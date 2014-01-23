@@ -20,3 +20,8 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:impli
 // However, something related is configured in ./src/main/AndroidManifest.xml
 platformName := "android-19"
 
+// See for Proguard options
+// http://fxthomas.github.io/android-plugin/tutorial/02-configuring-the-build.html#toc_8
+usePreloaded := true
+
+useProguard := false
