@@ -8,5 +8,9 @@
     android:id="@+id/textview"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"/>
+    <TextView
+            android:id="@+id/calendarname"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
 </LinearLayout>
 
