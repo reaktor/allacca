@@ -1,75 +1,66 @@
 package fi.allacca
 
-import android.app.Activity
+import android.app.{LoaderManager, ListActivity}
 import android.os.Bundle
 
 import android.provider.CalendarContract.Calendars
-import android.provider.CalendarContract.SyncColumns
 import android.database.Cursor
-import android.content.ContentResolver
+import android.content.{CursorLoader, Loader}
 import android.provider.CalendarContract
-import android.net.Uri
-import android.provider.ContactsContract.SyncState
 import android.provider.SyncStateContract.Columns
 import android.util.Log
+import android.widget.{ListView, SimpleCursorAdapter, ProgressBar}
+import android.view.{View, ViewGroup}
 
 object MyConstants extends Columns
 
-class AllaccaSpike extends Activity with TypedViewHolder {
+class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.LoaderCallbacks[Cursor] {
   private val TAG = getClass.getSimpleName
+  private val PROJECTION = Array[String] (
+    "_id",                // 0
+    Calendars.NAME        // 1
+  )
+  private lazy val adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, null,
+    PROJECTION, Array(android.R.id.text1, android.R.id.text1), 0)
 
-    override def onCreate(savedInstanceState: Bundle): Unit = {
+  override def onCreate(savedInstanceState: Bundle): Unit = {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
-        findView(TR.textview).setText("Terve android-sdksta!")
+        findView(TR.textview).setText("Looks like you've got access to these calendars")
 
-        // Projection array. Creating indices for this array instead of doing
-        // dynamic lookups improves performance.
-/*        val EVENT_PROJECTION = Array[String] (
-          Calendars._ID,                           // 0
-          Calendars.ACCOUNT_NAME,                  // 1
-          Calendars.CALENDAR_DISPLAY_NAME,         // 2
-          Calendars.OWNER_ACCOUNT                  // 3
-        )
-        */
-      val EVENT_PROJECTION = Array[String] (
-        Calendars.NAME                           // 0
-      )
+     val progressBar = new ProgressBar(this)
+      progressBar.setIndeterminate(true)
+      getListView.setEmptyView(progressBar)
+      val root = findViewById(android.R.id.content).asInstanceOf[ViewGroup]
+      root.addView(progressBar)
 
-        val PROJECTION_ID_INDEX = 0
-        val PROJECTION_ACCOUNT_NAME_INDEX = 1
-        val PROJECTION_DISPLAY_NAME_INDEX = 2
-        val PROJECTION_OWNER_ACCOUNT_INDEX = 3
-
-      val cr: ContentResolver = getContentResolver
-      val uri: Uri = CalendarContract.Calendars.CONTENT_URI
-      val selectionArgs: Array[String] = Array("timo.rantalaiho@gmail.com")
-
-      val selection = "((" + Calendars.NAME+ " = ?))"
-/*      val selection = "((" + Calendars.ACCOUNT_NAME + " = ?) AND ("
-      + Calendars.ACCOUNT_TYPE + " = ?) AND ("
-      + Calendars.OWNER_ACCOUNT + " = ?))"*/
-
-
-      //val selectionArgs: Array[String] = Array[String]("sampleuser@gmail.com", "com.google", "sampleuser@gmail.com")
-
-      // Submit the query and get a Cursor object back.
-      Log.d(TAG, "Starting call...")
-      val cur = cr.query(uri, EVENT_PROJECTION, "", Array[String](), null)
-
-      while (cur.moveToNext()) {
-//        val calID = cur.getLong(PROJECTION_ID_INDEX)
-        val displayName = cur.getString(0)
-//        val accountName = cur.getString(PROJECTION_ACCOUNT_NAME_INDEX)
-//        val ownerName = cur.getString(PROJECTION_OWNER_ACCOUNT_INDEX)
-
-        // Do something with the values...
-
-        Log.d(TAG, "\tProcessing:")
-        Log.d(TAG, "\t" + displayName)
-
-        findView(TR.calendarname).setText(displayName)
-      }
-      Log.d(TAG, "...cursor loop ended.")
+      setListAdapter(adapter)
+      getLoaderManager.initLoader(0, null, this)
     }
+
+
+  override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
+    // Now create and return a CursorLoader that will take care of
+    // creating a Cursor for the data being displayed.
+    new CursorLoader(this, CalendarContract.Calendars.CONTENT_URI, PROJECTION, "", null, null)
+  }
+
+  // Called when a previously created loader has finished loading
+  override def onLoadFinished(loader: Loader[Cursor], data: Cursor): Unit = {
+    // Swap the new cursor in.  (The framework will take care of closing the
+    // old cursor once we return.)
+    adapter.swapCursor(data)
+  }
+
+  // Called when a previously created loader is reset, making the data unavailable
+  override def onLoaderReset(loader: Loader[Cursor]): Unit = {
+    // This is called when the last Cursor provided to onLoadFinished()
+    // above is about to be closed.  We need to make sure we are no
+    // longer using it.
+    adapter.swapCursor(null)
+  }
+
+  override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
+    Log.d(TAG, "Got a click with position == " + position + " , id == " + id)
+  }
 }
