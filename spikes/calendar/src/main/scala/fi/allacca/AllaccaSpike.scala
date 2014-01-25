@@ -55,13 +55,13 @@ class AllaccaSpike extends Activity with TypedViewHolder {
 
       // Submit the query and get a Cursor object back.
       Log.d(TAG, "Starting call...")
-      val cur = cr.query(uri, EVENT_PROJECTION, selection, selectionArgs, null)
+      val cur = cr.query(uri, EVENT_PROJECTION, "", Array[String](), null)
 
       while (cur.moveToNext()) {
-        val calID = cur.getLong(PROJECTION_ID_INDEX)
-        val displayName = cur.getString(PROJECTION_DISPLAY_NAME_INDEX)
-        val accountName = cur.getString(PROJECTION_ACCOUNT_NAME_INDEX)
-        val ownerName = cur.getString(PROJECTION_OWNER_ACCOUNT_INDEX)
+//        val calID = cur.getLong(PROJECTION_ID_INDEX)
+        val displayName = cur.getString(0)
+//        val accountName = cur.getString(PROJECTION_ACCOUNT_NAME_INDEX)
+//        val ownerName = cur.getString(PROJECTION_OWNER_ACCOUNT_INDEX)
 
         // Do something with the values...
 
