@@ -15,5 +15,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".EventListActivity"
+                  android:label="@string/event_list_name">
+<!--            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+-->
+        </activity>
     </application>
 </manifest>

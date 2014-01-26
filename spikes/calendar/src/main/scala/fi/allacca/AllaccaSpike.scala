@@ -5,14 +5,17 @@ import android.os.Bundle
 
 import android.provider.CalendarContract.Calendars
 import android.database.Cursor
-import android.content.{CursorLoader, Loader}
+import android.content.{Intent, CursorLoader, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.widget.{ListView, SimpleCursorAdapter, ProgressBar}
 import android.view.{View, ViewGroup}
 
+object AllaccaSpike {
+  val TAG = "AllaccaSpike"
+}
+
 class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.LoaderCallbacks[Cursor] {
-  private val TAG = getClass.getSimpleName
   private val PROJECTION = Array[String] (
     "_id",                // 0
     Calendars.NAME        // 1
@@ -58,6 +61,8 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
   }
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
-    Log.d(TAG, "Got a click with position == " + position + " , id == " + id)
+    Log.d(AllaccaSpike.TAG, "Got a click with position == " + position + " , id == " + id)
+    val intent = new Intent(this, classOf[EventListActivity])
+    startActivity(intent)
   }
 }
