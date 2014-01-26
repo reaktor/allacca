@@ -4,6 +4,11 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent">
 
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/open_obd"
+            android:onClick="openObd" />
   <TextView
     android:id="@+id/textview"
     android:layout_width="fill_parent"
@@ -16,4 +21,3 @@
 
     </ListView>
 </LinearLayout>
-

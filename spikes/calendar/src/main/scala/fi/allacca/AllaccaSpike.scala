@@ -23,6 +23,11 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
   private lazy val adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, null,
     PROJECTION, Array(android.R.id.text1, android.R.id.text1), 0)
 
+  def openObd(view: View): Unit = {
+    Log.d(AllaccaSpike.TAG, "OpenObd has been clicked")
+    startActivity(new Intent(this, classOf[ObdActivity]))
+  }
+
   override def onCreate(savedInstanceState: Bundle): Unit = {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
