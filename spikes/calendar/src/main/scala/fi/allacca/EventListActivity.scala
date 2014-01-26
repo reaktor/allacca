@@ -16,8 +16,8 @@ class EventListActivity extends ListActivity with TypedViewHolder with LoaderMan
     "dtstart",
     "dtend"
   )
-  private lazy val adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, null,
-    PROJECTION, Array(android.R.id.text1, android.R.id.text1, android.R.id.text1, android.R.id.text1), 0)
+  private lazy val adapter = new SimpleCursorAdapter(this, R.layout.single_event, null,
+    PROJECTION, Array(R.id.title, R.id.dtstart, R.id.dtend), 0)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
