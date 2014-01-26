@@ -7,12 +7,9 @@ import android.provider.CalendarContract.Calendars
 import android.database.Cursor
 import android.content.{CursorLoader, Loader}
 import android.provider.CalendarContract
-import android.provider.SyncStateContract.Columns
 import android.util.Log
 import android.widget.{ListView, SimpleCursorAdapter, ProgressBar}
 import android.view.{View, ViewGroup}
-
-object MyConstants extends Columns
 
 class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.LoaderCallbacks[Cursor] {
   private val TAG = getClass.getSimpleName
