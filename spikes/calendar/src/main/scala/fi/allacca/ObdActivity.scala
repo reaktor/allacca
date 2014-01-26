@@ -4,7 +4,7 @@ import android.app.{LoaderManager, ListActivity}
 import android.database.Cursor
 import android.content.{ContentUris, CursorLoader, Loader}
 import android.os.Bundle
-import android.widget.{AbsListView, ListView, ProgressBar, SimpleCursorAdapter}
+import android.widget._
 import android.view.{View, ViewGroup}
 import android.provider.CalendarContract
 import android.util.Log
@@ -43,6 +43,7 @@ class ObdActivity extends ListActivity with TypedViewHolder with LoaderManager.L
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " got a click with position == " + position + " , id == " + id)
+    findViewById(R.id.obd_selected).asInstanceOf[TextView].setText(id.toString)
   }
 
 
