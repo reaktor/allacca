@@ -9,24 +9,18 @@ import android.view.View
 import android.provider.CalendarContract
 import android.util.{AttributeSet, Log}
 import android.widget.AbsListView.OnScrollListener
+import android.view.ViewTreeObserver.OnScrollChangedListener
 
-class ObdActivity extends Activity with TypedViewHolder with ScrollViewListener {
+class ObdActivity extends Activity with TypedViewHolder {
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.obd)
     val listView = findViewById(R.id.infinite_events_list)
     listView.requestFocus()
-
-    val scroll = findViewById(R.id.infinite_events_scrollview).asInstanceOf[EventsScrollView]
-    scroll.setScrollViewListener(this)
-  }
-
-  override def onScrollChanged(scrollView: EventsScrollView, x: Int, y: Int, oldX: Int, oldY: Int): Unit = {
-    Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" got onScrollChanged with $x $y $oldX $oldY")
   }
 }
 
-class InfiniteEventsListFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cursor] {
+class InfiniteEventsListFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cursor] with OnScrollListener with OnScrollChangedListener {
   private val PROJECTION = Array[String] (
     "_id",
     "title",
@@ -42,6 +36,12 @@ class InfiniteEventsListFragment extends ListFragment with LoaderManager.LoaderC
 
     setListAdapter(adapter)
     getLoaderManager.initLoader(0, null, this)
+  }
+
+
+  override def onActivityCreated(savedInstanceState: Bundle): Unit = {
+    super.onActivityCreated(savedInstanceState)
+    getListView.setOnScrollListener(this)
   }
 
   override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
@@ -60,25 +60,17 @@ class InfiniteEventsListFragment extends ListFragment with LoaderManager.LoaderC
     Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " got a click with position == " + position + " , id == " + id)
     getActivity.findViewById(R.id.obd_selected).asInstanceOf[TextView].setText(id.toString)
   }
-}
 
-trait ScrollViewListener {
-  def onScrollChanged(scrollView: EventsScrollView, x: Int, y: Int, oldX: Int, oldY: Int)
+  def onScrollChanged(): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " onScrollChanged")
+
+  def onScrollStateChanged(p1: AbsListView, p2: Int): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" onScrollStateChanged $p2 $p1")
+
+  def onScroll(p1: AbsListView, p2: Int, p3: Int, p4: Int): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" onScroll $p2 $p3 $p4 $p1")
 }
 
 class EventsScrollView(context: Context, attrs: AttributeSet) extends ScrollView(context, attrs) {
-  private var scrollViewListener: ScrollViewListener = null
-
-  def setScrollViewListener(listener: ScrollViewListener): Unit = {
-    scrollViewListener = listener
-  }
-
   override protected def onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int): Unit = {
     super.onScrollChanged(l, t, oldl, oldt)
-    if (scrollViewListener != null) {
-      scrollViewListener.onScrollChanged(this, l, t, oldl, oldt)
-      Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" scrolling with $l $t $oldl $oldt")
-    }
-    Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" Bad! ScrollViewListener == null")
+    Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" scrolling with $l $t $oldl $oldt")
   }
 }

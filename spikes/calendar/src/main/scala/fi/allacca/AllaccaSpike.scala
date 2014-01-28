@@ -8,14 +8,16 @@ import android.database.Cursor
 import android.content.{Intent, CursorLoader, Loader}
 import android.provider.CalendarContract
 import android.util.Log
-import android.widget.{ListView, SimpleCursorAdapter, ProgressBar}
+import android.widget.{AbsListView, ListView, SimpleCursorAdapter, ProgressBar}
 import android.view.{View, ViewGroup}
+import android.widget.AbsListView.OnScrollListener
+import android.view.ViewTreeObserver.OnScrollChangedListener
 
 object AllaccaSpike {
   val TAG = "AllaccaSpike"
 }
 
-class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.LoaderCallbacks[Cursor] {
+class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.LoaderCallbacks[Cursor] with OnScrollListener with OnScrollChangedListener {
   private val PROJECTION = Array[String] (
     "_id",                // 0
     Calendars.NAME        // 1
@@ -36,6 +38,7 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
      val progressBar = new ProgressBar(this)
       progressBar.setIndeterminate(true)
       getListView.setEmptyView(progressBar)
+      getListView.setOnScrollListener(this)
       val root = findViewById(android.R.id.content).asInstanceOf[ViewGroup]
       root.addView(progressBar)
 
@@ -70,4 +73,10 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
     val intent = new Intent(this, classOf[EventListActivity])
     startActivity(intent)
   }
+
+  def onScrollChanged(): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " onScrollChanged")
+
+  def onScrollStateChanged(p1: AbsListView, p2: Int): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" onScrollStateChanged $p2 $p1")
+
+  def onScroll(p1: AbsListView, p2: Int, p3: Int, p4: Int): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + s" onScroll $p2 $p3 $p4 $p1")
 }
