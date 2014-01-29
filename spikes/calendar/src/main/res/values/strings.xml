@@ -3,6 +3,7 @@
     <string name="app_name">0 Allacca</string>
     <string name="event_list_name">Here be events</string>
     <string name="open_obd">Open OBD view</string>
+    <string name="add_fixed_event">Add fixed event</string>
     <string name="obd_name">Will this be OBD</string>
     <string name="infinite_list_name">Infinite calendar view</string>
 </resources>

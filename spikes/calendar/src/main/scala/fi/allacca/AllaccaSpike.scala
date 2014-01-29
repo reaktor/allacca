@@ -30,6 +30,10 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
     startActivity(new Intent(this, classOf[ObdActivity]))
   }
 
+  def addFixedEvent(view: View): Unit = {
+    Log.d(AllaccaSpike.TAG, "addFixedEvent has been clicked")
+  }
+
   override def onCreate(savedInstanceState: Bundle): Unit = {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
