@@ -23,8 +23,9 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
     "_id",                // 0
     Calendars.NAME        // 1
   )
-  private lazy val adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, null,
-    PROJECTION, Array(android.R.id.text1, android.R.id.text1), 0)
+  private lazy val adapter = new SimpleCursorAdapter(this, R.layout.single_calendar, null,
+    PROJECTION, Array(R.id.calendar_id, R.id.calendar_name), 0)
+
 
   def openObd(view: View): Unit = {
     Log.d(AllaccaSpike.TAG, "OpenObd has been clicked")
