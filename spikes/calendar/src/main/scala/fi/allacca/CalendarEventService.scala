@@ -10,23 +10,24 @@ import android.content.Context
 class CalendarEventService(val calendarId: Long, context: Context) {
 
   def createEvent(): Long = {
-    val cal = new GregorianCalendar(2012, 11, 14)
+    val cal = new GregorianCalendar(2014, 1, 3)
     cal.setTimeZone(TimeZone.getTimeZone("UTC"))
     cal.set(Calendar.HOUR, 0)
     cal.set(Calendar.MINUTE, 0)
     cal.set(Calendar.SECOND, 0)
     cal.set(Calendar.MILLISECOND, 0)
     val start: Long = cal.getTimeInMillis()
+    val end = start + (1000 * 60 * 60)
     val values = new ContentValues()
     values.put("dtstart", Long.box(start))
-    values.put("dtend", start.asInstanceOf[Double]);
-    values.put("rrule", "FREQ=DAILY;COUNT=20;BYDAY=MO,TU,WE,TH,FR;WKST=MO");
-    values.put("title", "Some title");
-    values.put("eventLocation", "Münster");
+    values.put("dtend", Long.box(end))
+    //values.put("rrule", "FREQ=DAILY;COUNT=20;BYDAY=MO,TU,WE,TH,FR;WKST=MO");
+    values.put("rrule", "FREQ=DAILY;COUNT=1;BYDAY=MO,TU,WE,TH,FR;WKST=MO")
+    values.put("title", "Test event");
+    values.put("eventLocation", "back alley");
     values.put("calendar_id", Long.box(calendarId));
     values.put("eventTimezone", "Europe/Berlin");
     values.put("description", "The agenda or some description of the event")
-    values.put("calendar_access_level", Int.box(2)) //2 = private
     values.put("selfAttendeeStatus", Int.box(1))
     values.put("allDay", Int.box(1))
     values.put("organizer", "some.mail@some.address.com")
