@@ -32,6 +32,8 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
 
   def addFixedEvent(view: View): Unit = {
     Log.d(AllaccaSpike.TAG, "addFixedEvent has been clicked")
+    val service = new CalendarEventService(1, this)
+    service.createEvent()
   }
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
