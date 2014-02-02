@@ -12,7 +12,7 @@ class CalendarEventService(context: Context) {
     values.put("dtstart", Long.box(event.startTime))
     values.put("dtend", Long.box(event.endTime))
     //values.put("rrule", "FREQ=DAILY;COUNT=20;BYDAY=MO,TU,WE,TH,FR;WKST=MO")
-    values.put("rrule", "FREQ=DAILY;COUNT=1;BYDAY=MO,TU,WE,TH,FR;WKST=MO")
+//    values.put("rrule", "FREQ=DAILY;COUNT=1;BYDAY=MO,TU,WE,TH,FR;WKST=MO")
     values.put("title", event.title)
     values.put("eventLocation", event.location)
     values.put("calendar_id", Long.box(calendarId))
