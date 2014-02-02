@@ -4,32 +4,25 @@ import java.util.{Calendar, TimeZone, GregorianCalendar}
 import android.provider.CalendarContract.Events
 import android.content.ContentValues
 import android.content.Context
-/**
- * Deals with single events, no listing/mass stuff
- */
-class CalendarEventService(val calendarId: Long, context: Context) {
 
-  def createEvent(): Long = {
-    val cal = new GregorianCalendar(2014, 1, 3)
-    cal.setTimeZone(TimeZone.getTimeZone("UTC"))
-    cal.set(Calendar.HOUR, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    val start: Long = cal.getTimeInMillis()
-    val end = start + (1000 * 60 * 60)
+class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, val description: String, val location: String = "", val allDay: Boolean = false) {}
+
+class CalendarEventService(context: Context) {
+
+  def createEvent(calendarId: Long, event: CalendarEvent): Long = {
     val values = new ContentValues()
-    values.put("dtstart", Long.box(start))
-    values.put("dtend", Long.box(end))
+    values.put("dtstart", Long.box(event.startTime))
+    values.put("dtend", Long.box(event.endTime))
     //values.put("rrule", "FREQ=DAILY;COUNT=20;BYDAY=MO,TU,WE,TH,FR;WKST=MO");
     values.put("rrule", "FREQ=DAILY;COUNT=1;BYDAY=MO,TU,WE,TH,FR;WKST=MO")
-    values.put("title", "Test event");
-    values.put("eventLocation", "back alley");
+    values.put("title", event.title);
+    values.put("eventLocation", event.location);
     values.put("calendar_id", Long.box(calendarId));
     values.put("eventTimezone", "Europe/Berlin");
-    values.put("description", "The agenda or some description of the event")
+    values.put("description", event.description)
     values.put("selfAttendeeStatus", Int.box(1))
-    values.put("allDay", Int.box(1))
+    val allDay = if (event.allDay) 1 else 0
+    values.put("allDay", Int.box(allDay))
     values.put("organizer", "some.mail@some.address.com")
     values.put("guestsCanInviteOthers", Int.box(1))
     values.put("guestsCanModify", Int.box(1))

@@ -12,6 +12,7 @@ import android.widget.{AbsListView, ListView, SimpleCursorAdapter, ProgressBar}
 import android.view.{View, ViewGroup}
 import android.widget.AbsListView.OnScrollListener
 import android.view.ViewTreeObserver.OnScrollChangedListener
+import java.util.{Calendar, TimeZone, GregorianCalendar}
 
 object AllaccaSpike {
   val TAG = "AllaccaSpike"
@@ -32,8 +33,17 @@ class AllaccaSpike extends ListActivity with TypedViewHolder with LoaderManager.
 
   def addFixedEvent(view: View): Unit = {
     Log.d(AllaccaSpike.TAG, "addFixedEvent has been clicked")
-    val service = new CalendarEventService(1, this)
-    service.createEvent()
+    val service = new CalendarEventService(this)
+
+    val cal = new GregorianCalendar(2014, 1, 3)
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"))
+    cal.set(Calendar.HOUR, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    val start: Long = cal.getTimeInMillis()
+    val end = start + (1000 * 60 * 60)
+    service.createEvent(1, new CalendarEvent("Joku tapaaminen", start, end, "Jotain hämärähommia"))
   }
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
