@@ -6,7 +6,6 @@
         <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
             <TextView android:id="@+id/eventlisttitle2" android:layout_width="fill_parent" android:layout_height="wrap_content"/>
             <TextView android:id="@+id/eventtitle2" android:layout_width="fill_parent" android:layout_height="wrap_content"/>
-            <fi.allacca.EventsScrollView android:id="@+id/infinite_events_scrollview" android:layout_width="fill_parent" android:layout_height="fill_parent"/>
         </LinearLayout>
     </fragment>
     <LinearLayout android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="fill_parent">
