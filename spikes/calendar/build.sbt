@@ -8,7 +8,7 @@ name := "android-sdk-spike"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion:= "2.11.0-M7"
+scalaVersion:= "2.11.0-M8"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
 
