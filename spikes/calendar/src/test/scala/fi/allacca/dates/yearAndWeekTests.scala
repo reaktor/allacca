@@ -3,6 +3,20 @@ package fi.allacca.dates
 
 import org.scalacheck.{Arbitrary, Properties, Gen}
 import org.scalacheck.Prop.forAll
+import org.scalatest._
+import org.scalatest.junit.JUnitRunner
+import org.junit.runner.RunWith
+
+@RunWith(classOf[JUnitRunner])
+class YearAndWeekSpec extends FunSpec with Matchers {
+  describe("YearOfWeek") {
+    it ("should work around start of a year") {
+      val lastWeekOf2013 = YearAndWeek(2013, 52)
+      lastWeekOf2013.next should be(YearAndWeek(2014, 1))
+      lastWeekOf2013.next.next should be(YearAndWeek(2014, 2))
+    }
+  }
+}
 
 object YearAndWeekSpecification extends Properties(classOf[YearAndWeek].getSimpleName) {
   private val yawGenerator = for {

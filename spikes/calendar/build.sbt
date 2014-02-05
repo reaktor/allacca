@@ -14,7 +14,9 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:impli
 
 libraryDependencies ++= Seq(
   "com.github.nscala-time" %% "nscala-time" % "0.8.0",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
+  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+  "org.scalatest" %% "scalatest" % "2.1.RC1" % "test",
+  "junit" % "junit" % "4.10" % "test"
 )
 
 // for non-ant-based projects, you'll need this for the specific build target:
