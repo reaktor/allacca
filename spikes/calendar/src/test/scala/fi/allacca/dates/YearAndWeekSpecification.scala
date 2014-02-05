@@ -14,6 +14,8 @@ object YearAndWeekSpecification extends Properties(classOf[YearAndWeek].getSimpl
 
   property("isOrderedByYearThenWeek") = forAll { (yaws: List[YearAndWeek]) => isSorted(yaws.sorted) }
 
+  property("nextIsAfterCurrent") = forAll { (current: YearAndWeek) => YearAndWeek.YearAndWeekOrdering.gt(current.next, current) }
+
   private def isSorted(l: List[YearAndWeek]) = {
     if (l.size < 2) true
     else {
