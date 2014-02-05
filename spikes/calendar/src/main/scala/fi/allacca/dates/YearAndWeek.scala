@@ -1,7 +1,6 @@
 package fi.allacca.dates
 
-import com.github.nscala_time.time.Imports._
-import org.joda.time.ReadableDateTime
+import org.joda.time.{LocalDate, DateTime, ReadableDateTime}
 
 case class YearAndWeek(year: Int, week: Int) {
   private val someDayOnWeek = new DateTime(year, 1, 4, 0, 0, 0).plusDays(7 * (week - 1))

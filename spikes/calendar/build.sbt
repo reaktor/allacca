@@ -13,7 +13,8 @@ scalaVersion:= "2.11.0-M8"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
 
 libraryDependencies ++= Seq(
-  "com.github.nscala-time" %% "nscala-time" % "0.8.0",
+  "joda-time"         % "joda-time"           % "2.3",
+  "org.joda"          % "joda-convert"        % "1.3",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.RC1" % "test",
   "junit" % "junit" % "4.10" % "test"
@@ -31,3 +32,13 @@ run <<= run in Android
 
 install <<= install in Android
 
+proguardCache in Android ++= Seq(
+  ProguardCache("joda") % "joda-time" %% "joda-time"
+)
+
+debugIncludesTests in Android := false
+
+apkbuildExcludes in Android ++= Seq(
+  "META-INF/LICENSE.txt",
+  "META-INF/NOTICE.txt"
+)
