@@ -4,11 +4,9 @@ import com.github.nscala_time.time.Imports._
 import org.joda.time.ReadableDateTime
 
 case class YearAndWeek(year: Int, week: Int) {
-  def next: YearAndWeek = {
-    val someDayOnWeek = new DateTime(year, 1, 4, 0, 0, 0).plusDays(7 * (week - 1))
-    val someDayOnNextWeek = someDayOnWeek.plusWeeks(1)
-    YearAndWeek.from(someDayOnNextWeek)
-  }
+  private val someDayOnWeek = new DateTime(year, 1, 4, 0, 0, 0).plusDays(7 * (week - 1))
+
+  lazy val next: YearAndWeek = YearAndWeek.from(someDayOnWeek.plusWeeks(1))
 }
 
 object YearAndWeek {
