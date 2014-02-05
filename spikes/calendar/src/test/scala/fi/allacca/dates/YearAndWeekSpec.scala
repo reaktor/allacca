@@ -24,11 +24,20 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
     it ("should have next week after current week") {
       check(forAll { (current: YearAndWeek) => YearAndWeek.YearAndWeekOrdering.gt(current.next, current) })
     }
+    it ("should have previous week before current week") {
+      check(forAll { (current: YearAndWeek) => YearAndWeek.YearAndWeekOrdering.lt(current.previous, current) })
+    }
 
     it ("should work around start of a year") {
       val lastWeekOf2013 = YearAndWeek(2013, 52)
       lastWeekOf2013.next should be(YearAndWeek(2014, 1))
       lastWeekOf2013.next.next should be(YearAndWeek(2014, 2))
+
+      lastWeekOf2013.previous should be(YearAndWeek(2013, 51))
+      lastWeekOf2013.next.previous should be(lastWeekOf2013)
+      lastWeekOf2013.next.next.previous should be(YearAndWeek(2014, 1))
+      lastWeekOf2013.next.previous.next.previous should be(lastWeekOf2013)
+      YearAndWeek(2014, 2).previous.previous should be(lastWeekOf2013)
     }
   }
 
