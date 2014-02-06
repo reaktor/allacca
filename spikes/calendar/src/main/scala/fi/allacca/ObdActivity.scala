@@ -1,15 +1,15 @@
 package fi.allacca
 
 import android.app._
-import android.database.Cursor
-import android.content.{Context, ContentUris, CursorLoader, Loader}
+import android.content.Context
 import android.os.Bundle
 import android.widget._
-import android.view.View
-import android.provider.CalendarContract
+import android.view.{ViewGroup, View}
 import android.util.{AttributeSet, Log}
 import android.widget.AbsListView.OnScrollListener
 import android.view.ViewTreeObserver.OnScrollChangedListener
+import fi.allacca.dates.YearAndWeek
+import org.joda.time.{Weeks, DateTime}
 
 class ObdActivity extends Activity with TypedViewHolder {
   override def onCreate(savedInstanceState: Bundle): Unit = {
@@ -20,45 +20,46 @@ class ObdActivity extends Activity with TypedViewHolder {
   }
 }
 
-class InfiniteEventsListFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cursor] with OnScrollListener with OnScrollChangedListener {
-  private val PROJECTION = Array[String] (
-    "_id",
-    "title",
-    "dtstart",
-    "dtend"
-  )
+class InfiniteEventsListFragment extends ListFragment with OnScrollListener with OnScrollChangedListener {
   private lazy val activity = getActivity
-  private lazy val adapter = new SimpleCursorAdapter(activity, R.layout.single_event, null,
-    PROJECTION, Array(R.id.title, R.id.dtstart, R.id.dtend), 0)
+  private lazy val adapter = new WeeksAdapter
+
+  class WeeksAdapter extends BaseAdapter {
+    private val beginningOfEpoch = new DateTime(1970, 1, 1, 0, 0, 0).withTimeAtStartOfDay()
+
+    def positionOfNow: Int = Weeks.weeksBetween(beginningOfEpoch, new DateTime()).getWeeks
+
+    override def getCount: Int = Integer.MAX_VALUE
+
+    override def getItem(position: Int): YearAndWeek = {
+      YearAndWeek.from(beginningOfEpoch.plusWeeks(position))
+    }
+
+    override def getItemId(position: Int): Long = getItem(position).hashCode
+
+    override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
+      val view = new TextView(activity)
+      view.setText(getItem(position).toString)
+      view
+    }
+  }
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
     setListAdapter(adapter)
-    getLoaderManager.initLoader(0, null, this)
   }
-
 
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
     getListView.setOnScrollListener(this)
+    setSelection(adapter.positionOfNow)
   }
-
-  override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
-    val builder = CalendarContract.Instances.CONTENT_URI.buildUpon
-    ContentUris.appendId(builder, System.currentTimeMillis)
-    ContentUris.appendId(builder, System.currentTimeMillis() + 8 * 24 * 60 * 60 * 1000)
-
-    new CursorLoader(getActivity, builder.build, PROJECTION, "", null, null)
-  }
-
-  override def onLoadFinished(loader: Loader[Cursor], data: Cursor): Unit = adapter.swapCursor(data)
-
-  override def onLoaderReset(loader: Loader[Cursor]): Unit = adapter.swapCursor(null)
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " got a click with position == " + position + " , id == " + id)
-    getActivity.findViewById(R.id.obd_selected).asInstanceOf[TextView].setText(id.toString)
+    val clickedThing = adapter.getItem(position)
+    getActivity.findViewById(R.id.obd_selected).asInstanceOf[TextView].setText(clickedThing.toString + clickedThing.firstDay + " - " + clickedThing.lastDay)
   }
 
   def onScrollChanged(): Unit = Log.d(AllaccaSpike.TAG, getClass.getSimpleName + " onScrollChanged")
