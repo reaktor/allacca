@@ -7,6 +7,7 @@ import org.scalatest._
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
 import org.scalatest.prop.Checkers
+import org.joda.time.DateTime
 
 @RunWith(classOf[JUnitRunner])
 class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
@@ -27,6 +28,12 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
     it ("should have previous week before current week") {
       check(forAll { (current: YearAndWeek) => YearAndWeek.YearAndWeekOrdering.lt(current.previous, current) })
     }
+    it ("should start on Monday 00.00") {
+      check(forAll { (any: YearAndWeek) => any.firstDay.getDayOfWeek == 1 })
+    }
+    it ("should stop on Monday 00.00") {
+      check(forAll { (any: YearAndWeek) => any.lastDay.getDayOfWeek == 1 })
+    }
 
     it ("should work around start of a year") {
       val lastWeekOf2013 = YearAndWeek(2013, 52)
@@ -39,6 +46,12 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
       lastWeekOf2013.next.previous.next.previous should be(lastWeekOf2013)
       YearAndWeek(2014, 2).previous.previous should be(lastWeekOf2013)
     }
+  }
+
+  it ("should range from Monday 00.00 to next Monday 00.00") {
+    val week6Of2014 = YearAndWeek(2014, 6)
+    week6Of2014.firstDay should be(new DateTime(2014, 2, 3, 0, 0, 0))
+    week6Of2014.lastDay should be(new DateTime(2014, 2, 10, 0, 0, 0))
   }
 
   private def isSorted(l: List[YearAndWeek]) = {
