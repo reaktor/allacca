@@ -14,7 +14,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:impli
 
 libraryDependencies ++= Seq(
   "joda-time"         % "joda-time"           % "2.3",
-  "org.joda"          % "joda-convert"        % "1.3",
+  "org.joda"          % "joda-convert"        % "1.4",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.RC1" % "test",
   "junit" % "junit" % "4.10" % "test"
@@ -33,10 +33,11 @@ run <<= run in Android
 install <<= install in Android
 
 proguardCache in Android ++= Seq(
-  ProguardCache("joda") % "joda-time" %% "joda-time"
+  ProguardCache("joda") % "joda-time" %% "joda-time",
+  ProguardCache("joda-convert") % "org.joda" %% "joda-convert"
 )
 
-debugIncludesTests in Android := false
+debugIncludesTests in Android := true
 
 apkbuildExcludes in Android ++= Seq(
   "META-INF/LICENSE.txt",
