@@ -9,6 +9,7 @@ case class YearAndWeek(year: Int, week: Int) {
   lazy val previous: YearAndWeek = YearAndWeek.from(someDayOnWeek.minusWeeks(1))
   lazy val firstDay: DateTime = someDayOnWeek.minusDays(someDayOnWeek.getDayOfWeek - 1)
   lazy val lastDay: DateTime = firstDay.plusDays(7)
+  lazy val days: Seq[DateTime] = 0.to(6).map { firstDay.plusDays }
 }
 
 object YearAndWeek {

@@ -19,7 +19,7 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
   implicit val arbitraryYaw = Arbitrary(yawGenerator)
 
   describe("YearOfWeek") {
-    it ("should be ordered by year then week") {
+    it ("should be ordered isGreater year then week") {
       check(forAll { (yaws: List[YearAndWeek]) => isSorted(yaws.sorted) })
     }
     it ("should have next week after current week") {
@@ -33,6 +33,11 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
     }
     it ("should stop on Monday 00.00") {
       check(forAll { (any: YearAndWeek) => any.lastDay.getDayOfWeek == 1 })
+    }
+
+    it ("should consist of 7 consecutive days") {
+      check(forAll { (any: YearAndWeek) => any.days.length == 7 })
+      check(forAll { (any: YearAndWeek) => isSorted(any.days, (d1: DateTime, d2: DateTime) => d1.isBefore(d2)) })
     }
 
     it ("should work around start of a year") {
@@ -52,17 +57,26 @@ class YearAndWeekSpec extends FunSpec with Matchers with Checkers {
     val week6Of2014 = YearAndWeek(2014, 6)
     week6Of2014.firstDay should be(new DateTime(2014, 2, 3, 0, 0, 0))
     week6Of2014.lastDay should be(new DateTime(2014, 2, 10, 0, 0, 0))
+    week6Of2014.days(0) should be(new DateTime(2014, 2, 3, 0, 0, 0))
+    week6Of2014.days(1) should be(new DateTime(2014, 2, 4, 0, 0, 0))
+    week6Of2014.days(2) should be(new DateTime(2014, 2, 5, 0, 0, 0))
+    week6Of2014.days(3) should be(new DateTime(2014, 2, 6, 0, 0, 0))
+    week6Of2014.days(4) should be(new DateTime(2014, 2, 7, 0, 0, 0))
+    week6Of2014.days(5) should be(new DateTime(2014, 2, 8, 0, 0, 0))
+    week6Of2014.days(6) should be(new DateTime(2014, 2, 9, 0, 0, 0))
   }
 
-  private def isSorted(l: List[YearAndWeek]) = {
+  private def isSorted(l: List[YearAndWeek]): Boolean = {
+    isSorted(l, (first: YearAndWeek, second: YearAndWeek) =>
+      if (first.year == second.year) {
+        first.week <= second.week
+      } else first.year <= second.year)
+  }
+
+  private def isSorted[T](l: Seq[T], isSmaller: ((T, T) => Boolean)): Boolean = {
     if (l.size < 2) true
     else {
-      l.zip(l.tail).forall {
-        case (first, second) =>
-          if (first.year == second.year) {
-            first.week <= second.week
-          } else first.year <= second.year
-      }
+      l.zip(l.tail).forall { case (first, second) => isSmaller(first, second) }
     }
   }
 }
