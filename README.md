@@ -9,3 +9,10 @@ Working with Idea
 * ./sbt gen-idea
 * Add target/android-gen as source folder ("add content root")
 * Add android lib from your SDK installation path as library. For example: /Applications/devtools/adt-bundle-mac-x86_64-20131030/sdk/platforms/android-19/android.jar
+
+
+Licensing
+---------
+
+GPL v3 (see LICENSE.txt), copyright by the authors.
+
