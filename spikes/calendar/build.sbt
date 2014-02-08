@@ -33,8 +33,8 @@ run <<= run in Android
 install <<= install in Android
 
 proguardCache in Android ++= Seq(
-  ProguardCache("joda") % "joda-time" %% "joda-time",
-  ProguardCache("joda-convert") % "org.joda" %% "joda-convert"
+  ProguardCache("org.joda") % "joda-time" % "joda-time",
+  ProguardCache("org.joda.convert") % "org.joda" % "joda-convert"
 )
 
 debugIncludesTests in Android := true
