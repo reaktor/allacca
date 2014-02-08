@@ -5,19 +5,16 @@ import android.content.{ContentUris, Context}
 import android.os.Bundle
 import android.widget._
 import android.view.{ViewGroup, View}
-import android.util.{AttributeSet, Log}
+import android.util.{TypedValue, AttributeSet, Log}
 import android.widget.AbsListView.OnScrollListener
 import android.view.ViewTreeObserver.OnScrollChangedListener
 import fi.allacca.dates.YearAndWeek
-import org.joda.time.{DateMidnight, Weeks, DateTime}
+import org.joda.time.{Weeks, DateTime}
 import android.provider.CalendarContract
 import android.database.Cursor
-import scala.collection.immutable
-import scala.collection.parallel.mutable
 import scala.collection
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
-import android.view.ViewGroup.LayoutParams
 
 class ObdActivity extends Activity with TypedViewHolder {
   override def onCreate(savedInstanceState: Bundle): Unit = {
@@ -66,6 +63,7 @@ class InfiniteEventsListFragment extends ListFragment with OnScrollListener with
         dayView.setText(weekDayNameInitial)
         dayView.setTextColor(Color.WHITE)
         dayView.setBackgroundColor(if (hasEvents) Color.LTGRAY else Color.DKGRAY)
+        dayView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20)
 
         dayView.setId(id)
         id = id + 1
@@ -76,6 +74,7 @@ class InfiniteEventsListFragment extends ListFragment with OnScrollListener with
       weekNumberView.setId(id)
       weekNumberView.setPadding(5, 5, 5, 5)
       weekNumberView.setText(yearAndWeek.week + " / " + yearAndWeek.year)
+      weekNumberView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20)
       wholeLineLayout.addView(weekNumberView)
 
       dayViews.foreach { dayView => wholeLineLayout.addView(dayView) }
