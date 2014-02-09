@@ -6,11 +6,10 @@ import android.widget._
 import android.view.{View, ViewGroup}
 import android.graphics.Color
 import android.view.ViewGroup.LayoutParams
-import android.view.View.OnClickListener
 import android.util.Log
 
 
-class AllaccaMain extends Activity with TypedViewHolder with OnClickListener {
+class AllaccaMain extends Activity with TypedViewHolder {
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
     val textView = new TextView(this)
@@ -30,12 +29,13 @@ class AllaccaMain extends Activity with TypedViewHolder with OnClickListener {
     b.setText("+")
     b.setTextColor(Color.WHITE)
     b.setLayoutParams(params)
-    b.setOnClickListener(this)
+    b.setOnClickListener(createNewEvent _)
     linearLayout.addView(b)
   }
 
-  override def onClick (view: View) {
-    Log.d("ALLACCA", "clicked")
+  def createNewEvent (view: View) {
+    Log.d("ALLACCA", "+ createNewEvent")
   }
+
 }
 
