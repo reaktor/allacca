@@ -13,27 +13,53 @@ import android.content.Intent
 
 
 class AllaccaMain extends Activity with TypedViewHolder {
-  private lazy val dimensions = new Dimensions(getResources.getDisplayMetrics)
+  private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-    val cornerView = new TextView(this)
-    cornerView.setId(1)
-    cornerView.setText("Hello")
-    cornerView.setWidth(dimensions.weekNumberWidth)
-    cornerView.setHeight(dimensions.weekRowHeight)
+    val mainLayout = createMainLayout
 
-    val mainLayout = new RelativeLayout(this)
-    val mainLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-    mainLayout.setLayoutParams(mainLayoutParams)
+    val cornerView = createTopLeftCornerView
     mainLayout.addView(cornerView)
 
     val titles = createDayColumnTitles(cornerView.getId + 1)
     titles.foreach { mainLayout.addView }
 
+    val weeksList = createWeeksList(cornerView)
+    mainLayout.addView(weeksList)
+
     addAEventButton(mainLayout)
 
     setContentView(mainLayout)
+  }
+
+
+  def createMainLayout: RelativeLayout = {
+    val mainLayout = new RelativeLayout(this)
+    val mainLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+    mainLayout.setLayoutParams(mainLayoutParams)
+    mainLayout
+  }
+
+  private def createTopLeftCornerView: View = {
+    val cornerView = new TextView(this)
+    cornerView.setId(1)
+    cornerView.setText("Hello")
+    cornerView.setWidth(dimensions.weekNumberWidth)
+    cornerView.setHeight(dimensions.weekRowHeight)
+    cornerView
+  }
+
+  def createWeeksList(cornerView: View): View = {
+    val weeksList = new ListView(this)
+    val weeksAdapter = new WeeksAdapter(this, dimensions)
+    weeksList.setAdapter(weeksAdapter)
+    weeksList.setSelection(weeksAdapter.positionOfNow)
+    val weeksListParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+    weeksListParams.addRule(RelativeLayout.BELOW, cornerView.getId)
+    weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+    weeksList.setLayoutParams(weeksListParams)
+    weeksList
   }
 
   private def addAEventButton(layout: ViewGroup) {
@@ -75,7 +101,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
       val layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
       layoutParams.addRule(RelativeLayout.RIGHT_OF, view.getId - 1)
       view.setLayoutParams(layoutParams)
-      view.setTextSize(30)
+      view.setTextSize(dimensions.overviewTextSizePx)
       view.setText(c)
       view
     }
