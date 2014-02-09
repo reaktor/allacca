@@ -1,28 +1,41 @@
 package fi.allacca
 
 import android.app._
-import android.content.{ContentUris, Context}
 import android.os.Bundle
 import android.widget._
-import android.view.{ViewGroup, View}
-import android.util.{TypedValue, AttributeSet, Log}
-import android.widget.AbsListView.OnScrollListener
-import android.view.ViewTreeObserver.OnScrollChangedListener
-import fi.allacca.dates.YearAndWeek
-import org.joda.time.{Weeks, DateTime}
-import android.provider.CalendarContract
-import android.database.Cursor
-import scala.collection
-import org.joda.time.format.DateTimeFormat
+import android.view.{View, ViewGroup}
 import android.graphics.Color
+import android.view.ViewGroup.LayoutParams
+import android.view.View.OnClickListener
+import android.util.Log
 
-class AllaccaMain extends Activity with TypedViewHolder {
+
+class AllaccaMain extends Activity with TypedViewHolder with OnClickListener {
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
     val textView = new TextView(this)
     textView.setId(1)
     textView.setText("Hello")
-    setContentView(textView)
+    val linearLayout = new LinearLayout(this)
+    val relativeParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT)
+    relativeParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+    linearLayout.addView(textView)
+    addAEventButton(linearLayout)
+    setContentView(linearLayout)
+  }
+
+  private def addAEventButton(linearLayout: LinearLayout) {
+    val b = new Button(this)
+    val params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    b.setText("+")
+    b.setTextColor(Color.WHITE)
+    b.setLayoutParams(params)
+    b.setOnClickListener(this)
+    linearLayout.addView(b)
+  }
+
+  override def onClick (view: View) {
+    Log.d("ALLACCA", "clicked")
   }
 }
 
