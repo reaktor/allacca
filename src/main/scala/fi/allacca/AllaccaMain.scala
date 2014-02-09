@@ -101,7 +101,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
       val layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
       layoutParams.addRule(RelativeLayout.RIGHT_OF, view.getId - 1)
       view.setLayoutParams(layoutParams)
-      view.setTextSize(dimensions.overviewTextSizePx)
+      view.setTextSize(dimensions.overviewHeaderTextSize)
       view.setText(c)
       view
     }

@@ -4,10 +4,9 @@ import android.widget._
 import android.content.ContentUris
 import org.joda.time.{Weeks, DateTime}
 import fi.allacca.dates.YearAndWeek
-import android.view.{ViewGroup, View}
+import android.view.{Gravity, ViewGroup, View}
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
-import android.util.TypedValue
 import android.provider.CalendarContract
 import android.database.Cursor
 import android.app.Activity
@@ -46,10 +45,10 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
       dayView.setText(dayNumber)
       dayView.setTextColor(Color.WHITE)
       dayView.setBackgroundColor(if (hasEvents) dimensions.governorBay else Color.BLACK)
-      dayView.setTextSize(dimensions.overviewTextSizePx / 2)
+      dayView.setTextSize(dimensions.overviewContentTextSize)
+      dayView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
       dayView.setHeight(dimensions.weekRowHeight)
       dayView.setWidth(dimensions.dayColumnWidth)
-
 
       dayView.setId(id)
       id = id + 1
@@ -61,7 +60,8 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
     weekNumberView.setWidth(dimensions.weekNumberWidth)
     weekNumberView.setHeight(dimensions.weekRowHeight)
     weekNumberView.setText(yearAndWeek.week.toString)
-    weekNumberView.setTextSize(dimensions.overviewTextSizePx / 2)
+    weekNumberView.setTextSize(dimensions.overviewContentTextSize)
+    weekNumberView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
     wholeLineLayout.addView(weekNumberView)
 
     dayViews.foreach { dayView => wholeLineLayout.addView(dayView) }
