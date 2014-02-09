@@ -9,6 +9,7 @@ import android.view.ViewGroup.LayoutParams
 import android.util.Log
 import java.text.DateFormatSymbols
 import java.util.Calendar
+import android.content.Intent
 
 
 class AllaccaMain extends Activity with TypedViewHolder {
@@ -47,7 +48,10 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def createNewEvent (view: View) {
-    Log.d("ALLACCA", "+ createNewEvent")
+    Log.d(TAG, "+ createNewEvent")
+    val intent = new Intent(this, classOf[EditEventActivity])
+    intent.putExtra(EVENT_ID, None) //We're creating a new event -> no ID yet
+    startActivity(intent)
   }
 
   private def createDayColumnTitles(firstId: Int): Seq[View] = {
