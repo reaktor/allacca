@@ -16,7 +16,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     textView.setId(1)
     textView.setText("Hello")
     val linearLayout = new LinearLayout(this)
-    val relativeParams = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT)
+    val relativeParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
     relativeParams.addRule(RelativeLayout.ALIGN_PARENT_TOP)
     linearLayout.addView(textView)
     addAEventButton(linearLayout)
