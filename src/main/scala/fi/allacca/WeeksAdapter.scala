@@ -101,15 +101,14 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
     ContentUris.appendId(builder, week.lastDay.withTimeAtStartOfDay.getMillis)
     val cursor: Cursor = activity.getContentResolver.query(builder.build(), projection, "", Array(), "")
     val results = new collection.mutable.MutableList[CalendarEvent]
-    if (cursor.moveToFirst()) {
-      do {
+    while (cursor.moveToNext()) {
         val title = cursor.getString(1)
         val start = cursor.getLong(2)
         val end = cursor.getLong(3)
         val description = cursor.getString(4)
         results += new CalendarEvent(title, start, end, description)
-      } while (cursor.moveToNext())
-      results
-    } else Nil
+    }
+    cursor.close()
+    results
   }
 }
