@@ -76,9 +76,13 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
       weekNumberView.setText(yearAndWeek.week.toString)
       weekNumberView.setTextSize(dimensions.overviewContentTextSize)
       weekNumberView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
-      wholeLineLayout.addView(weekNumberView)
 
-      dayViews.foreach { dayView => wholeLineLayout.addView(dayView) }
+      wholeLineLayout.post(new Runnable {
+        def run(): Unit = {
+          wholeLineLayout.addView(weekNumberView)
+          dayViews.foreach { dayView => wholeLineLayout.addView(dayView) }
+        }
+      })
     }
     wholeLineLayout.getRootView
   }
