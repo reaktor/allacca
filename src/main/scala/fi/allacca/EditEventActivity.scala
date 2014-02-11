@@ -6,7 +6,7 @@ import android.util.{TypedValue, Log}
 import android.widget._
 import android.view.ViewGroup.LayoutParams
 import android.text.{InputFilter, InputType}
-import fi.allacca.ui.util.TextValidator
+import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -45,12 +45,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     dayField.setHint("DD")
     dayField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
     dayField.setInputType(InputType.TYPE_CLASS_NUMBER)
-    dayField.addTextChangedListener(new TextValidator(dayField){
-      def validate(textView: TextView, text: String): Unit = {
-        Log.i(TAG, "text validator called")
-        textView.setTextColor(Color.RED)
-      }
-    })
+
+    dayField.addTextChangedListener({ x:String => Log.i(TAG, s"Got string $x"); dayField.setTextColor(Color.RED) })
+
     editLayout.addView(dayField)
 
     val monthField = new EditText(this)
@@ -68,4 +65,5 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()))
+
 }
