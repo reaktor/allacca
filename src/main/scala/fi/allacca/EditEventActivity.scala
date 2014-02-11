@@ -6,6 +6,8 @@ import android.util.{TypedValue, Log}
 import android.widget._
 import android.view.ViewGroup.LayoutParams
 import android.text.{InputFilter, InputType}
+import fi.allacca.ui.util.TextValidator
+import android.graphics.Color
 
 class EditEventActivity extends Activity with TypedViewHolder {
   private val idGenerator = new IdGenerator
@@ -40,9 +42,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val dayFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
     dayFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
     dayField.setLayoutParams(dayFieldParams)
-    dayField.setHint("Day")
+    dayField.setHint("DD")
     dayField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
     dayField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    dayField.addTextChangedListener(new TextValidator(dayField){
+      def validate(textView: TextView, text: String): Unit = {
+        Log.i(TAG, "text validator called")
+        textView.setTextColor(Color.RED)
+      }
+    })
     editLayout.addView(dayField)
 
     val monthField = new EditText(this)
@@ -51,7 +59,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     monthFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
     monthFieldParams.addRule(RelativeLayout.RIGHT_OF, dayField.getId)
     monthField.setLayoutParams(monthFieldParams)
-    monthField.setHint("Month3")
+    monthField.setHint("MM")
     monthField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
     monthField.setInputType(InputType.TYPE_CLASS_NUMBER)
     editLayout.addView(monthField)
