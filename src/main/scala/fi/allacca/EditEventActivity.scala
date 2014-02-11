@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.{TypedValue, Log}
 import android.widget._
 import android.view.ViewGroup.LayoutParams
-import android.text.InputType
+import android.text.{InputFilter, InputType}
 
 class EditEventActivity extends Activity with TypedViewHolder {
   private val idGenerator = new IdGenerator
@@ -37,12 +37,24 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
     val dayField = new EditText(this)
     dayField.setId(idGenerator.nextId)
-    val dayFieldParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+    val dayFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
     dayFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
     dayField.setLayoutParams(dayFieldParams)
-    dayField.setHint("day")
+    dayField.setHint("Day")
+    dayField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
     dayField.setInputType(InputType.TYPE_CLASS_NUMBER)
     editLayout.addView(dayField)
+
+    val monthField = new EditText(this)
+    monthField.setId(idGenerator.nextId)
+    val monthFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
+    monthFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
+    monthFieldParams.addRule(RelativeLayout.RIGHT_OF, dayField.getId)
+    monthField.setLayoutParams(monthFieldParams)
+    monthField.setHint("Month3")
+    monthField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
+    monthField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    editLayout.addView(monthField)
 
     setContentView(editLayout)
   }
