@@ -14,6 +14,9 @@ import android.content.Intent
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
+  private lazy val weeksList = new ListView(this)
+  private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
+  private val idGenerator = new IdGenerator
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -22,13 +25,14 @@ class AllaccaMain extends Activity with TypedViewHolder {
     val cornerView = createTopLeftCornerView
     mainLayout.addView(cornerView)
 
-    val titles = createDayColumnTitles(cornerView.getId + 1)
+    val titles = createDayColumnTitles()
     titles.foreach { mainLayout.addView }
 
     val weeksList = createWeeksList(cornerView)
     mainLayout.addView(weeksList)
 
-    addAEventButton(mainLayout)
+    val addEventButton = addAEventButton(mainLayout)
+    addGotoNowButton(mainLayout, addEventButton.getId)
 
     setContentView(mainLayout)
   }
@@ -43,7 +47,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   private def createTopLeftCornerView: View = {
     val cornerView = new TextView(this)
-    cornerView.setId(1)
+    cornerView.setId(idGenerator.nextId)
     cornerView.setText("Hello")
     cornerView.setWidth(dimensions.weekNumberWidth)
     cornerView.setHeight(dimensions.weekRowHeight)
@@ -51,8 +55,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def createWeeksList(cornerView: View): View = {
-    val weeksList = new ListView(this)
-    val weeksAdapter = new WeeksAdapter(this, dimensions)
+    weeksList.setId(idGenerator.nextId)
     weeksList.setAdapter(weeksAdapter)
     weeksList.setSelection(weeksAdapter.positionOfNow)
     val weeksListParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
@@ -62,8 +65,9 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksList
   }
 
-  private def addAEventButton(layout: ViewGroup) {
+  private def addAEventButton(layout: ViewGroup): Button = {
     val b = new Button(this)
+    b.setId(idGenerator.nextId)
     val params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
     b.setLayoutParams(params)
@@ -71,6 +75,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     b.setTextColor(Color.WHITE)
     b.setOnClickListener(createNewEvent _)
     layout.addView(b)
+    b
   }
 
   def createNewEvent (view: View) {
@@ -80,8 +85,24 @@ class AllaccaMain extends Activity with TypedViewHolder {
     startActivity(intent)
   }
 
-  private def createDayColumnTitles(firstId: Int): Seq[View] = {
-    var id = firstId
+  private def addGotoNowButton(layout: ViewGroup, leftSideId: Int) {
+    val b = new Button(this)
+    b.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+    params.addRule(RelativeLayout.RIGHT_OF, leftSideId)
+    b.setLayoutParams(params)
+    b.setText("Now")
+    b.setTextColor(Color.WHITE)
+    b.setOnClickListener(gotoNow _)
+    layout.addView(b)
+  }
+
+  def gotoNow(view: View) {
+    weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
+  }
+
+  private def createDayColumnTitles(): Seq[View] = {
     val shortWeekDays = new DateFormatSymbols().getShortWeekdays
     val weekDayInitials = List(
       shortWeekDays(Calendar.MONDAY),
@@ -94,8 +115,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     ).map { _.charAt(0).toString }
     weekDayInitials.map { c =>
       val view = new TextView(this)
-      view.setId(id)
-      id = id + 1
+      view.setId(idGenerator.nextId)
       view.setWidth(dimensions.dayColumnWidth)
       view.setHeight(dimensions.weekRowHeight)
       val layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -104,6 +124,14 @@ class AllaccaMain extends Activity with TypedViewHolder {
       view.setTextSize(dimensions.overviewHeaderTextSize)
       view.setText(c)
       view
+    }
+  }
+
+  private class IdGenerator {
+    private var id: Int = 0
+    def nextId: Int = {
+      id = id + 1
+      id
     }
   }
 }
