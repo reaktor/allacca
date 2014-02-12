@@ -72,31 +72,30 @@ class EditEventActivity extends Activity with TypedViewHolder {
     yearField.setInputType(InputType.TYPE_CLASS_NUMBER)
     editLayout.addView(yearField)
 
-    val hourField = new EditText(this)
-    hourField.setId(idGenerator.nextId)
-    val hourFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
-    hourFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
-    hourFieldParams.addRule(RelativeLayout.RIGHT_OF, yearField.getId)
-    hourField.setLayoutParams(hourFieldParams)
-    hourField.setHint("h")
-    hourField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
-    hourField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    val hourField = addTextField(50, 2, "h", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, yearField.getId))
     editLayout.addView(hourField)
 
-    val minuteField = new EditText(this)
-    minuteField.setId(idGenerator.nextId)
-    val minuteFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
-    minuteFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
-    minuteFieldParams.addRule(RelativeLayout.RIGHT_OF, hourField.getId)
-    minuteField.setLayoutParams(minuteFieldParams)
-    minuteField.setHint("m")
-    minuteField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
-    minuteField.setInputType(InputType.TYPE_CLASS_NUMBER)
+
+    val minuteField = addTextField(50, 2, "m", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, hourField.getId))
     editLayout.addView(minuteField)
 
     setContentView(editLayout)
   }
 
-  def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()))
+  private def addTextField(widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
+    val textField = new EditText(this)
+    textField.setId(idGenerator.nextId)
+    val textFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
+    layoutParamRules.foreach { rule =>
+      textFieldParams.addRule(rule._1, rule._2)
+    }
+    textField.setLayoutParams(textFieldParams)
+    textField.setHint(hint)
+    textField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(inputLength)))
+    textField.setInputType(inputType)
+    textField
+  }
+
+  private def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()))
 
 }
