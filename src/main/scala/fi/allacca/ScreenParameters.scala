@@ -11,6 +11,8 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val overviewHeaderTextSize = 30
   val overviewContentTextSize = 20
 
+  val weekListWidth = weekNumberWidth + (7 * dayColumnWidth)
+
   val governorBay = Color.parseColor("#a22fbb")
   val pavlova = Color.parseColor("#bba378")
   val funBlue = Color.parseColor("#2e4d7c")

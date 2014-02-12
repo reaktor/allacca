@@ -4,7 +4,7 @@ import android.app._
 import android.os.Bundle
 import android.widget._
 import android.view.{View, ViewGroup}
-import android.graphics.Color
+import android.graphics.{Point, Color}
 import android.view.ViewGroup.LayoutParams
 import android.util.Log
 import java.text.DateFormatSymbols
@@ -30,6 +30,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
     val weeksList = createWeeksList(cornerView)
     mainLayout.addView(weeksList)
+
+    createAgenda(weeksList, mainLayout)
 
     val addEventButton = addAEventButton(mainLayout)
     addGotoNowButton(mainLayout, addEventButton.getId)
@@ -58,11 +60,29 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksList.setId(idGenerator.nextId)
     weeksList.setAdapter(weeksAdapter)
     weeksList.setSelection(weeksAdapter.positionOfNow)
-    val weeksListParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+    val weeksListParams = new RelativeLayout.LayoutParams(dimensions.weekListWidth, LayoutParams.WRAP_CONTENT)
     weeksListParams.addRule(RelativeLayout.BELOW, cornerView.getId)
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
     weeksList.setLayoutParams(weeksListParams)
     weeksList
+  }
+
+  private def screenSize: Point = {
+    val display = getWindowManager.getDefaultDisplay
+    val size = new Point()
+    display.getSize(size)
+    size
+  }
+
+  def createAgenda(leftSide: View, mainLayout: RelativeLayout): Unit = {
+    val agenda = new AgendaFragment
+    val agendaLayout = new LinearLayout(this)
+    val layoutParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
+    layoutParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
+    agendaLayout.setLayoutParams(layoutParams)
+    agendaLayout.setId(idGenerator.nextId)
+    getFragmentManager.beginTransaction().add(agendaLayout.getId, agenda).commit()
+    mainLayout.addView(agendaLayout)
   }
 
   private def addAEventButton(layout: ViewGroup): Button = {
