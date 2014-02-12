@@ -8,15 +8,13 @@ import android.view.View.OnClickListener
  * import fi.allacca._
  */
 package object allacca {
-
   //For logging
   def TAG = "ALLACCA"
 
   //Intent keys
   def EVENT_ID = "fi.allacca.eventID"
 
-  implicit def func2OnClickListener( f: View => Unit ) =
-    new  OnClickListener() {
-      def onClick( evt: View ) = f(evt)
-    }
+  implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
+    def onClick(evt: View) = f(evt)
+  }
 }
