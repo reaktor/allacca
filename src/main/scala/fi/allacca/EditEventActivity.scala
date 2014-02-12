@@ -22,7 +22,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
     val header = new TextView(this)
     header.setId(idGenerator.nextId)
-    header.setText("Event details")
+    header.setText("Event name")
     val params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     header.setLayoutParams(params)
     editLayout.addView(header)
@@ -37,44 +37,19 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventNameField.setInputType(InputType.TYPE_CLASS_TEXT)
     editLayout.addView(eventNameField)
 
-    val dayField = new EditText(this)
-    dayField.setId(idGenerator.nextId)
-    val dayFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
-    dayFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
-    dayField.setLayoutParams(dayFieldParams)
-    dayField.setHint("d")
-    dayField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
-    dayField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    val dayField = addTextField(50, 2, "d", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId))
+    editLayout.addView(dayField)
 
     dayField.addTextChangedListener({ x:String => Log.i(TAG, s"Got string $x"); dayField.setTextColor(Color.RED) })
 
-    editLayout.addView(dayField)
-
-    val monthField = new EditText(this)
-    monthField.setId(idGenerator.nextId)
-    val monthFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
-    monthFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
-    monthFieldParams.addRule(RelativeLayout.RIGHT_OF, dayField.getId)
-    monthField.setLayoutParams(monthFieldParams)
-    monthField.setHint("m")
-    monthField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(2)))
-    monthField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    val monthField = addTextField(50, 2, "m", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, dayField.getId))
     editLayout.addView(monthField)
 
-    val yearField = new EditText(this)
-    yearField.setId(idGenerator.nextId)
-    val yearFieldParams = new RelativeLayout.LayoutParams(dip2px(65), LayoutParams.WRAP_CONTENT)
-    yearFieldParams.addRule(RelativeLayout.BELOW, eventNameField.getId)
-    yearFieldParams.addRule(RelativeLayout.RIGHT_OF, monthField.getId)
-    yearField.setLayoutParams(yearFieldParams)
-    yearField.setHint("year")
-    yearField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(4)))
-    yearField.setInputType(InputType.TYPE_CLASS_NUMBER)
+    val yearField = addTextField(65, 4, "year", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, monthField.getId))
     editLayout.addView(yearField)
 
     val hourField = addTextField(50, 2, "h", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, yearField.getId))
     editLayout.addView(hourField)
-
 
     val minuteField = addTextField(50, 2, "m", InputType.TYPE_CLASS_NUMBER, (RelativeLayout.BELOW, eventNameField.getId), (RelativeLayout.RIGHT_OF, hourField.getId))
     editLayout.addView(minuteField)
@@ -85,7 +60,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private def addTextField(widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
     val textField = new EditText(this)
     textField.setId(idGenerator.nextId)
-    val textFieldParams = new RelativeLayout.LayoutParams(dip2px(50), LayoutParams.WRAP_CONTENT)
+    val textFieldParams = new RelativeLayout.LayoutParams(dip2px(widthDip), LayoutParams.WRAP_CONTENT)
     layoutParamRules.foreach { rule =>
       textFieldParams.addRule(rule._1, rule._2)
     }
