@@ -74,7 +74,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private def startDateValidator(x: String) {
     println("start date validator")
     Log.i(TAG, s"start date validator dayField value:"); //dayField.setTextColor(Color.RED)
-    Log.i(TAG, dayField.getText().toString)
+    Log.i(TAG, dayField.getText.toString)
   }
 
   private def addTextField(widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
@@ -91,6 +91,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     textField
   }
 
-  private def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()))
+  private def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources.getDisplayMetrics))
 
 }
