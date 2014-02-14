@@ -2,6 +2,7 @@ package fi
 
 import android.view.View
 import android.view.View.OnClickListener
+import org.joda.time.LocalDate
 
 /*
  * When your code is not in allacca-package, but you need these definitions, do this import:
@@ -17,4 +18,6 @@ package object allacca {
   implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
     def onClick(evt: View) = f(evt)
   }
+
+  implicit def localDateToEpochMillis(localDate: LocalDate): Long = localDate.toDate.getTime
 }

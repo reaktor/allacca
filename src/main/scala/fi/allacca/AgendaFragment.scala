@@ -10,11 +10,13 @@ import android.content.{Context, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
+import org.joda.time.LocalDate
 
 class AgendaFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cursor] {
   private val ids = new IdGenerator
   private lazy val activity = getActivity
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
+  private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(20))
 
   private val VIEW_ID_TITLE = 1
 
@@ -35,6 +37,21 @@ class AgendaFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cur
       val title = cursor.getString(1)
       view.findViewById(VIEW_ID_TITLE).asInstanceOf[TextView].setText(title)
     }
+
+    override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
+      if (position == 0) {
+        displayRange = (displayRange._1.minusDays(10), displayRange._2.minusDays(5))
+        getLoaderManager.restartLoader(0, null, AgendaFragment.this)
+        notifyDataSetChanged()
+      }
+      if (position >= getCount) {
+        displayRange = (displayRange._1.plusDays(5), displayRange._2.plusDays(10))
+        getLoaderManager.restartLoader(0, null, AgendaFragment.this)
+        notifyDataSetChanged()
+
+      }
+      super.getView(position, convertView, parent)
+    }
   }
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle): View = {
@@ -52,9 +69,9 @@ class AgendaFragment extends ListFragment with LoaderManager.LoaderCallbacks[Cur
 
   override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
     val builder = CalendarContract.Instances.CONTENT_URI.buildUpon
-    ContentUris.appendId(builder, System.currentTimeMillis)
-    ContentUris.appendId(builder, System.currentTimeMillis() + 20 * 24 * 60 * 60 * 1000)
-
+    ContentUris.appendId(builder, displayRange._1)
+    ContentUris.appendId(builder, displayRange._2)
+    Log.d(TAG, "Gonna load " + displayRange)
     new CursorLoader(activity, builder.build, Array("_id", "title"), "", null, null)
   }
 
