@@ -23,6 +23,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val header = createHeader()
 
   private lazy val startDateTimeField = new DateTimeField(eventNameField.getId, this)
+  private lazy val endDateTimeField = new DateTimeField(startDateTimeField.lastElementId, this)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -34,6 +35,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.setLayoutParams(mainLayoutParams)
 
     startDateTimeField.init(editLayout)
+    endDateTimeField.init(editLayout)
 
     editLayout.addView(header)
     editLayout.addView(eventNameField)
@@ -127,5 +129,7 @@ class DateTimeField(placeBelowFieldId: Int, val context: Context) {
       }
     }
   }
+
+  def lastElementId = minuteField.getId
 
 }
