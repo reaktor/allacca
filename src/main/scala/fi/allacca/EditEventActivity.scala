@@ -12,8 +12,9 @@ import android.text.InputType.TYPE_CLASS_TEXT
 import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
-import android.content.Context
+import android.content.{Intent, Context}
 import org.joda.time.{IllegalFieldValueException, DateTime}
+import android.view.{View, ViewGroup}
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
@@ -42,6 +43,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(endTimeHeader)
     endDateTimeField.init(editLayout)
 
+    val okButton = createSaveEventButton
+    editLayout.addView(okButton)
+
     setContentView(editLayout)
   }
 
@@ -66,6 +70,30 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventNameField.setInputType(TYPE_CLASS_TEXT)
     eventNameField
   }
+
+  private def createSaveEventButton: Button = {
+    val button = new Button(this)
+    button.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+    button.setLayoutParams(params)
+    button.setText("OK")
+    button.setTextColor(Color.WHITE)
+    button.setOnClickListener(saveEvent _)
+    button
+  }
+
+  def isValid = !eventNameField.getText.toString.isEmpty && startDateTimeField.isValid && endDateTimeField.isValid
+
+  def saveEvent (view: View) {
+    val eventName = eventNameField.getText.toString
+    if (isValid) {
+      Log.i(TAG, s"all valid, let's save: $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
+    } else {
+      Log.i(TAG, s"What's not valid? event name valid ${eventName} start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
+    }
+  }
+  
 }
 
 object EditEventActivity {
