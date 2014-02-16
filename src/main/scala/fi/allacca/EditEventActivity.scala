@@ -13,7 +13,7 @@ import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{Intent, Context}
-import org.joda.time.{IllegalFieldValueException, DateTime}
+import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.{View, ViewGroup}
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -24,9 +24,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameHeader = createHeader("Event name")
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
-  private lazy val startDateTimeField = new DateTimeField(startTimeHeader.getId, this, okButtonController)
+  private lazy val startDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)), startTimeHeader.getId, this, okButtonController)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
-  private lazy val endDateTimeField = new DateTimeField(endTimeHeader.getId, this, okButtonController)
+  private lazy val endDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)).plusHours(1), endTimeHeader.getId, this, okButtonController)
   private lazy val okButton = createOkButton
 
   val HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED: Long = 1
@@ -151,8 +151,8 @@ object EditEventActivity {
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics()))
 }
 
-class DateTimeField(placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
-  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId/*eventNameField.getId*/))
+class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
+  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
   val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, yearField.getId))
@@ -160,6 +160,7 @@ class DateTimeField(placeBelowFieldId: Int, val context: Context, changeListener
   val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
   def init(editLayout: RelativeLayout) {
+    prePopulateFields(prepopulate)
     fields.foreach { field =>
       editLayout.addView(field)
       field.addTextChangedListener(validate _)
@@ -200,5 +201,13 @@ class DateTimeField(placeBelowFieldId: Int, val context: Context, changeListener
   }
 
   def lastElementId = minuteField.getId
+
+  private def prePopulateFields(prepopulate: DateTime) {
+    dayField.setText(prepopulate.getDayOfMonth.toString)
+    monthField.setText(prepopulate.getMonthOfYear.toString)
+    yearField.setText(prepopulate.getYear.toString)
+    hourField.setText(prepopulate.getHourOfDay.toString)
+    minuteField.setText(prepopulate.getMinuteOfHour.toString)
+  }
 
 }
