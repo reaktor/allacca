@@ -21,7 +21,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameHeader = createHeader("Event name")
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
-  private lazy val startDateTimeField = new DateTimeField(eventNameField.getId, this)
+  private lazy val startDateTimeField = new DateTimeField(startTimeHeader.getId, this)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(endTimeHeader.getId, this)
 
