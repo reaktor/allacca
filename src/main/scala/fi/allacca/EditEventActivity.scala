@@ -14,6 +14,7 @@ import android.widget.RelativeLayout.RIGHT_OF
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.Context
+import org.joda.time.{IllegalFieldValueException, DateTime}
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
@@ -86,17 +87,44 @@ class DateTimeField(placeBelowFieldId: Int, val context: Context) {
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
   val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, yearField.getId))
   val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
+  val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
   def init(editLayout: RelativeLayout) {
-    def startDateValidator(x: String) {
-      println("start date validator")
-      Log.i(TAG, s"start date validator dayField value:"); //dayField.setTextColor(Color.RED)
-      Log.i(TAG, dayField.getText().toString)
-    }
-
-    List(dayField, monthField, yearField, hourField, minuteField).foreach { field =>
+    fields.foreach { field =>
       editLayout.addView(field)
-      field.addTextChangedListener(startDateValidator _)
+      field.addTextChangedListener(validate _)
+    }
+  }
+
+  def getDateTime: DateTime = {
+    def intValue(editText: EditText) = {
+      editText.getText.toString.toInt
+    }
+    new DateTime(intValue(yearField), intValue(monthField), intValue(dayField), intValue(hourField), intValue(minuteField), 0, 0)
+  }
+
+  def isValid: Boolean = {
+    try {
+      getDateTime //Will throw the exceptions below if not valid
+      true
+    } catch {
+      case e: NumberFormatException =>
+        false
+      case e: IllegalFieldValueException =>
+        false
+    }
+  }
+
+  def validate(x: String) {
+    Log.i(TAG, s"** valid $isValid **")
+    if (isValid) {
+      fields.foreach { field =>
+        field.setTextColor(Color.WHITE)
+      }
+    } else {
+      fields.foreach { field =>
+        field.setTextColor(Color.RED)
+      }
     }
   }
 
