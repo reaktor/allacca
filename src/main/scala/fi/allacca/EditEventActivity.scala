@@ -17,6 +17,7 @@ import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.{View, ViewGroup}
 import scala.Array
 import android.provider.CalendarContract.Calendars
+import android.database.Cursor
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
@@ -65,20 +66,20 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   def createCalendarSelection = {
-
-    val calendarSelection = new Spinner(this)
-
-    val queryCols = Array[String] ("_id", Calendars.NAME)
-    val calCursor = getContentResolver().query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
-
-    var calendars = Array[SpinnerCalendarModel]()
-    calCursor.moveToFirst()
-    do {
+    def getCalendars(calCursor: Cursor, calendars: Array[SpinnerCalendarModel]): Array[SpinnerCalendarModel] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
-      Log.i(TAG, s"calendar $id $displayName")
-      calendars = calendars :+ new SpinnerCalendarModel(id, displayName)
-    } while (calCursor.moveToNext())
+      val currCalendar = new SpinnerCalendarModel(id, displayName)
+      val newCalendars = calendars :+ currCalendar
+      if (calCursor.moveToNext()) getCalendars(calCursor, newCalendars) else newCalendars
+    }
+
+    val calendarSelection = new Spinner(this)
+    val queryCols = Array[String] ("_id", Calendars.NAME)
+    val calCursor: Cursor = getContentResolver().query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
+
+    calCursor.moveToFirst()
+    val calendars = getCalendars(calCursor, Array())
 
     val spinnerArrayAdapter: ArrayAdapter[SpinnerCalendarModel] = new ArrayAdapter[SpinnerCalendarModel](this, android.R.layout.simple_spinner_dropdown_item, calendars)
     calendarSelection.setAdapter(spinnerArrayAdapter)
@@ -88,6 +89,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     calendarSelection.setLayoutParams(layoutParams)
     calendarSelection
+
   }
 
   private def okButtonController(text: String = "") {
