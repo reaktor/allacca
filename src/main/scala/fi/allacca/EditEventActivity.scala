@@ -13,17 +13,15 @@ import android.widget.RelativeLayout.BELOW
 import android.widget.RelativeLayout.RIGHT_OF
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
+import android.content.Context
 
 class EditEventActivity extends Activity with TypedViewHolder {
-  private val idGenerator = new IdGenerator
+  import EditEventActivity._
 
   private lazy val eventNameField = createEventNameField()
   private lazy val header = createHeader()
-  private lazy val dayField = addTextField(50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, eventNameField.getId))
-  private lazy val monthField = addTextField(50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, eventNameField.getId), (RIGHT_OF, dayField.getId))
-  private lazy val yearField = addTextField(65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, eventNameField.getId), (RIGHT_OF, monthField.getId))
-  private lazy val hourField = addTextField(50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, eventNameField.getId), (RIGHT_OF, yearField.getId))
-  private lazy val minuteField = addTextField(50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, eventNameField.getId), (RIGHT_OF, hourField.getId))
+
+  private lazy val startDateTimeField = new DateTimeField(eventNameField.getId, this)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -31,23 +29,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
     val editLayout = new RelativeLayout(this)
     val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-    editLayout.setPadding(dip2px(16), 0, dip2px(16), 0)
+    editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
     editLayout.setLayoutParams(mainLayoutParams)
 
-    initStartDateFields(editLayout)
+    startDateTimeField.init(editLayout)
 
     editLayout.addView(header)
     editLayout.addView(eventNameField)
 
     setContentView(editLayout)
-  }
-
-
-  def initStartDateFields(editLayout: RelativeLayout) {
-    List(dayField, monthField, yearField, hourField, minuteField).foreach { field =>
-      editLayout.addView(field)
-      field.addTextChangedListener(startDateValidator _)
-    }
   }
 
   private def createHeader() = {
@@ -70,17 +60,14 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventNameField.setInputType(TYPE_CLASS_TEXT)
     eventNameField
   }
+}
 
-  private def startDateValidator(x: String) {
-    println("start date validator")
-    Log.i(TAG, s"start date validator dayField value:"); //dayField.setTextColor(Color.RED)
-    Log.i(TAG, dayField.getText.toString)
-  }
-
-  private def addTextField(widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
-    val textField = new EditText(this)
+object EditEventActivity {
+  val idGenerator = new IdGenerator
+  def addTextField(context: Context, widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
+    val textField = new EditText(context)
     textField.setId(idGenerator.nextId)
-    val textFieldParams = new RelativeLayout.LayoutParams(dip2px(widthDip), WRAP_CONTENT)
+    val textFieldParams = new RelativeLayout.LayoutParams(dip2px(widthDip, context), WRAP_CONTENT)
     layoutParamRules.foreach { rule =>
       textFieldParams.addRule(rule._1, rule._2)
     }
@@ -90,7 +77,27 @@ class EditEventActivity extends Activity with TypedViewHolder {
     textField.setInputType(inputType)
     textField
   }
+  def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics()))
+}
 
-  private def dip2px(dip: Float): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources.getDisplayMetrics))
+class DateTimeField(placeBelowFieldId: Int, val context: Context) {
+  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId/*eventNameField.getId*/))
+  val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
+  val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
+  val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, yearField.getId))
+  val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
+
+  def init(editLayout: RelativeLayout) {
+    def startDateValidator(x: String) {
+      println("start date validator")
+      Log.i(TAG, s"start date validator dayField value:"); //dayField.setTextColor(Color.RED)
+      Log.i(TAG, dayField.getText().toString)
+    }
+
+    List(dayField, monthField, yearField, hourField, minuteField).foreach { field =>
+      editLayout.addView(field)
+      field.addTextChangedListener(startDateValidator _)
+    }
+  }
 
 }
