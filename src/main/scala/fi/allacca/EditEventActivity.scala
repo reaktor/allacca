@@ -55,9 +55,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(cancelButton)
 
     setContentView(editLayout)
+
+    okButtonController()
   }
 
-  private def okButtonController(text: String) {
+  private def okButtonController(text: String = "") {
     Log.i(TAG, s"Setting ok button enabled status to $isValid")
     okButton.setEnabled(isValid)
   }
