@@ -100,11 +100,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
     button.setLayoutParams(params)
     button.setText("←")
     button.setTextColor(Color.WHITE)
+    button.setOnClickListener(cancel _)
     button
   }
 
   def isValid = !eventNameField.getText.toString.isEmpty && startDateTimeField.isValid && endDateTimeField.isValid
 
+  def cancel(view: View) {
+    onBackPressed()
+  }
 
   def saveEvent (view: View) {
     val eventName = eventNameField.getText.toString
