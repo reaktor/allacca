@@ -119,6 +119,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
       calendarEventService.createEvent(HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED, eventToSave)
       Log.i(TAG, "SAVED!")
+      onBackPressed()
     } else {
       Log.i(TAG, s"What's not valid? event name valid ${eventName} start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
     }
