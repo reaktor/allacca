@@ -18,6 +18,7 @@ import android.view.{View, ViewGroup}
 import scala.Array
 import android.provider.CalendarContract.Calendars
 import android.database.Cursor
+import android.widget.AdapterView.OnItemSelectedListener
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
@@ -32,8 +33,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)).plusHours(1), endTimeHeader.getId, this, okButtonController)
   private lazy val okButton = createOkButton
-
-  val HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED: Long = 1
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -89,7 +88,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     calendarSelection.setLayoutParams(layoutParams)
     calendarSelection
-
   }
 
   private def okButtonController(text: String = "") {
@@ -154,11 +152,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
   def saveEvent (view: View) {
     val eventName = eventNameField.getText.toString
     if (isValid) {
-      Log.i(TAG, s"all valid, let's save: $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
       val startMillis = startDateTimeField.getDateTime.toDate.getTime
       val endMillis = endDateTimeField.getDateTime.toDate.getTime
       val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
-      calendarEventService.createEvent(HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED, eventToSave)
+      val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[SpinnerCalendarModel]
+      Log.i(TAG, s"all valid, let's save: ${selectedCalendar.id} $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
+      calendarEventService.createEvent(selectedCalendar.id, eventToSave)
       Log.i(TAG, "SAVED!")
       onBackPressed()
     } else {
