@@ -9,7 +9,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.text.InputFilter
 import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_CLASS_TEXT
-import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF}
+import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{Intent, Context}
@@ -47,11 +47,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(endTimeHeader)
     endDateTimeField.init(editLayout)
 
-    val cancelButton = createCancelButton
-    editLayout.addView(cancelButton)
-
-    val okButton = createOkButton(cancelButton.getId)
+    val okButton = createOkButton
     editLayout.addView(okButton)
+
+    val cancelButton = createCancelButton(okButton.getId)
+    editLayout.addView(cancelButton)
 
     setContentView(editLayout)
   }
@@ -78,12 +78,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventNameField
   }
 
-  private def createOkButton(rightOf: Int): Button = {
+  private def createOkButton: Button = {
     val button = new Button(this)
     button.setId(idGenerator.nextId)
     val params = new RelativeLayout.LayoutParams(dip2px(50, this), WRAP_CONTENT)
-    params.addRule(RIGHT_OF, rightOf)
     params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
     button.setLayoutParams(params)
     button.setText("✔")
     button.setTextColor(Color.WHITE)
@@ -91,10 +91,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
     button
   }
 
-  private def createCancelButton: Button = {
+  private def createCancelButton(leftOfId: Int): Button = {
     val button = new Button(this)
     button.setId(idGenerator.nextId)
     val params = new RelativeLayout.LayoutParams(dip2px(50, this), WRAP_CONTENT)
+    params.addRule(LEFT_OF, leftOfId)
     params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
     button.setLayoutParams(params)
     button.setText("←")
