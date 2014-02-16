@@ -47,7 +47,10 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(endTimeHeader)
     endDateTimeField.init(editLayout)
 
-    val okButton = createSaveEventButton
+    val cancelButton = createCancelButton
+    editLayout.addView(cancelButton)
+
+    val okButton = createOkButton(cancelButton.getId)
     editLayout.addView(okButton)
 
     setContentView(editLayout)
@@ -75,15 +78,27 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventNameField
   }
 
-  private def createSaveEventButton: Button = {
+  private def createOkButton(rightOf: Int): Button = {
     val button = new Button(this)
     button.setId(idGenerator.nextId)
-    val params = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    val params = new RelativeLayout.LayoutParams(dip2px(50, this), WRAP_CONTENT)
+    params.addRule(RIGHT_OF, rightOf)
     params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
     button.setLayoutParams(params)
-    button.setText("OK")
+    button.setText("✔")
     button.setTextColor(Color.WHITE)
     button.setOnClickListener(saveEvent _)
+    button
+  }
+
+  private def createCancelButton: Button = {
+    val button = new Button(this)
+    button.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(dip2px(50, this), WRAP_CONTENT)
+    params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+    button.setLayoutParams(params)
+    button.setText("←")
+    button.setTextColor(Color.WHITE)
     button
   }
 
