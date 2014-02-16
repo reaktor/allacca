@@ -24,9 +24,10 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameHeader = createHeader("Event name")
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
-  private lazy val startDateTimeField = new DateTimeField(startTimeHeader.getId, this)
+  private lazy val startDateTimeField = new DateTimeField(startTimeHeader.getId, this, okButtonController)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
-  private lazy val endDateTimeField = new DateTimeField(endTimeHeader.getId, this)
+  private lazy val endDateTimeField = new DateTimeField(endTimeHeader.getId, this, okButtonController)
+  private lazy val okButton = createOkButton
 
   val HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED: Long = 1
 
@@ -41,19 +42,24 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
+    eventNameField.addTextChangedListener(okButtonController _)
 
     editLayout.addView(startTimeHeader)
     startDateTimeField.init(editLayout)
     editLayout.addView(endTimeHeader)
     endDateTimeField.init(editLayout)
 
-    val okButton = createOkButton
     editLayout.addView(okButton)
 
     val cancelButton = createCancelButton(okButton.getId)
     editLayout.addView(cancelButton)
 
     setContentView(editLayout)
+  }
+
+  private def okButtonController(text: String) {
+    Log.i(TAG, s"Setting ok button enabled status to $isValid")
+    okButton.setEnabled(isValid)
   }
 
   private def createHeader(text: String, belowField: Option[Int] = None) = {
@@ -145,7 +151,7 @@ object EditEventActivity {
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics()))
 }
 
-class DateTimeField(placeBelowFieldId: Int, val context: Context) {
+class DateTimeField(placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
   val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId/*eventNameField.getId*/))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
@@ -157,6 +163,7 @@ class DateTimeField(placeBelowFieldId: Int, val context: Context) {
     fields.foreach { field =>
       editLayout.addView(field)
       field.addTextChangedListener(validate _)
+      field.addTextChangedListener(changeListener)
     }
   }
 
