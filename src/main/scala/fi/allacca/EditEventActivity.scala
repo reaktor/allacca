@@ -165,6 +165,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
     prePopulateFields(prepopulate)
     fields.foreach { field =>
       editLayout.addView(field)
+      field.setSelectAllOnFocus(true)
       field.addTextChangedListener(validate _)
       field.addTextChangedListener(changeListener)
     }
