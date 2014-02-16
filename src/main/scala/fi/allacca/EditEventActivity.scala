@@ -15,13 +15,16 @@ import android.graphics.Color
 import android.content.{Intent, Context}
 import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.{View, ViewGroup}
+import scala.Array
+import android.provider.CalendarContract.Calendars
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
 
   private lazy val calendarEventService = new CalendarEventService(this)
 
-  private lazy val eventNameHeader = createHeader("Event name")
+  private lazy val calendarSelection = createCalendarSelection
+  private lazy val eventNameHeader = createHeader("Event name", Some(calendarSelection.getId))
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
   private lazy val startDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)), startTimeHeader.getId, this, okButtonController)
@@ -40,6 +43,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
     editLayout.setLayoutParams(mainLayoutParams)
 
+    editLayout.addView(calendarSelection)
+
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
     eventNameField.addTextChangedListener(okButtonController _)
@@ -57,6 +62,28 @@ class EditEventActivity extends Activity with TypedViewHolder {
     setContentView(editLayout)
 
     okButtonController()
+  }
+
+  def createCalendarSelection = {
+
+    val calendarSelection = new Spinner(this)
+    /*
+    val queryCols = Array[String] ("_id", Calendars.NAME)
+    val adapterCols = Array[String] (Calendars.NAME)
+    val calCursor = getContentResolver().query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
+    val adapterRowViews: Array[Int] = new Array[Int] (android.R.id.text1)
+    val calendarCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item, calCursor, adapterCols, adapterRowViews, 0)
+    calendarSelection.setAdapter(calendarCursorAdapter)
+    */
+
+    val spinnerArrayAdapter: ArrayAdapter[String] = new ArrayAdapter[String](this, android.R.layout.simple_spinner_dropdown_item, Array("Dummy cal 1", "Dummy cal 2"))
+    calendarSelection.setAdapter(spinnerArrayAdapter)
+
+    calendarSelection.setId(idGenerator.nextId)
+
+    val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    calendarSelection.setLayoutParams(layoutParams)
+    calendarSelection
   }
 
   private def okButtonController(text: String = "") {
