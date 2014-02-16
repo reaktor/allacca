@@ -19,12 +19,16 @@ import android.view.{View, ViewGroup}
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
 
+  private lazy val calendarEventService = new CalendarEventService(this)
+
   private lazy val eventNameHeader = createHeader("Event name")
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
   private lazy val startDateTimeField = new DateTimeField(startTimeHeader.getId, this)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(endTimeHeader.getId, this)
+
+  val HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED: Long = 1
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -85,10 +89,16 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   def isValid = !eventNameField.getText.toString.isEmpty && startDateTimeField.isValid && endDateTimeField.isValid
 
+
   def saveEvent (view: View) {
     val eventName = eventNameField.getText.toString
     if (isValid) {
       Log.i(TAG, s"all valid, let's save: $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
+      val startMillis = startDateTimeField.getDateTime.toDate.getTime
+      val endMillis = endDateTimeField.getDateTime.toDate.getTime
+      val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
+      calendarEventService.createEvent(HARD_CODED_CALENDAR_ID_UNTIL_CALENDAR_SELECTION_IS_IMPLEMENTED, eventToSave)
+      Log.i(TAG, "SAVED!")
     } else {
       Log.i(TAG, s"What's not valid? event name valid ${eventName} start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
     }

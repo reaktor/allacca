@@ -5,7 +5,7 @@ import android.content.ContentValues
 import android.content.Context
 import org.joda.time.DateTime
 
-class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, val description: String, val location: String = "", val allDay: Boolean = false) {
+class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, val description: String = "", val location: String = "", val allDay: Boolean = false) {
   def isDuring(day: DateTime): Boolean = startTime >= day.getMillis && endTime < day.plusDays(1).getMillis
   override def toString = s"$title ($description) $startTime - $endTime"
 }
