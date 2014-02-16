@@ -69,23 +69,18 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val calendarSelection = new Spinner(this)
 
     val queryCols = Array[String] ("_id", Calendars.NAME)
-    val adapterCols = Array[String] (Calendars.NAME)
     val calCursor = getContentResolver().query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
 
-    var calendars = Array[String]()
+    var calendars = Array[SpinnerCalendarModel]()
     calCursor.moveToFirst()
     do {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
       Log.i(TAG, s"calendar $id $displayName")
-      calendars = calendars :+ displayName
+      calendars = calendars :+ new SpinnerCalendarModel(id, displayName)
     } while (calCursor.moveToNext())
 
-    //val adapterRowViews: Array[Int] = new Array[Int] (android.R.id.text1)
-    //val calendarCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item, calCursor, adapterCols, adapterRowViews, 0)
-    //calendarSelection.setAdapter(calendarCursorAdapter)
-
-    val spinnerArrayAdapter: ArrayAdapter[String] = new ArrayAdapter[String](this, android.R.layout.simple_spinner_dropdown_item, calendars)
+    val spinnerArrayAdapter: ArrayAdapter[SpinnerCalendarModel] = new ArrayAdapter[SpinnerCalendarModel](this, android.R.layout.simple_spinner_dropdown_item, calendars)
     calendarSelection.setAdapter(spinnerArrayAdapter)
 
     calendarSelection.setId(idGenerator.nextId)
@@ -169,6 +164,10 @@ class EditEventActivity extends Activity with TypedViewHolder {
     }
   }
   
+}
+
+class SpinnerCalendarModel(val id: Long, val name: String) {
+  override def toString = name
 }
 
 object EditEventActivity {
