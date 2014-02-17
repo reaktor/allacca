@@ -37,13 +37,35 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-    Log.d(TAG, "EditEventActivity.onCreate")
+    val editLayout = createMainLayout
+    addControls(editLayout)
+    eventNameField.addTextChangedListener(okButtonController _)
+    initDateFields(editLayout)
+    initTabOrder
+    setContentView(editLayout)
+    okButtonController()
+  }
 
+
+  private def initTabOrder {
+    eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
+    startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
+  }
+
+  private def initDateFields(editLayout: RelativeLayout) {
+    startDateTimeField.init(editLayout)
+    endDateTimeField.init(editLayout)
+  }
+
+  private def createMainLayout: RelativeLayout = {
     val editLayout = new RelativeLayout(this)
     val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
     editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
     editLayout.setLayoutParams(mainLayoutParams)
+    editLayout
+  }
 
+  private def addControls(editLayout: RelativeLayout) {
     editLayout.addView(calendarSelection)
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
@@ -51,21 +73,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(endTimeHeader)
     editLayout.addView(okButton)
     editLayout.addView(cancelButton)
-
-    eventNameField.addTextChangedListener(okButtonController _)
-
-    startDateTimeField.init(editLayout)
-    endDateTimeField.init(editLayout)
-
-    eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
-    startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
-
-    setContentView(editLayout)
-
-    okButtonController()
   }
 
-  def createCalendarSelection = {
+  private def createCalendarSelection = {
     def getCalendars(calCursor: Cursor, calendars: Array[SpinnerCalendarModel]): Array[SpinnerCalendarModel] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
