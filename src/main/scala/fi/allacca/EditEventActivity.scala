@@ -33,6 +33,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)).plusHours(1), endTimeHeader.getId, this, okButtonController)
   private lazy val okButton = createOkButton
+  private lazy val cancelButton = createCancelButton(okButton.getId)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -44,20 +45,20 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.setLayoutParams(mainLayoutParams)
 
     editLayout.addView(calendarSelection)
-
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
+    editLayout.addView(startTimeHeader)
+    editLayout.addView(endTimeHeader)
+    editLayout.addView(okButton)
+    editLayout.addView(cancelButton)
+
     eventNameField.addTextChangedListener(okButtonController _)
 
-    editLayout.addView(startTimeHeader)
     startDateTimeField.init(editLayout)
-    editLayout.addView(endTimeHeader)
     endDateTimeField.init(editLayout)
 
-    editLayout.addView(okButton)
-
-    val cancelButton = createCancelButton(okButton.getId)
-    editLayout.addView(cancelButton)
+    eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
+    startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
 
     setContentView(editLayout)
 
@@ -205,6 +206,10 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
       field.addTextChangedListener(validate _)
       field.addTextChangedListener(changeListener)
     }
+    dayField.setNextFocusDownId(monthField.getId)
+    monthField.setNextFocusDownId(yearField.getId)
+    yearField.setNextFocusDownId(hourField.getId)
+    hourField.setNextFocusDownId(minuteField.getId)
   }
 
   def getDateTime: DateTime = {
@@ -239,7 +244,9 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
     }
   }
 
+  def lastElement = minuteField
   def lastElementId = minuteField.getId
+  def firstElementId = dayField.getId
 
   private def prePopulateFields(prepopulate: DateTime) {
     dayField.setText(prepopulate.getDayOfMonth.toString)
