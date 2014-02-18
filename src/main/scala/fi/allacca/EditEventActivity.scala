@@ -9,16 +9,15 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.text.InputFilter
 import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_CLASS_TEXT
-import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF, LEFT_OF}
+import android.widget.RelativeLayout.{BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
-import android.content.{Intent, Context}
+import android.content.Context
 import org.joda.time.{Period, IllegalFieldValueException, DateTime}
-import android.view.{View, ViewGroup}
+import android.view.View
 import scala.Array
 import android.provider.CalendarContract.Calendars
 import android.database.Cursor
-import android.widget.AdapterView.OnItemSelectedListener
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
