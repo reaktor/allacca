@@ -45,12 +45,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
-  private def initTabOrder() {
+  private def initTabOrder(): Unit = {
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
   }
 
-  private def initDateFields(editLayout: RelativeLayout) {
+  private def initDateFields(editLayout: RelativeLayout): Unit = {
     startDateTimeField.init(editLayout)
     endDateTimeField.init(editLayout)
   }
@@ -63,7 +63,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout
   }
 
-  private def addControls(editLayout: RelativeLayout) {
+  private def addControls(editLayout: RelativeLayout): Unit = {
     editLayout.addView(calendarSelection)
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
@@ -73,7 +73,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(cancelButton)
   }
 
-  private def createCalendarSelection = {
+  private def createCalendarSelection: Spinner = {
     def getCalendars(calCursor: Cursor, calendars: Array[SpinnerCalendarModel]): Array[SpinnerCalendarModel] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
@@ -99,12 +99,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
     calendarSelection
   }
 
-  private def okButtonController(text: String = "") {
+  private def okButtonController(text: String = ""): Unit = {
     Log.i(TAG, s"Setting ok button enabled status to $isValid")
     okButton.setEnabled(isValid)
   }
 
-  private def createHeader(text: String, belowField: Option[Int] = None) = {
+  private def createHeader(text: String, belowField: Option[Int] = None): TextView = {
     val header = new TextView(this)
     header.setId(idGenerator.nextId)
     header.setText(text)
@@ -114,7 +114,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     header
   }
 
-  private def createEventNameField() = {
+  private def createEventNameField(): EditText = {
     val eventNameField = new EditText(this)
     eventNameField.setId(idGenerator.nextId)
     val eventNameLayoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -154,11 +154,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   def isValid = !eventNameField.getText.toString.isEmpty && startDateTimeField.isValid && endDateTimeField.isValid
 
-  def cancel(view: View) {
+  def cancel(view: View): Unit = {
     onBackPressed()
   }
 
-  def saveEvent (view: View) {
+  def saveEvent (view: View): Unit = {
     val eventName = eventNameField.getText.toString
     if (isValid) {
       val startMillis = startDateTimeField.getDateTime.toDate.getTime
@@ -205,7 +205,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
   val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
   val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
-  def init(editLayout: RelativeLayout) {
+  def init(editLayout: RelativeLayout): Unit = {
     prePopulateFields(prepopulate)
     fields.foreach { field =>
       editLayout.addView(field)
@@ -238,7 +238,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
     }
   }
 
-  def validate(x: String) {
+  def validate(x: String): Unit = {
     Log.i(TAG, s"** valid $isValid **")
     val modifier: (EditText => Unit) =
       if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
@@ -249,7 +249,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
   def lastElementId = minuteField.getId
   def firstElementId = dayField.getId
 
-  private def prePopulateFields(prepopulate: DateTime) {
+  private def prePopulateFields(prepopulate: DateTime): Unit = {
     dayField.setText(prepopulate.getDayOfMonth.toString)
     monthField.setText(prepopulate.getMonthOfYear.toString)
     yearField.setText(prepopulate.getYear.toString)
