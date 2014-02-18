@@ -240,15 +240,9 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
 
   def validate(x: String) {
     Log.i(TAG, s"** valid $isValid **")
-    if (isValid) {
-      fields.foreach { field =>
-        field.setTextColor(Color.WHITE)
-      }
-    } else {
-      fields.foreach { field =>
-        field.setTextColor(Color.RED)
-      }
-    }
+    val modifier: (EditText => Unit) =
+      if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
+    fields.foreach(modifier)
   }
 
   def lastElement = minuteField
