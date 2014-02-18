@@ -45,7 +45,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
-
   private def initTabOrder {
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
@@ -174,7 +173,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
       Log.i(TAG, s"What's not valid? event name valid ${eventName} start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
     }
   }
-  
 }
 
 class SpinnerCalendarModel(val id: Long, val name: String) {
@@ -264,5 +262,4 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
     hourField.setText(prepopulate.getHourOfDay.toString)
     minuteField.setText(prepopulate.getMinuteOfHour.toString)
   }
-
 }
