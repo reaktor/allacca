@@ -45,12 +45,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
-  private def initTabOrder(): Unit = {
+  private def initTabOrder() {
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
   }
 
-  private def initDateFields(editLayout: RelativeLayout): Unit = {
+  private def initDateFields(editLayout: RelativeLayout) {
     startDateTimeField.init(editLayout)
     endDateTimeField.init(editLayout)
   }
@@ -63,7 +63,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout
   }
 
-  private def addControls(editLayout: RelativeLayout): Unit = {
+  private def addControls(editLayout: RelativeLayout) {
     editLayout.addView(calendarSelection)
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
@@ -99,7 +99,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     calendarSelection
   }
 
-  private def okButtonController(text: String = ""): Unit = {
+  private def okButtonController(text: String = "") {
     Log.i(TAG, s"Setting ok button enabled status to $isValid")
     okButton.setEnabled(isValid)
   }
@@ -154,11 +154,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   def isValid = !eventNameField.getText.toString.isEmpty && startDateTimeField.isValid && endDateTimeField.isValid
 
-  def cancel(view: View): Unit = {
+  def cancel(view: View) {
     onBackPressed()
   }
 
-  def saveEvent (view: View): Unit = {
+  def saveEvent (view: View) {
     val eventName = eventNameField.getText.toString
     if (isValid) {
       val startMillis = startDateTimeField.getDateTime.toDate.getTime
@@ -205,7 +205,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
   val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
   val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
-  def init(editLayout: RelativeLayout): Unit = {
+  def init(editLayout: RelativeLayout) {
     prePopulateFields(prepopulate)
     fields.foreach { field =>
       editLayout.addView(field)
@@ -238,7 +238,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
     }
   }
 
-  def validate(x: String): Unit = {
+  def validate(x: String) {
     Log.i(TAG, s"** valid $isValid **")
     val modifier: (EditText => Unit) =
       if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
@@ -249,7 +249,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
   def lastElementId = minuteField.getId
   def firstElementId = dayField.getId
 
-  private def prePopulateFields(prepopulate: DateTime): Unit = {
+  private def prePopulateFields(prepopulate: DateTime) {
     dayField.setText(prepopulate.getDayOfMonth.toString)
     monthField.setText(prepopulate.getMonthOfYear.toString)
     yearField.setText(prepopulate.getYear.toString)
