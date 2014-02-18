@@ -40,12 +40,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
     addControls(editLayout)
     eventNameField.addTextChangedListener(okButtonController _)
     initDateFields(editLayout)
-    initTabOrder
+    initTabOrder()
     setContentView(editLayout)
     okButtonController()
   }
 
-  private def initTabOrder {
+  private def initTabOrder() {
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
   }
@@ -84,7 +84,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
     val calendarSelection = new Spinner(this)
     val queryCols = Array[String] ("_id", Calendars.NAME)
-    val calCursor: Cursor = getContentResolver().query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
+    val calCursor: Cursor = getContentResolver.query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
 
     calCursor.moveToFirst()
     val calendars = getCalendars(calCursor, Array())
@@ -170,7 +170,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
       Log.i(TAG, "SAVED!")
       onBackPressed()
     } else {
-      Log.i(TAG, s"What's not valid? event name valid ${eventName} start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
+      Log.i(TAG, s"What's not valid? event name valid $eventName start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
     }
   }
 }
@@ -194,7 +194,7 @@ object EditEventActivity {
     textField.setInputType(inputType)
     textField
   }
-  def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics()))
+  def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
 }
 
 class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
