@@ -28,13 +28,10 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
   override def getItemId(position: Int): Long = position
 
   override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-    Log.d(TAG, "Get view of position " + position)
     if (convertView != null) {
-      Log.d(TAG, "Returning convertView of position " + position)
       return convertView
     }
 
-    Log.d(TAG, "Creating new view of position " + position)
     val wholeLineLayout : LinearLayout = new LinearLayout(activity)
     wholeLineLayout.setOrientation(LinearLayout.HORIZONTAL)
 
@@ -46,7 +43,6 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
     }
 
     def render(eventsOfWeek: Seq[CalendarEvent]): Unit = {
-      Log.d(TAG, "Rendering " + eventsOfWeek.size)
       val days = yearAndWeek.days
 
       var id = 1
