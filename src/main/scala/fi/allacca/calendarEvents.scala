@@ -3,10 +3,15 @@ package fi.allacca
 import android.provider.CalendarContract.Events
 import android.content.ContentValues
 import android.content.Context
-import org.joda.time.DateTime
+import org.joda.time.{Interval, DateTime}
 
 class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, val description: String = "", val location: String = "", val allDay: Boolean = false) {
-  def isDuring(day: DateTime): Boolean = startTime >= day.getMillis && endTime < day.plusDays(1).getMillis
+  def isDuring(day: DateTime): Boolean = {
+    val effectiveEnd = if (endTime < startTime) java.lang.Long.MAX_VALUE else endTime
+    val intervalOfEvent = new Interval(startTime, effectiveEnd)
+    val intervalOfDay = new Interval(day.withTimeAtStartOfDay, day.withTimeAtStartOfDay.plusDays(1))
+    intervalOfDay.overlaps(intervalOfEvent)
+  }
   override def toString = s"$title ($description) $startTime - $endTime"
 }
 
