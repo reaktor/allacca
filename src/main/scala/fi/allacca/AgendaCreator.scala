@@ -63,10 +63,15 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
 
   def onTopReached() {
     Log.d(TAG, "We have scrolled to top and need to load more things of past")
+    displayRange = (displayRange._1.minusDays(20), displayRange._2.minusDays(20))
+    activity.getLoaderManager.restartLoader(0, null, this)
+
   }
 
   def onBottomReached() {
     Log.d(TAG, "We have scrolled to bottom and need to load more things of future")
+    displayRange = (displayRange._1.plusDays(10), displayRange._2.plusDays(10))
+    activity.getLoaderManager.restartLoader(0, null, this)
   }
 
   @tailrec
