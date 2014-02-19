@@ -12,6 +12,7 @@ import android.view.ViewGroup.LayoutParams
 import org.joda.time.{DateTime, LocalDate}
 import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
+import android.graphics.Color
 
 class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderManager.LoaderCallbacks[Cursor] {
   private val ids = new IdGenerator(parent.getId + 1)
@@ -37,10 +38,11 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
     daysInOrder.foreach { day =>
       val dayNameView = new TextView(activity)
       dayNameView.setId(ids.nextId)
-      val dayNameParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+      val dayNameParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
       dayNameParams.addRule(RelativeLayout.BELOW, dayNameView.getId - 1)
       dayNameView.setLayoutParams(dayNameParams)
       dayNameView.setBackgroundColor(dimensions.pavlova)
+      dayNameView.setTextColor(Color.BLACK)
       dayNameView.setTextSize(dimensions.overviewContentTextSize)
       val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
       dayNameView.setText(dateFormat.print(day))
