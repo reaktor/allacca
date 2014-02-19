@@ -17,11 +17,11 @@ import ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends BaseAdapter {
-  private val beginningOfEpoch = new DateTime(0, 1, 1, 0, 0, 0).withTimeAtStartOfDay()
+  private val beginningOfEpoch = new DateTime(2010, 1, 1, 0, 0, 0).withTimeAtStartOfDay()
 
   def positionOfNow: Int = Weeks.weeksBetween(beginningOfEpoch, new DateTime()).getWeeks
 
-  override def getCount: Int = Integer.MAX_VALUE
+  override def getCount: Int = 10 * 52
 
   override def getItem(position: Int): YearAndWeek = YearAndWeek.from(beginningOfEpoch.plusWeeks(position))
 
