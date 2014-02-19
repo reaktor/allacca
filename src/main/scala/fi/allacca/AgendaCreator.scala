@@ -59,6 +59,14 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
     }
   }
 
+  def onTopReached() {
+    Log.d(TAG, "We have scrolled to top and need to load more things of past")
+  }
+
+  def onBottomReached() {
+    Log.d(TAG, "We have scrolled to bottom and need to load more things of future")
+  }
+
   @tailrec
   private def readEvents(cursor: Cursor, events: Seq[CalendarEvent] = Nil): Seq[CalendarEvent] = {
     val newEvents = events :+ readEventFrom(cursor)
