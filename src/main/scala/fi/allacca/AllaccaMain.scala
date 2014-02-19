@@ -31,7 +31,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     val weeksList = createWeeksList(cornerView)
     mainLayout.addView(weeksList)
 
-    createAgenda(weeksList, mainLayout)
+    createAgenda(mainLayout)
 
     val addEventButton = addAEventButton(mainLayout)
     addGotoNowButton(mainLayout, addEventButton.getId)
@@ -74,15 +74,19 @@ class AllaccaMain extends Activity with TypedViewHolder {
     size
   }
 
-  def createAgenda(leftSide: View, mainLayout: RelativeLayout): Unit = {
-    val agenda = new AgendaFragment
-    val agendaLayout = new LinearLayout(this)
-    val layoutParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
-    layoutParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
-    agendaLayout.setLayoutParams(layoutParams)
+  def createAgenda(mainLayout: RelativeLayout): Unit = {
+    val agendasParentThatEnablesScrolling = new ScrollView(this)
+    val scrollParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
+    agendasParentThatEnablesScrolling.setLayoutParams(scrollParams)
+    scrollParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
+    agendasParentThatEnablesScrolling.setId(idGenerator.nextId)
+
+    val agendaLayout = new RelativeLayout(this)
+    agendaLayout.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     agendaLayout.setId(idGenerator.nextId)
-    getFragmentManager.beginTransaction().add(agendaLayout.getId, agenda).commit()
-    mainLayout.addView(agendaLayout)
+    new AgendaCreator(this, agendaLayout)
+    agendasParentThatEnablesScrolling.addView(agendaLayout)
+    mainLayout.addView(agendasParentThatEnablesScrolling)
   }
 
   private def addAEventButton(layout: ViewGroup): Button = {
