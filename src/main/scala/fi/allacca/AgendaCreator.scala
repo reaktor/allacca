@@ -25,7 +25,7 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
     val builder = CalendarContract.Instances.CONTENT_URI.buildUpon
     ContentUris.appendId(builder, displayRange._1)
     ContentUris.appendId(builder, displayRange._2)
-    new CursorLoader(activity, builder.build, Array("_id", "title", "dtstart", "dtend"), "", null, "dtstart asc")
+    new CursorLoader(activity, builder.build, Array("_id", "title", "begin", "end"), "", null, "begin asc")
   }
 
   override def onLoadFinished(loader: Loader[Cursor], data: Cursor) {
@@ -45,7 +45,7 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
       val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
       dayNameView.setText(dateFormat.print(day))
       parent.addView(dayNameView)
-      eventsByDays(day).foreach { event =>
+      events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime } foreach { event =>
         Log.d(TAG, "Rendering " + event)
         val titleView = new TextView(activity)
         titleView.setId(ids.nextId)
