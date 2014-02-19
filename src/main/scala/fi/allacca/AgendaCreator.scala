@@ -30,8 +30,8 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
   }
 
   override def onLoadFinished(loader: Loader[Cursor], data: Cursor) {
-    data.moveToFirst()
-    val events = readEvents(data)
+    val dataLoaded = data.moveToFirst()
+    val events = if (dataLoaded) readEvents(data) else Nil
     val eventsByDays: Map[LocalDate, Seq[CalendarEvent]] = events.groupBy { e => new DateTime(e.startTime).toLocalDate }
     val daysInOrder = eventsByDays.keys.toSeq.sortBy(_.toDateTimeAtCurrentTime.getMillis)
     Log.d(TAG, "daysInOrder == " + daysInOrder)
