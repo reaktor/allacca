@@ -197,7 +197,7 @@ object EditEventActivity {
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
 }
 
-class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
+class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
   val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
@@ -206,7 +206,7 @@ class DateTimeField(val prepopulate: DateTime, placeBelowFieldId: Int, val conte
   val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
   def init(editLayout: RelativeLayout) {
-    prePopulateFields(prepopulate)
+    prePopulateFields(prePopulateTime)
     fields.foreach { field =>
       editLayout.addView(field)
       field.setSelectAllOnFocus(true)
