@@ -78,26 +78,15 @@ class AllaccaMain extends Activity with TypedViewHolder {
     val agendaLayout = new RelativeLayout(this)
     agendaLayout.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     agendaLayout.setId(idGenerator.nextId)
-    val creator = new AgendaCreator(this, agendaLayout)
+    val agendaView = new AgendaView(this, agendaLayout)
 
-    val agendasParentThatEnablesScrolling = new ScrollView(this) {
-      override def onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
-        val yCoordinateWhenAtBottom = getChildAt(0).getHeight - getHeight
-        if (t <= 0) {
-          creator.onTopReached()
-        } else if (t >= yCoordinateWhenAtBottom) {
-          creator.onBottomReached()
-        }
-        super.onScrollChanged(l, t, oldl, oldt)
-      }
-    }
     val scrollParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
     scrollParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
-    agendasParentThatEnablesScrolling.setLayoutParams(scrollParams)
-    agendasParentThatEnablesScrolling.setId(idGenerator.nextId)
+    agendaView.setLayoutParams(scrollParams)
+    agendaView.setId(idGenerator.nextId)
 
-    agendasParentThatEnablesScrolling.addView(agendaLayout)
-    mainLayout.addView(agendasParentThatEnablesScrolling)
+    agendaView.addView(agendaLayout)
+    mainLayout.addView(agendaView)
   }
 
   private def addAEventButton(layout: ViewGroup): Button = {

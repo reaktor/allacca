@@ -5,7 +5,7 @@ import android.database.Cursor
 import android.widget._
 import scala.Array
 import android.os.Bundle
-import android.content.{CursorLoader, ContentUris, Loader}
+import android.content.{Context, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
@@ -14,8 +14,22 @@ import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
 
+class AgendaView(activity: Activity, parent: RelativeLayout) extends ScrollView(activity) {
+  private val creator = new AgendaCreator(activity, parent)
+
+  override def onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+    val yCoordinateWhenAtBottom = getChildAt(0).getHeight - getHeight
+    if (t <= 0) {
+      creator.onTopReached()
+    } else if (t >= yCoordinateWhenAtBottom) {
+      creator.onBottomReached()
+    }
+    super.onScrollChanged(l, t, oldl, oldt)
+  }
+}
+
 class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderManager.LoaderCallbacks[Cursor] {
-  private val ids = new IdGenerator(parent.getId + 1)
+  private val ids = new IdGenerator(parent.getId + 100)
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(20))
 
