@@ -28,14 +28,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameHeader = createHeader("Event name", Some(calendarSelection.getId))
   private lazy val eventNameField = createEventNameField()
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
-  private lazy val startDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)), startTimeHeader.getId, this, okButtonController)
+  private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
-  private lazy val endDateTimeField = new DateTimeField(new DateTime().plus(Period.days(1)).plusHours(1), endTimeHeader.getId, this, okButtonController)
+  private lazy val endDateTimeField = new DateTimeField(getPrepopulateEndTime, endTimeHeader.getId, this, okButtonController)
   private lazy val okButton = createOkButton
   private lazy val cancelButton = createCancelButton(okButton.getId)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
+
     val editLayout = createMainLayout
     addControls(editLayout)
     eventNameField.addTextChangedListener(okButtonController _)
@@ -43,6 +44,16 @@ class EditEventActivity extends Activity with TypedViewHolder {
     initTabOrder()
     setContentView(editLayout)
     okButtonController()
+  }
+
+  private def getPrepopulateStartTime: DateTime = {
+    val intent = getIntent()
+    val eventDateLong = intent.getLongExtra(EVENT_DATE, DAWN_OF_TIME)
+    if (eventDateLong == DAWN_OF_TIME) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+  }
+
+  private def getPrepopulateEndTime: DateTime = {
+    getPrepopulateStartTime.plusHours(1)
   }
 
   private def initTabOrder() {
