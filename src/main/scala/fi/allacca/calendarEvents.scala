@@ -24,13 +24,16 @@ class CalendarEventService(context: Context) {
 
   def createEvent(calendarId: Long, event: CalendarEvent): Long = {
     val values = new ContentValues()
-    values.put("dtstart", Long.box(event.startTime))
-    values.put("dtend", Long.box(event.endTime))
-    values.put("title", event.title)
-    values.put("eventLocation", event.location)
     values.put("calendar_id", Long.box(calendarId))
-    values.put("eventTimezone", "Europe/Berlin")
+    fillCommonFields(values, event)
+
+    //TODO:
+    //Move these to fillCommonFields when it's safe: when edit can prefill and edit these vals
+    values.put("eventLocation", event.location)
     values.put("description", event.description)
+    //END_TODO
+
+    values.put("eventTimezone", "Europe/Berlin")
     values.put("selfAttendeeStatus", Int.box(1))
     val allDay = if (event.allDay) 1 else 0
     values.put("allDay", Int.box(allDay))
@@ -41,6 +44,18 @@ class CalendarEventService(context: Context) {
     val uri = context.getContentResolver.insert(Events.CONTENT_URI, values)
     val eventId = uri.getLastPathSegment.toLong
     eventId
+  }
+
+  def saveEvent(eventId: Long, event: CalendarEvent): Int = {
+    val values = new ContentValues()
+    fillCommonFields(values, event)
+    context.getContentResolver().update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
+  }
+
+  private def fillCommonFields(values: ContentValues, event: CalendarEvent) {
+    values.put("dtstart", Long.box(event.startTime))
+    values.put("dtend", Long.box(event.endTime))
+    values.put("title", event.title)
   }
 
   def getCalendars: Array[Calendar] = {
@@ -56,4 +71,5 @@ class CalendarEventService(context: Context) {
     calCursor.moveToFirst()
     getCalendars0(calCursor, Array())
   }
+
 }
