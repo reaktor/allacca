@@ -23,6 +23,8 @@ class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, v
   private def formatEpoch(epochMillis: Long): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(epochMillis)
 }
 
+case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent])
+
 class CalendarEventService(context: Context) {
 
   def createEvent(calendarId: Long, event: CalendarEvent): Long = {

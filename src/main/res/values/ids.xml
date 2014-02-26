@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- These can be used for ids that require globally unique ids, such as view tags.
+     Single view ids are probably better handled in code ( http://stackoverflow.com/a/13241629 ) -->
+<resources>
+    <item type="id" name="dayViewTagId"/>
+</resources>
