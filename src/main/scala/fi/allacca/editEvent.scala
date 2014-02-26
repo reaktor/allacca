@@ -46,10 +46,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
+  private def getIdOfEditedEvent: Option[Long] = {
+    val eventIdWeAreEditing = getIntent.getLongExtra(EVENT_ID, NULL_VALUE)
+    if (eventIdWeAreEditing == NULL_VALUE) None else Some(eventIdWeAreEditing)
+  }
+
   private def getPrepopulateStartTime: DateTime = {
     val intent = getIntent()
-    val eventDateLong = intent.getLongExtra(EVENT_DATE, DAWN_OF_TIME)
-    if (eventDateLong == DAWN_OF_TIME) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+    val eventDateLong = intent.getLongExtra(EVENT_DATE, NULL_VALUE)
+    if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
   }
 
   private def getPrepopulateEndTime: DateTime = {
@@ -155,19 +160,31 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   def saveEvent (view: View) {
-    val eventName = eventNameField.getText.toString
     if (isValid) {
-      val startMillis = startDateTimeField.getDateTime.toDate.getTime
-      val endMillis = endDateTimeField.getDateTime.toDate.getTime
-      val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
+      val eventToSave: CalendarEvent = extractEventFromFieldValues
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[Calendar]
-      Log.i(TAG, s"all valid, let's save: ${selectedCalendar.id} $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
+      saveOrUpdate(eventToSave, selectedCalendar)
+      onBackPressed()
+    }
+  }
+
+  private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: Calendar) {
+    val eventIdWeAreEditing = getIdOfEditedEvent
+    if (eventIdWeAreEditing.isDefined) {
+      val updateCount = calendarEventService.saveEvent(126L, eventToSave)
+      Log.i(TAG, s"Updated event $updateCount")
+    } else {
       val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
       Log.i(TAG, s"Saved event with id $savedId")
-      onBackPressed()
-    } else {
-      Log.i(TAG, s"What's not valid? event name valid $eventName start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
     }
+  }
+
+  private def extractEventFromFieldValues: CalendarEvent = {
+    val eventName = eventNameField.getText.toString
+    val startMillis = startDateTimeField.getDateTime.toDate.getTime
+    val endMillis = endDateTimeField.getDateTime.toDate.getTime
+    val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
+    eventToSave
   }
 }
 

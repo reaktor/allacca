@@ -15,7 +15,7 @@ package object allacca {
   //Intent keys
   val EVENT_ID = "fi.allacca.eventID"
   val EVENT_DATE = "fi.allacca.eventDate"
-  val DAWN_OF_TIME = -1L
+  val NULL_VALUE = -1L
 
   implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
     def onClick(evt: View) = f(evt)

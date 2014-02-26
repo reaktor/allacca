@@ -52,6 +52,17 @@ class CalendarEventService(context: Context) {
     context.getContentResolver().update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
   }
 
+  def getEvent(eventId: Long): Option[CalendarEvent] = {
+    val proj = Array("dtstart", "dtend", "title")
+    val cursor = context.getContentResolver().query(Events.CONTENT_URI, proj, "_id =? ", Array(eventId.toString), null)
+    if (cursor.moveToFirst()) {
+      val startTime = cursor.getLong(0)
+      val endTime = cursor.getLong(1)
+      val title = cursor.getString(2)
+      Some(new CalendarEvent(title, startTime, endTime))
+    } else { None }
+  }
+
   private def fillCommonFields(values: ContentValues, event: CalendarEvent) {
     values.put("dtstart", Long.box(event.startTime))
     values.put("dtend", Long.box(event.endTime))

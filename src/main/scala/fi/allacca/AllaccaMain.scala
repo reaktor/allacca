@@ -106,7 +106,9 @@ class AllaccaMain extends Activity with TypedViewHolder {
   def createNewEvent (view: View) {
     Log.d(TAG, "+ createNewEvent")
     val intent = new Intent(this, classOf[EditEventActivity])
-    intent.putExtra(EVENT_ID, None) //We're creating a new event -> no ID yet
+
+    //Editing existing event was manually tested with this (all we need to change creation to editing)
+    //intent.putExtra(EVENT_ID, 126L) //We're creating a new event -> no ID yet
 
     //This will create the new event after ten days:
     //intent.putExtra(EVENT_DATE, new DateTime().plusDays(10).toDate.getTime)
