@@ -85,26 +85,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def createCalendarSelection: Spinner = {
-    def getCalendars(calCursor: Cursor, calendars: Array[SpinnerCalendarModel]): Array[SpinnerCalendarModel] = {
-      val id = calCursor.getLong(0)
-      val displayName = calCursor.getString(1)
-      val currCalendar = new SpinnerCalendarModel(id, displayName)
-      val newCalendars = calendars :+ currCalendar
-      if (calCursor.moveToNext()) getCalendars(calCursor, newCalendars) else newCalendars
-    }
-
+    val calendars = calendarEventService.getCalendars
     val calendarSelection = new Spinner(this)
-    val queryCols = Array[String] ("_id", Calendars.NAME)
-    val calCursor: Cursor = getContentResolver.query(Calendars.CONTENT_URI, queryCols, "visible" + " = 1", null, "_id" + " ASC")
-
-    calCursor.moveToFirst()
-    val calendars = getCalendars(calCursor, Array())
-
-    val spinnerArrayAdapter: ArrayAdapter[SpinnerCalendarModel] = new ArrayAdapter[SpinnerCalendarModel](this, android.R.layout.simple_spinner_dropdown_item, calendars)
+    val spinnerArrayAdapter: ArrayAdapter[Calendar] = new ArrayAdapter[Calendar](this, android.R.layout.simple_spinner_dropdown_item, calendars)
     calendarSelection.setAdapter(spinnerArrayAdapter)
-
     calendarSelection.setId(idGenerator.nextId)
-
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     calendarSelection.setLayoutParams(layoutParams)
     calendarSelection
@@ -175,7 +160,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val startMillis = startDateTimeField.getDateTime.toDate.getTime
       val endMillis = endDateTimeField.getDateTime.toDate.getTime
       val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
-      val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[SpinnerCalendarModel]
+      val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[Calendar]
       Log.i(TAG, s"all valid, let's save: ${selectedCalendar.id} $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
       calendarEventService.createEvent(selectedCalendar.id, eventToSave)
       Log.i(TAG, "SAVED!")
@@ -186,9 +171,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 }
 
-class SpinnerCalendarModel(val id: Long, val name: String) {
-  override def toString = name
-}
 
 object EditEventActivity {
   val idGenerator = new IdGenerator
