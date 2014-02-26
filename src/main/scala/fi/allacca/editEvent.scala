@@ -162,8 +162,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[Calendar]
       Log.i(TAG, s"all valid, let's save: ${selectedCalendar.id} $eventName ${startDateTimeField.getDateTime} ${endDateTimeField.getDateTime}")
-      calendarEventService.createEvent(selectedCalendar.id, eventToSave)
-      Log.i(TAG, "SAVED!")
+      val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
+      Log.i(TAG, s"Saved event with id $savedId")
       onBackPressed()
     } else {
       Log.i(TAG, s"What's not valid? event name valid $eventName start valid ${startDateTimeField.isValid} end valid ${endDateTimeField.isValid}")
