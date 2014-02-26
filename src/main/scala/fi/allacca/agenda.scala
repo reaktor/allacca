@@ -5,7 +5,7 @@ import android.database.Cursor
 import android.widget._
 import scala.Array
 import android.os.Bundle
-import android.content.{Context, CursorLoader, ContentUris, Loader}
+import android.content.{CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
@@ -14,7 +14,7 @@ import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
 
-class AgendaView(activity: Activity, parent: RelativeLayout) extends ScrollView(activity) {
+class AgendaView(activity: Activity, parent: LinearLayout) extends ScrollView(activity) {
   private val creator = new AgendaCreator(activity, parent)
 
   override def onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
@@ -28,7 +28,7 @@ class AgendaView(activity: Activity, parent: RelativeLayout) extends ScrollView(
   }
 }
 
-class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderManager.LoaderCallbacks[Cursor] {
+class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderManager.LoaderCallbacks[Cursor] {
   private val ids = new IdGenerator(parent.getId + 100)
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(20))
@@ -52,8 +52,7 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
     daysInOrder.foreach { day =>
       val dayNameView = new TextView(activity)
       dayNameView.setId(ids.nextId)
-      val dayNameParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-      dayNameParams.addRule(RelativeLayout.BELOW, dayNameView.getId - 1)
+      val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
       dayNameView.setLayoutParams(dayNameParams)
       dayNameView.setBackgroundColor(dimensions.pavlova)
       dayNameView.setTextColor(Color.BLACK)
@@ -65,8 +64,7 @@ class AgendaCreator(activity: Activity, parent: RelativeLayout) extends LoaderMa
         Log.d(TAG, "Rendering " + event)
         val titleView = new TextView(activity)
         titleView.setId(ids.nextId)
-        val params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        params.addRule(RelativeLayout.BELOW, titleView.getId - 1)
+        val params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         titleView.setLayoutParams(params)
         titleView.setTextSize(dimensions.overviewContentTextSize)
         titleView.setText(event.title)

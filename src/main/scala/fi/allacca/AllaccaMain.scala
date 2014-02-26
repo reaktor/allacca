@@ -75,8 +75,9 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def createAgenda(mainLayout: RelativeLayout): Unit = {
-    val agendaLayout = new RelativeLayout(this)
-    agendaLayout.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    val agendaLayout = new LinearLayout(this)
+    agendaLayout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    agendaLayout.setOrientation(LinearLayout.VERTICAL)
     agendaLayout.setId(idGenerator.nextId)
     val agendaView = new AgendaView(this, agendaLayout)
 
