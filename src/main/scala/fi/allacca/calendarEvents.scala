@@ -6,7 +6,7 @@ import android.content.Context
 import org.joda.time.{Interval, DateTime}
 import android.database.Cursor
 
-class Calendar(val id: Long, val name: String) {
+class UserCalendar(val id: Long, val name: String) {
   override def toString = name
 }
 
@@ -69,11 +69,11 @@ class CalendarEventService(context: Context) {
     values.put("title", event.title)
   }
 
-  def getCalendars: Array[Calendar] = {
-    def getCalendars0(calCursor: Cursor, calendars: Array[Calendar]): Array[Calendar] = {
+  def getCalendars: Array[UserCalendar] = {
+    def getCalendars0(calCursor: Cursor, calendars: Array[UserCalendar]): Array[UserCalendar] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
-      val currCalendar = new Calendar(id, displayName)
+      val currCalendar = new UserCalendar(id, displayName)
       val newCalendars = calendars :+ currCalendar
       if (calCursor.moveToNext()) getCalendars0(calCursor, newCalendars) else newCalendars
     }

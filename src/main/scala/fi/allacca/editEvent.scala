@@ -113,7 +113,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private def createCalendarSelection: Spinner = {
     val calendars = calendarEventService.getCalendars
     val calendarSelection = new Spinner(this)
-    val spinnerArrayAdapter: ArrayAdapter[Calendar] = new ArrayAdapter[Calendar](this, android.R.layout.simple_spinner_dropdown_item, calendars)
+    val spinnerArrayAdapter: ArrayAdapter[UserCalendar] = new ArrayAdapter[UserCalendar](this, android.R.layout.simple_spinner_dropdown_item, calendars)
     calendarSelection.setAdapter(spinnerArrayAdapter)
     calendarSelection.setId(idGenerator.nextId)
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -184,13 +184,13 @@ class EditEventActivity extends Activity with TypedViewHolder {
   def saveEvent (view: View) {
     if (isValid) {
       val eventToSave: CalendarEvent = extractEventFromFieldValues
-      val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[Calendar]
+      val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[UserCalendar]
       saveOrUpdate(eventToSave, selectedCalendar)
       onBackPressed()
     }
   }
 
-  private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: Calendar) {
+  private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: UserCalendar) {
     if (idOfEventWeAreEditing.isDefined) {
       val updateCount = calendarEventService.saveEvent(126L, eventToSave)
       Log.i(TAG, s"Updated event $updateCount")
