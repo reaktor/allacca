@@ -3,8 +3,9 @@ package fi.allacca
 import android.provider.CalendarContract.{Calendars, Events}
 import android.content.ContentValues
 import android.content.Context
-import org.joda.time.{Interval, DateTime}
+import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
+import org.joda.time.format.DateTimeFormat
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -17,7 +18,9 @@ class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, v
     val intervalOfDay = new Interval(day.withTimeAtStartOfDay, day.withTimeAtStartOfDay.plusDays(1))
     intervalOfDay.overlaps(intervalOfEvent)
   }
-  override def toString = s"$title ($description) $startTime - $endTime"
+  override def toString = s"$title ($description) ${formatEpoch(startTime)} - ${formatEpoch(endTime)}"
+
+  private def formatEpoch(epochMillis: Long): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(epochMillis)
 }
 
 class CalendarEventService(context: Context) {
