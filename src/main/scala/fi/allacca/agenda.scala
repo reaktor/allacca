@@ -49,7 +49,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   /**
    * When scrolling, how many days to look forward for new events
    */
-  private val daysToLoadInAdvance = 30
+  private val daysToLoadInAdvance = 10
   private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(daysToLoadInAdvance))
   private val futureEventsLoadingInProgress: AtomicBoolean = new AtomicBoolean(false)
   private val BASIC_LOADER_ID = 0
@@ -58,7 +58,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   /**
    * How much hidden content we want to display above and below viewable part
    */
-  val verticalViewportPadding = activity.getResources.getDisplayMetrics.heightPixels
+  val verticalViewportPadding = activity.getResources.getDisplayMetrics.heightPixels / 2
 
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
 
@@ -72,6 +72,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   override def onLoadFinished(loader: Loader[Cursor], data: Cursor) { appendEvents(data) }
 
   private def appendEvents(cursor: Cursor) {
+    val startedAt = System.currentTimeMillis()
     val dataLoaded = cursor.moveToFirst()
     val events = if (dataLoaded) readEvents(cursor) else Nil
     val eventsByDays: Map[LocalDate, Seq[CalendarEvent]] = events.groupBy {
@@ -90,7 +91,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
         dayNameView.setTextSize(dimensions.overviewContentTextSize)
         val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
         dayNameView.setText(dateFormat.print(day))
-        parent.addView(dayNameView)
+        activity.runOnUiThread({ parent.addView(dayNameView) })
         val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
 
         val dayWithEvents = DayWithEvents(day, eventsOfDay)
@@ -98,18 +99,18 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
 
         eventsOfDay foreach {
           event =>
-            Log.d(TAG, "Rendering " + event)
             val titleView = new TextView(activity)
             titleView.setId(ids.nextId)
             val params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
             titleView.setLayoutParams(params)
             titleView.setTextSize(dimensions.overviewContentTextSize)
             titleView.setText(event.title)
-            parent.addView(titleView)
+            activity.runOnUiThread({ parent.addView(titleView) })
             val onClick: (View => Unit) = { v => Log.d(TAG, "Clicked " + event.toString) }
             titleView.setOnClickListener(onClick)
         }
     }
+    Log.d(TAG, "Rendering took " + (System.currentTimeMillis() - startedAt) + " milliseconds.")
   }
 
   def onTopReached() {
@@ -139,7 +140,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
     if (parent.getChildCount > 0) {
       val removeInvisiblePast: (View => Unit) = { v: View =>
         if (shouldBeRemoved(v)) {
-          Log.d(TAG, "removing " + v.asInstanceOf[TextView].getText)
+          //Log.d(TAG, "NOT removing " + v.asInstanceOf[TextView].getText)
           parent.removeView(v)
         }
       }
@@ -164,10 +165,14 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
     futureEventsLoadingInProgress.set(true)
     val startedAt = System.currentTimeMillis()
     val futureEventsHandler: Cursor => Unit = { cursor =>
-      appendEvents(cursor)
-      activity.getLoaderManager.destroyLoader(FUTURE_LOADER_ID)
-      futureEventsLoadingInProgress.set(false)
-      Log.d(TAG, "Loading took " + (System.currentTimeMillis() - startedAt) + " milliseconds")
+      new Thread(new Runnable() {
+        override def run() {
+          appendEvents(cursor)
+          activity.getLoaderManager.destroyLoader(FUTURE_LOADER_ID)
+          futureEventsLoadingInProgress.set(false)
+          Log.d(TAG, "Loading and rendering took " + (System.currentTimeMillis() - startedAt) + " milliseconds")
+        }
+      }).start()
     }
 
     val futureEventsLoader = new FutureEventsLoader(activity, dayToStartFutureLoading, dayToStartFutureLoading.plusDays(daysToLoadInAdvance), futureEventsHandler)

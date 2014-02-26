@@ -22,4 +22,6 @@ package object allacca {
   }
 
   implicit def localDateToEpochMillis(localDate: LocalDate): Long = localDate.toDate.getTime
+
+  implicit def func2Runnable(f: => Unit) = new Runnable() { def run() { f }}
 }
