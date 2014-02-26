@@ -13,6 +13,7 @@ import org.joda.time.{DateTime, LocalDate}
 import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
+import android.view.View
 
 class AgendaView(activity: Activity, parent: LinearLayout) extends ScrollView(activity) {
   private val creator = new AgendaCreator(activity, parent)
@@ -69,6 +70,8 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
         titleView.setTextSize(dimensions.overviewContentTextSize)
         titleView.setText(event.title)
         parent.addView(titleView)
+        val onClick: (View => Unit) = { v => Log.d(TAG, "Clicked " + event.toString) }
+        titleView.setOnClickListener(onClick)
       }
     }
   }
