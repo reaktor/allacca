@@ -26,13 +26,14 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private lazy val calendarSelection = createCalendarSelection
   private lazy val eventNameHeader = createHeader("Event name", Some(calendarSelection.getId))
-  private lazy val eventNameField = createEventNameField()
+  private lazy val eventNameField = createEventNameField(getPrepopulateEventName)
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
   private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(getPrepopulateEndTime, endTimeHeader.getId, this, okButtonController)
   private lazy val okButton = createOkButton
   private lazy val cancelButton = createCancelButton(okButton.getId)
+  private lazy val idOfEventWeAreEditing = getIdOfEditedEvent
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -51,14 +52,34 @@ class EditEventActivity extends Activity with TypedViewHolder {
     if (eventIdWeAreEditing == NULL_VALUE) None else Some(eventIdWeAreEditing)
   }
 
+  private def getPrepopulateEventName: String = {
+    getEventWeAreEditing match {
+      case Some(event) => event.title
+      case None => ""
+    }
+  }
+
   private def getPrepopulateStartTime: DateTime = {
-    val intent = getIntent()
-    val eventDateLong = intent.getLongExtra(EVENT_DATE, NULL_VALUE)
-    if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+    getEventWeAreEditing match {
+      case Some(event) => new DateTime(event.startTime)
+      case None =>
+        val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
+        if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+    }
   }
 
   private def getPrepopulateEndTime: DateTime = {
-    getPrepopulateStartTime.plusHours(1)
+    getEventWeAreEditing match {
+      case Some(event) => new DateTime(event.endTime)
+      case None => getPrepopulateStartTime.plusHours(1)
+    }
+  }
+
+  private def getEventWeAreEditing: Option[CalendarEvent] = {
+    for {
+      eventId <- idOfEventWeAreEditing
+      event <- calendarEventService.getEvent(eventId)
+    } yield event
   }
 
   private def initTabOrder() {
@@ -115,8 +136,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     header
   }
 
-  private def createEventNameField(): EditText = {
+  private def createEventNameField(prepopulate: String): EditText = {
     val eventNameField = new EditText(this)
+    eventNameField.setText(prepopulate)
     eventNameField.setId(idGenerator.nextId)
     val eventNameLayoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     eventNameLayoutParams.addRule(BELOW, eventNameHeader.getId)
@@ -169,8 +191,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: Calendar) {
-    val eventIdWeAreEditing = getIdOfEditedEvent
-    if (eventIdWeAreEditing.isDefined) {
+    if (idOfEventWeAreEditing.isDefined) {
       val updateCount = calendarEventService.saveEvent(126L, eventToSave)
       Log.i(TAG, s"Updated event $updateCount")
     } else {
