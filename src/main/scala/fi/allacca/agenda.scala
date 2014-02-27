@@ -5,7 +5,7 @@ import android.database.Cursor
 import android.widget._
 import scala.Array
 import android.os.Bundle
-import android.content.{CursorLoader, ContentUris, Loader}
+import android.content.{Intent, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
@@ -106,7 +106,13 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
             titleView.setTextSize(dimensions.overviewContentTextSize)
             titleView.setText(event.title)
             activity.runOnUiThread({ parent.addView(titleView) })
-            val onClick: (View => Unit) = { v => Log.d(TAG, "Clicked " + event.toString) }
+            val onClick: (View => Unit) = { _ =>
+              Log.i(TAG, "event clicked, starting activity")
+              val intent = new Intent(activity, classOf[EditEventActivity])
+              intent.putExtra(EVENT_ID, 126L)
+              activity.startActivity(intent)
+              Log.i(TAG, "After start activity")
+            }
             titleView.setOnClickListener(onClick)
         }
     }
@@ -212,7 +218,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   }
 
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
-    new CalendarEvent(title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
+    new CalendarEvent(id = Some(cursor.getLong(0)), title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
   }
 
   override def onLoaderReset(loader: Loader[Cursor]) {}
