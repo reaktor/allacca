@@ -121,64 +121,65 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   }
 
   def onBottomReached(topCoordinate: Int) {
+    val startedAt = System.currentTimeMillis()
     Log.d(TAG, "We have scrolled to bottom and need to load more things of future")
-    if (futureEventsLoadingInProgress.get()) {
+    if (futureEventsLoadingInProgress.getAndSet(true)) {
       Log.d(TAG, "...but load is already in progress, so let's not mess it up.")
       return
     }
 
-    val dayViews: Seq[View] = loopChildren[View](identity).filter { _.getTag(DAYVIEW_TAG_ID) != null }
-    def shouldBeRemoved(v: View): Boolean = v.getY < (topCoordinate - verticalViewportPadding)
-    val dayViewsThatShouldGo = dayViews.filter(shouldBeRemoved)
-    val newRangeStart = if (!dayViewsThatShouldGo.isEmpty) {
-      val lastDayToGo = dayViewsThatShouldGo.last.getTag(DAYVIEW_TAG_ID).asInstanceOf[DayWithEvents].day
-      lastDayToGo.plusDays(1)
-    } else {
-      displayRange._1
-    }
-
-    if (parent.getChildCount > 0) {
-      val removeInvisiblePast: (View => Unit) = { v: View =>
-        if (shouldBeRemoved(v)) {
-          //Log.d(TAG, "NOT removing " + v.asInstanceOf[TextView].getText)
-          parent.removeView(v)
+    new Thread(new Runnable() {
+      override def run() {
+        val dayViews: Seq[View] = loopChildren[View](identity).filter { _.getTag(DAYVIEW_TAG_ID) != null }
+        def shouldBeRemoved(v: View): Boolean = v.getY < (topCoordinate - verticalViewportPadding)
+        val dayViewsThatShouldGo = dayViews.filter(shouldBeRemoved)
+        val newRangeStart = if (!dayViewsThatShouldGo.isEmpty) {
+          val lastDayToGo = dayViewsThatShouldGo.last.getTag(DAYVIEW_TAG_ID).asInstanceOf[DayWithEvents].day
+          lastDayToGo.plusDays(1)
+        } else {
+          displayRange._1
         }
-      }
-      loopChildren(removeInvisiblePast)
-    }
 
-    val lastDayCurrentlyDisplayed: Option[LocalDate] = dayViews.lastOption.map { dayView =>
-      val dayWithEvents = dayView.getTag(DAYVIEW_TAG_ID).asInstanceOf[DayWithEvents]
-      dayWithEvents.day
-    }
+        if (parent.getChildCount > 0) {
+          val removeInvisiblePast: (View => Unit) = { v: View =>
+            if (shouldBeRemoved(v)) {
+              //Log.d(TAG, "NOT removing " + v.asInstanceOf[TextView].getText)
+              activity.runOnUiThread(parent.removeView(v))
+            }
+          }
+          loopChildren(removeInvisiblePast)
+        }
 
-    val newRangeEnd: LocalDate = lastDayCurrentlyDisplayed match {
-      case Some(lastDay) => new LocalDate(Math.max(lastDay.plusDays(daysToLoadInAdvance), displayRange._2.plusDays(daysToLoadInAdvance)))
-      case None => displayRange._2.plusDays(daysToLoadInAdvance)
-    }
+        val lastDayCurrentlyDisplayed: Option[LocalDate] = dayViews.lastOption.map { dayView =>
+          val dayWithEvents = dayView.getTag(DAYVIEW_TAG_ID).asInstanceOf[DayWithEvents]
+          dayWithEvents.day
+        }
 
-    val dayToStartFutureLoading = lastDayCurrentlyDisplayed match {
-      case Some(lastDay) => lastDay.plusDays(1)
-      case None => newRangeEnd
-    }
+        val newRangeEnd: LocalDate = lastDayCurrentlyDisplayed match {
+          case Some(lastDay) => new LocalDate(Math.max(lastDay.plusDays(daysToLoadInAdvance), displayRange._2.plusDays(daysToLoadInAdvance)))
+          case None => displayRange._2.plusDays(daysToLoadInAdvance)
+        }
 
-    futureEventsLoadingInProgress.set(true)
-    val startedAt = System.currentTimeMillis()
-    val futureEventsHandler: Cursor => Unit = { cursor =>
-      new Thread(new Runnable() {
-        override def run() {
+        val dayToStartFutureLoading = lastDayCurrentlyDisplayed match {
+          case Some(lastDay) => lastDay.plusDays(1)
+          case None => newRangeEnd
+        }
+
+        val futureEventsHandler: Cursor => Unit = { cursor =>
           appendEvents(cursor)
           activity.getLoaderManager.destroyLoader(FUTURE_LOADER_ID)
           futureEventsLoadingInProgress.set(false)
           Log.d(TAG, "Loading and rendering took " + (System.currentTimeMillis() - startedAt) + " milliseconds")
         }
-      }).start()
-    }
 
-    val futureEventsLoader = new FutureEventsLoader(activity, dayToStartFutureLoading, dayToStartFutureLoading.plusDays(daysToLoadInAdvance), futureEventsHandler)
-    activity.getLoaderManager.initLoader(FUTURE_LOADER_ID, null, futureEventsLoader)
-    activity.getLoaderManager.getLoader(FUTURE_LOADER_ID).forceLoad()
-    displayRange = (newRangeStart, newRangeEnd)
+        activity.runOnUiThread(new Runnable() { override def run() {
+          val futureEventsLoader = new FutureEventsLoader(activity, dayToStartFutureLoading, dayToStartFutureLoading.plusDays(daysToLoadInAdvance), futureEventsHandler)
+          activity.getLoaderManager.initLoader(FUTURE_LOADER_ID, null, futureEventsLoader)
+          activity.getLoaderManager.getLoader(FUTURE_LOADER_ID).forceLoad()
+          displayRange = (newRangeStart, newRangeEnd)
+        }})
+      }
+    }).start()
   }
 
   @tailrec
