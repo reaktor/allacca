@@ -109,7 +109,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
             val onClick: (View => Unit) = { _ =>
               Log.i(TAG, "event clicked, starting activity")
               val intent = new Intent(activity, classOf[EditEventActivity])
-              intent.putExtra(EVENT_ID, 126L)
+              intent.putExtra(EVENT_ID, event.id.get)
               activity.startActivity(intent)
               Log.i(TAG, "After start activity")
             }
