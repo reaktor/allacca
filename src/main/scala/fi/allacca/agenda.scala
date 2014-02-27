@@ -49,8 +49,8 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   /**
    * When scrolling, how many days to look forward for new events
    */
-  private val daysToLoadInAdvance = 10
-  private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(daysToLoadInAdvance))
+  private val daysToLoadInAdvance = 15
+  private var displayRange: (LocalDate, LocalDate) = (new LocalDate(), new LocalDate().plusDays(daysToLoadInAdvance * 2))
   private val futureEventsLoadingInProgress: AtomicBoolean = new AtomicBoolean(false)
   private val BASIC_LOADER_ID = 0
   private val FUTURE_LOADER_ID = 1
@@ -58,7 +58,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
   /**
    * How much hidden content we want to display above and below viewable part
    */
-  val verticalViewportPadding = activity.getResources.getDisplayMetrics.heightPixels / 2
+  val verticalViewportPadding = activity.getResources.getDisplayMetrics.heightPixels
 
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
 
