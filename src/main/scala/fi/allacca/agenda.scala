@@ -141,20 +141,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
         }
 
         if (parent.getChildCount > 0) {
-          val removeInvisiblePast: (View => Unit) = { v: View =>
-            if (shouldBeRemoved(v)) {
-              val heightLoss = v.getHeight
-              val scrollView = parent.getParent.asInstanceOf[ScrollView]
-              Log.d(TAG, "removing " + v.asInstanceOf[TextView].getText)
-              activity.runOnUiThread(new Runnable() {
-                override def run() {
-                  parent.removeView(v)
-                  scrollView.setScrollY(scrollView.getScrollY - heightLoss)
-                }
-              })
-            }
-          }
-          loopChildren(removeInvisiblePast)
+          loopChildren(v => removeInvisiblePast(topCoordinate, v))
         }
 
         val lastDayCurrentlyDisplayed: Option[LocalDate] = dayViews.lastOption.map { dayView =>
@@ -187,6 +174,22 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
         }})
       }
     }).start()
+  }
+
+  private def isTooFarInPast(topCoordinate: Int, v: View): Boolean = v.getY < (topCoordinate - verticalViewportPadding)
+
+  private def removeInvisiblePast(topCoordinate: Int, v: View) {
+    if (isTooFarInPast(topCoordinate, v)) {
+      val heightLoss = v.getHeight
+      val scrollView = parent.getParent.asInstanceOf[ScrollView]
+      Log.d(TAG, "removing " + v.asInstanceOf[TextView].getText)
+      activity.runOnUiThread(new Runnable() {
+        override def run() {
+          parent.removeView(v)
+          scrollView.setScrollY(scrollView.getScrollY - heightLoss)
+        }
+      })
+    }
   }
 
   @tailrec
