@@ -31,3 +31,6 @@ proguard/
 *.ipr
 *.iws
 .idea/
+
+# OSX filesystem index vomit files
+.DS_Store
