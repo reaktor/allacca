@@ -98,11 +98,12 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
     val cursor: Cursor = activity.getContentResolver.query(builder.build(), projection, "", Array(), "")
     val results = new collection.mutable.MutableList[CalendarEvent]
     while (cursor.moveToNext()) {
+        val id = cursor.getLong(0)
         val title = cursor.getString(1)
         val start = cursor.getLong(2)
         val end = cursor.getLong(3)
         val description = cursor.getString(4)
-        results += new CalendarEvent(title, start, end, description)
+        results += new CalendarEvent(Some(id), title, start, end, description)
     }
     cursor.close()
     results

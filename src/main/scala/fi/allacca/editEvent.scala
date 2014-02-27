@@ -204,7 +204,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val eventName = eventNameField.getText.toString
     val startMillis = startDateTimeField.getDateTime.toDate.getTime
     val endMillis = endDateTimeField.getDateTime.toDate.getTime
-    val eventToSave = new CalendarEvent(eventName, startMillis, endMillis)
+    val eventToSave = new CalendarEvent(None, eventName, startMillis, endMillis)
     eventToSave
   }
 }

@@ -11,7 +11,7 @@ class UserCalendar(val id: Long, val name: String) {
   override def toString = name
 }
 
-class CalendarEvent(val title: String, val startTime: Long, val endTime: Long, val description: String = "", val location: String = "", val allDay: Boolean = false) {
+class CalendarEvent(id: Option[Long], val title: String, val startTime: Long, val endTime: Long, val description: String = "", val location: String = "", val allDay: Boolean = false) {
   def isDuring(day: DateTime): Boolean = {
     val effectiveEnd = if (endTime < startTime) java.lang.Long.MAX_VALUE else endTime
     val intervalOfEvent = new Interval(startTime, effectiveEnd)
@@ -64,7 +64,7 @@ class CalendarEventService(context: Context) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
       val title = cursor.getString(2)
-      Some(new CalendarEvent(title, startTime, endTime))
+      Some(new CalendarEvent(Some(eventId), title, startTime, endTime))
     } else { None }
   }
 
