@@ -48,7 +48,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
-
   private def initTextFieldListeners {
     eventNameField.addTextChangedListener(okButtonController _)
     eventLocationField.addTextChangedListener(okButtonController _)
@@ -222,7 +221,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: UserCalendar) {
     if (idOfEventWeAreEditing.isDefined) {
-      val updateCount = calendarEventService.saveEvent(126L, eventToSave)
+      val updateCount = calendarEventService.saveEvent(idOfEventWeAreEditing.get, eventToSave)
       Log.i(TAG, s"Updated event $updateCount")
     } else {
       val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
@@ -235,7 +234,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val startMillis = startDateTimeField.getDateTime.toDate.getTime
     val endMillis = endDateTimeField.getDateTime.toDate.getTime
     val eventLocation = eventLocationField.getText.toString
-    val eventToSave = new CalendarEvent(None, eventName, startMillis, endMillis, eventLocation)
+    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis, location = eventLocation)
     eventToSave
   }
 }

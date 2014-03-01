@@ -6,6 +6,7 @@ import android.content.Context
 import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
+import android.util.Log
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -34,7 +35,6 @@ class CalendarEventService(context: Context) {
 
     //TODO:
     //Move these to fillCommonFields when it's safe: when edit can prefill and edit these vals
-    values.put("eventLocation", event.location)
     values.put("description", event.description)
     //END_TODO
 
@@ -58,13 +58,14 @@ class CalendarEventService(context: Context) {
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
-    val proj = Array("dtstart", "dtend", "title")
+    val proj = Array("dtstart", "dtend", "title", "eventLocation")
     val cursor = context.getContentResolver().query(Events.CONTENT_URI, proj, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
       val title = cursor.getString(2)
-      Some(new CalendarEvent(Some(eventId), title, startTime, endTime))
+      val location = cursor.getString(3)
+      Some(new CalendarEvent(id = Some(eventId), title = title, startTime = startTime, endTime = endTime, location = location))
     } else { None }
   }
 
@@ -72,6 +73,7 @@ class CalendarEventService(context: Context) {
     values.put("dtstart", Long.box(event.startTime))
     values.put("dtend", Long.box(event.endTime))
     values.put("title", event.title)
+    values.put("eventLocation", event.location)
   }
 
   def getCalendars: Array[UserCalendar] = {
