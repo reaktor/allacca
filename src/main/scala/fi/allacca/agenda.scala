@@ -15,6 +15,7 @@ import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
 import android.view.View
 import java.util.concurrent.atomic.AtomicBoolean
+import android.provider.CalendarContract.Instances
 
 class AgendaView(activity: Activity, parent: LinearLayout) extends ScrollView(activity) {
   private val creator = new AgendaCreator(activity, parent)
@@ -32,7 +33,7 @@ class AgendaView(activity: Activity, parent: LinearLayout) extends ScrollView(ac
 }
 
 object EventsLoaderFactory {
-  val columnsToSelect = Array("_id", "title", "begin", "end")
+  val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end")
 
   def createLoader(activity: Activity, start: LocalDate, end: LocalDate): CursorLoader = {
     val builder = CalendarContract.Instances.CONTENT_URI.buildUpon
