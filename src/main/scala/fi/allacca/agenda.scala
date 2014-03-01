@@ -118,7 +118,7 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
               Log.i(TAG, "event clicked, starting activity")
               val intent = new Intent(activity, classOf[EditEventActivity])
               intent.putExtra(EVENT_ID, event.id.get)
-              activity.startActivity(intent)
+              activity.startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
               Log.i(TAG, "After start activity")
             }
             titleView.setOnClickListener(onClick)

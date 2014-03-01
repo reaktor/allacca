@@ -12,7 +12,7 @@ import android.text.InputType.TYPE_CLASS_TEXT
 import android.widget.RelativeLayout.{BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
-import android.content.Context
+import android.content.{Intent, Context}
 import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.View
 import scala.Array
@@ -215,7 +215,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave: CalendarEvent = extractEventFromFieldValues
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[UserCalendar]
       saveOrUpdate(eventToSave, selectedCalendar)
-      onBackPressed()
+      val intent = new Intent
+      setResult(Activity.RESULT_OK, intent)
+      finish
     }
   }
 

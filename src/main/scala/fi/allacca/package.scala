@@ -17,6 +17,8 @@ package object allacca {
   val EVENT_DATE = "fi.allacca.eventDate"
   val NULL_VALUE = -1L
 
+  val REQUEST_CODE_EDIT_EVENT = 1
+
   implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
     def onClick(evt: View) = f(evt)
   }
