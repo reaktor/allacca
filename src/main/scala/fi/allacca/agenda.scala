@@ -13,7 +13,7 @@ import org.joda.time.{DateTime, LocalDate}
 import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
-import android.view.View
+import android.view.{ViewGroup, View}
 import java.util.concurrent.atomic.AtomicBoolean
 import android.provider.CalendarContract.Instances
 
@@ -83,6 +83,11 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
     Log.d(TAG, "daysInOrder == " + daysInOrder)
     daysInOrder.foreach {
       day =>
+        val dayView = new LinearLayout(activity)
+        dayView.setOrientation(LinearLayout.VERTICAL)
+        dayView.setId(ids.nextId)
+        val dayViewParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+        dayView.setLayoutParams(dayViewParams)
         val dayNameView = new TextView(activity)
         dayNameView.setId(ids.nextId)
         val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
@@ -92,21 +97,23 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
         dayNameView.setTextSize(dimensions.overviewContentTextSize)
         val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
         dayNameView.setText(dateFormat.print(day))
-        activity.runOnUiThread({ parent.addView(dayNameView) })
-        val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
 
+        val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
         val dayWithEvents = DayWithEvents(day, eventsOfDay)
-        dayNameView.setTag(DAYVIEW_TAG_ID, dayWithEvents)
+        dayView.setTag(DAYVIEW_TAG_ID, dayWithEvents)
+
+        activity.runOnUiThread({ dayView.addView(dayNameView) })
+        activity.runOnUiThread({ parent.addView(dayView) })
 
         eventsOfDay foreach {
           event =>
             val titleView = new TextView(activity)
             titleView.setId(ids.nextId)
-            val params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+            val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
             titleView.setLayoutParams(params)
             titleView.setTextSize(dimensions.overviewContentTextSize)
             titleView.setText(event.title)
-            activity.runOnUiThread({ parent.addView(titleView) })
+            activity.runOnUiThread({ dayView.addView(titleView) })
             val onClick: (View => Unit) = { _ =>
               Log.i(TAG, "event clicked, starting activity")
               val intent = new Intent(activity, classOf[EditEventActivity])
@@ -189,7 +196,8 @@ class AgendaCreator(activity: Activity, parent: LinearLayout) extends LoaderMana
     if (isTooFarInPast(topCoordinate, v)) {
       val heightLoss = v.getHeight
       val scrollView = parent.getParent.asInstanceOf[ScrollView]
-      Log.d(TAG, "removing " + v.asInstanceOf[TextView].getText)
+      val daysText = v.asInstanceOf[ViewGroup].getChildAt(0).asInstanceOf[TextView].getText
+      Log.d(TAG, "removing " + daysText)
       activity.runOnUiThread(new Runnable() {
         override def run() {
           parent.removeView(v)
