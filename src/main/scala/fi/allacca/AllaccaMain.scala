@@ -158,7 +158,6 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
     Log.i(TAG, s"onActivityResult requestCode $requestCode resultCode $resultCode")
-
     if (requestCode == REQUEST_CODE_EDIT_EVENT && resultCode == Activity.RESULT_OK) refresh
   }
 
