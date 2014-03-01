@@ -37,7 +37,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val cancelButton = createCancelButton(okButton.getId)
   private lazy val idOfEventWeAreEditing = getIdOfEditedEvent
 
-  override def onCreate(savedInstanceState: Bundle): Unit = {
+  override def onCreate(savedInstanceState: Bundle) = {
     super.onCreate(savedInstanceState)
     val editLayout = createMainLayout
     addControls(editLayout)
