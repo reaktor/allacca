@@ -7,6 +7,7 @@ import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import android.util.Log
+import java.util.TimeZone
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -32,11 +33,10 @@ class CalendarEventService(context: Context) {
     val values = new ContentValues()
     values.put("calendar_id", Long.box(calendarId))
     fillCommonFields(values, event)
-    values.put("eventTimezone", "Europe/Berlin")
+    values.put("eventTimezone", TimeZone.getDefault.getID)
     values.put("selfAttendeeStatus", Int.box(1))
     val allDay = if (event.allDay) 1 else 0
     values.put("allDay", Int.box(allDay))
-    values.put("organizer", "some.mail@some.address.com")
     values.put("guestsCanInviteOthers", Int.box(1))
     values.put("guestsCanModify", Int.box(1))
     values.put("availability", Int.box(0))
