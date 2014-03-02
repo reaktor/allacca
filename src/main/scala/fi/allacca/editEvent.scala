@@ -44,8 +44,16 @@ class EditEventActivity extends Activity with TypedViewHolder {
     initTextFieldListeners
     initDateFields(editLayout)
     initTabOrder()
-    setContentView(editLayout)
+    setContentView(wrapInScroller(editLayout))
     okButtonController()
+  }
+  
+  private def createMainLayout: RelativeLayout = {
+    val editLayout = new RelativeLayout(this)
+    val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+    editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
+    editLayout.setLayoutParams(mainLayoutParams)
+    editLayout
   }
 
   private def addControls(editLayout: RelativeLayout) {
@@ -69,6 +77,13 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventLocationField.setNextFocusDownId(eventDescriptionField.getId)
   }
 
+  private def wrapInScroller(editLayout: RelativeLayout): ScrollView = {
+    val scrollView = new ScrollView(this)
+    scrollView.setId(idGenerator.nextId)
+    scrollView.addView(editLayout)
+    scrollView
+  }
+
   private def initTextFieldListeners {
     eventNameField.addTextChangedListener(okButtonController _)
     eventLocationField.addTextChangedListener(okButtonController _)
@@ -90,8 +105,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
     getEventWeAreEditing match {
       case Some(event) => new DateTime(event.startTime)
       case None =>
-        val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
-        if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+    val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
+    if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
     }
   }
 
@@ -104,22 +119,14 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def getEventWeAreEditing: Option[CalendarEvent] = {
     for {
-      eventId <- idOfEventWeAreEditing
-      event <- calendarEventService.getEvent(eventId)
+    eventId <- idOfEventWeAreEditing
+    event <- calendarEventService.getEvent(eventId)
     } yield event
   }
 
   private def initDateFields(editLayout: RelativeLayout) {
     startDateTimeField.init(editLayout)
     endDateTimeField.init(editLayout)
-  }
-
-  private def createMainLayout: RelativeLayout = {
-    val editLayout = new RelativeLayout(this)
-    val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-    editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
-    editLayout.setLayoutParams(mainLayoutParams)
-    editLayout
   }
 
   private def createCalendarSelection: Spinner = {
