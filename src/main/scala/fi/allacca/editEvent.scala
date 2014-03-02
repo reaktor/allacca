@@ -218,6 +218,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     button.setText("X")
     button.setTextColor(Color.RED)
     button.setOnClickListener(confirmDelete _)
+    button.setEnabled(idOfEventWeAreEditing.isDefined)
     button
   }
 
