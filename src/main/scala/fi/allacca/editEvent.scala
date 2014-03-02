@@ -32,7 +32,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventLocationHeader = createHeader("Event location", Some(endDateTimeField.lastElement.getId))
   private lazy val eventLocationField = createTextField(getPrepopulateText { e => e.location }, eventLocationHeader.getId, "Event location")
   private lazy val eventDescriptionHeader = createHeader("Event description", Some(eventLocationField.getId))
-  private lazy val eventDescriptionField = createTextField(getPrepopulateText { e => e.description }, eventDescriptionHeader.getId, "Event description")
+  private lazy val eventDescriptionField = createDescriptionField(getPrepopulateText { e => e.description })
   private lazy val okButton = createOkButton
   private lazy val cancelButton = createCancelButton(okButton.getId)
   private lazy val idOfEventWeAreEditing = getIdOfEditedEvent
@@ -58,11 +58,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def addControlsToLayout(editLayout: RelativeLayout) {
-    def setBottomMarginForWholeLayout {
-      val layoutParams = eventDescriptionField.getLayoutParams.asInstanceOf[RelativeLayout.LayoutParams]
-      layoutParams.bottomMargin = dip2px(50, this)
-      eventDescriptionField.setLayoutParams(layoutParams)
-    }
     editLayout.addView(calendarSelection)
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
@@ -71,7 +66,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(eventLocationHeader)
     editLayout.addView(eventLocationField)
     editLayout.addView(eventDescriptionHeader)
-    setBottomMarginForWholeLayout
     editLayout.addView(eventDescriptionField)
     editLayout.addView(createHeader("", Some(eventDescriptionField.getId))) //Without this bottomMargin of last element doesn't work :(
     editLayout.addView(okButton)
@@ -163,14 +157,27 @@ class EditEventActivity extends Activity with TypedViewHolder {
     header
   }
 
+  private def createDescriptionField(prepopulate: String): EditText = {
+    val field = createPlainTextFieldWithHint(prepopulate, "Event description")
+    val layoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    layoutParams.addRule(BELOW, eventDescriptionHeader.getId)
+    layoutParams.bottomMargin = dip2px(50, this)
+    field.setLayoutParams(layoutParams)
+    field
+  }
+
   private def createTextField(prepopulate: String, belowField: Int, hint: String): EditText = {
+    val field: EditText = createPlainTextFieldWithHint(prepopulate, hint)
+    val layoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    layoutParams.addRule(BELOW, belowField)
+    field.setLayoutParams(layoutParams)
+    field
+  }
+
+  def createPlainTextFieldWithHint(prepopulate: String, hint: String): EditText = {
     val field = new EditText(this)
     field.setText(prepopulate)
     field.setId(idGenerator.nextId)
-    val layoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-    layoutParams.addRule(BELOW, belowField)
-
-    field.setLayoutParams(layoutParams)
     field.setHint(hint)
     field.setInputType(TYPE_CLASS_TEXT)
     field
