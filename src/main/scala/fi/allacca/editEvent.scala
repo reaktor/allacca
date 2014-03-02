@@ -24,13 +24,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private lazy val calendarSelection = createCalendarSelection
   private lazy val eventNameHeader = createHeader("Event name", Some(calendarSelection.getId))
-  private lazy val eventNameField = createTextField(getPrepopulateEventName, eventNameHeader.getId, "Event title")
+  private lazy val eventNameField = createTextField(getPrepopulateText { e => e.title }, eventNameHeader.getId, "Event title")
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
   private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(getPrepopulateEndTime, endTimeHeader.getId, this, okButtonController)
   private lazy val eventLocationHeader = createHeader("Event location", Some(endDateTimeField.lastElement.getId))
-  private lazy val eventLocationField = createTextField(getPrepopulateEventLocation, eventLocationHeader.getId, "Event location")
+  private lazy val eventLocationField = createTextField(getPrepopulateText { e => e.location }, eventLocationHeader.getId, "Event location")
+  private lazy val eventDescriptionHeader = createHeader("Event description", Some(eventLocationField.getId))
+  private lazy val eventDescriptionField = createTextField(getPrepopulateText { e => e.description }, eventDescriptionHeader.getId, "Event description")
   private lazy val okButton = createOkButton
   private lazy val cancelButton = createCancelButton(okButton.getId)
   private lazy val idOfEventWeAreEditing = getIdOfEditedEvent
@@ -46,6 +48,27 @@ class EditEventActivity extends Activity with TypedViewHolder {
     okButtonController()
   }
 
+  private def addControls(editLayout: RelativeLayout) {
+    editLayout.addView(calendarSelection)
+    editLayout.addView(eventNameHeader)
+    editLayout.addView(eventNameField)
+    editLayout.addView(startTimeHeader)
+    editLayout.addView(endTimeHeader)
+    editLayout.addView(eventLocationHeader)
+    editLayout.addView(eventLocationField)
+    editLayout.addView(eventDescriptionHeader)
+    editLayout.addView(eventDescriptionField)
+    editLayout.addView(okButton)
+    editLayout.addView(cancelButton)
+  }
+
+  private def initTabOrder() {
+    eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
+    startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
+    endDateTimeField.lastElement.setNextFocusDownId(eventLocationField.getId)
+    eventLocationField.setNextFocusDownId(eventDescriptionField.getId)
+  }
+
   private def initTextFieldListeners {
     eventNameField.addTextChangedListener(okButtonController _)
     eventLocationField.addTextChangedListener(okButtonController _)
@@ -56,16 +79,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     if (eventIdWeAreEditing == NULL_VALUE) None else Some(eventIdWeAreEditing)
   }
 
-  private def getPrepopulateEventName: String = {
+  private def getPrepopulateText(extractor: CalendarEvent => String): String = {
     getEventWeAreEditing match {
-      case Some(event) => event.title
-      case None => ""
-    }
-  }
-
-  private def getPrepopulateEventLocation: String = {
-    getEventWeAreEditing match {
-      case Some(event) => event.location
+      case Some(event) => extractor(event)
       case None => ""
     }
   }
@@ -93,12 +109,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     } yield event
   }
 
-  private def initTabOrder() {
-    eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
-    startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
-    endDateTimeField.lastElement.setNextFocusDownId(eventLocationField.getId)
-  }
-
   private def initDateFields(editLayout: RelativeLayout) {
     startDateTimeField.init(editLayout)
     endDateTimeField.init(editLayout)
@@ -110,18 +120,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
     editLayout.setLayoutParams(mainLayoutParams)
     editLayout
-  }
-
-  private def addControls(editLayout: RelativeLayout) {
-    editLayout.addView(calendarSelection)
-    editLayout.addView(eventNameHeader)
-    editLayout.addView(eventNameField)
-    editLayout.addView(startTimeHeader)
-    editLayout.addView(endTimeHeader)
-    editLayout.addView(eventLocationHeader)
-    editLayout.addView(eventLocationField)
-    editLayout.addView(okButton)
-    editLayout.addView(cancelButton)
   }
 
   private def createCalendarSelection: Spinner = {
@@ -148,19 +146,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     belowField.map { fieldId => layoutParams.addRule(BELOW, fieldId) }
     header.setLayoutParams(layoutParams)
     header
-  }
-
-  private def createEventNameField(prepopulate: String): EditText = {
-    val eventNameField = new EditText(this)
-    eventNameField.setText(prepopulate)
-    eventNameField.setId(idGenerator.nextId)
-    val eventNameLayoutParams: RelativeLayout.LayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-    eventNameLayoutParams.addRule(BELOW, eventNameHeader.getId)
-
-    eventNameField.setLayoutParams(eventNameLayoutParams)
-    eventNameField.setHint("Event title")
-    eventNameField.setInputType(TYPE_CLASS_TEXT)
-    eventNameField
   }
 
   private def createTextField(prepopulate: String, belowField: Int, hint: String): EditText = {
@@ -234,7 +219,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val startMillis = startDateTimeField.getDateTime.toDate.getTime
     val endMillis = endDateTimeField.getDateTime.toDate.getTime
     val eventLocation = eventLocationField.getText.toString
-    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis, location = eventLocation)
+    val eventDescription = eventDescriptionField.getText.toString
+    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis, location = eventLocation, description = eventDescription)
     eventToSave
   }
 }
