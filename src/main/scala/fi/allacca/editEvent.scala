@@ -256,7 +256,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 }
 
-
 object EditEventActivity {
   val idGenerator = new IdGenerator
   def addTextField(context: Context, widthDip: Float, inputLength: Int, hint: String, inputType: Int, layoutParamRules: (Int, Int)*) : EditText = {
@@ -276,12 +275,12 @@ object EditEventActivity {
 }
 
 class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit), focusListener: Option[(View, Boolean) => Unit] = None) {
-  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
+  val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
+  val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
+  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, minuteField.getId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
-  val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, yearField.getId))
-  val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
-  val fields = List(dayField, monthField, yearField, hourField, minuteField)
+  val fields = List(hourField, minuteField, dayField, monthField, yearField)
 
   def init(editLayout: RelativeLayout) {
     setDateTime(prePopulateTime)
@@ -292,10 +291,10 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       field.addTextChangedListener(changeListener)
       focusListener.map { focusListener => field.setOnFocusChangeListener(focusListener) }
     }
+    hourField.setNextFocusDownId(minuteField.getId)
+    minuteField.setNextFocusDownId(dayField.getId)
     dayField.setNextFocusDownId(monthField.getId)
     monthField.setNextFocusDownId(yearField.getId)
-    yearField.setNextFocusDownId(hourField.getId)
-    hourField.setNextFocusDownId(minuteField.getId)
   }
 
   def getDateTime: DateTime = {
@@ -332,8 +331,8 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
     fields.foreach(modifier)
   }
 
-  def lastElement = minuteField
-  def lastElementId = minuteField.getId
-  def firstElementId = dayField.getId
+  def lastElement = yearField
+  def lastElementId = yearField.getId
+  def firstElementId = hourField.getId
 
 }
