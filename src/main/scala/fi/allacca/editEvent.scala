@@ -305,11 +305,11 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   }
 
   def setDateTime(prepopulate: DateTime) {
-    dayField.setText(prepopulate.getDayOfMonth.toString)
-    monthField.setText(prepopulate.getMonthOfYear.toString)
+    dayField.setText(digitToStr(prepopulate.getDayOfMonth))
+    monthField.setText(digitToStr(prepopulate.getMonthOfYear))
     yearField.setText(prepopulate.getYear.toString)
-    hourField.setText(prepopulate.getHourOfDay.toString)
-    minuteField.setText(prepopulate.getMinuteOfHour.toString)
+    hourField.setText(digitToStr(prepopulate.getHourOfDay))
+    minuteField.setText(digitToStr(prepopulate.getMinuteOfHour))
   }
 
   def isValid: Boolean = {
@@ -335,4 +335,8 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   def lastElementId = yearField.getId
   def firstElementId = hourField.getId
 
+  private def digitToStr(d: Int): String = {
+    val str = d.toString
+    if (str.length < 2) s"0$str" else str
+  }
 }
