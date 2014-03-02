@@ -51,6 +51,10 @@ class CalendarEventService(context: Context) {
     context.getContentResolver().update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
   }
 
+  def deleteEvent(eventId: Long): Int = {
+    context.getContentResolver().delete(Events.CONTENT_URI, "_id =? ", Array(eventId.toString))
+  }
+
   def getEvent(eventId: Long): Option[CalendarEvent] = {
     val projection = Array("dtstart", "dtend", "title", "eventLocation", "description")
     val cursor = context.getContentResolver().query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)

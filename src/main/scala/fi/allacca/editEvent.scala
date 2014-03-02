@@ -1,6 +1,6 @@
 package fi.allacca
 
-import android.app.Activity
+import android.app.{AlertDialog, DialogFragment, Dialog, Activity}
 import android.os.Bundle
 import android.util.{TypedValue, Log}
 import android.widget._
@@ -12,10 +12,11 @@ import android.text.InputType.TYPE_CLASS_TEXT
 import android.widget.RelativeLayout.{BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
-import android.content.{Intent, Context}
+import android.content.{DialogInterface, Intent, Context}
 import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.View
 import scala.Array
+
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
@@ -34,8 +35,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventDescriptionHeader = createHeader("Event description", Some(eventLocationField.getId))
   private lazy val eventDescriptionField = createDescriptionField(getPrepopulateText { e => e.description })
   private lazy val okButton = createOkButton
-  private lazy val cancelButton = createCancelButton(okButton.getId)
-  private lazy val idOfEventWeAreEditing = getIdOfEditedEvent
+  private lazy val deleteButton = createDeleteButton(okButton.getId)
+  private lazy val cancelButton = createCancelButton(deleteButton.getId)
+  private lazy val idOfEventWeAreEditing: Option[Long] = getIdOfEditedEvent
 
   override def onCreate(savedInstanceState: Bundle) = {
     super.onCreate(savedInstanceState)
@@ -69,6 +71,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(eventDescriptionField)
     editLayout.addView(createHeader("", Some(eventDescriptionField.getId))) //Without this bottomMargin of last element doesn't work :(
     editLayout.addView(okButton)
+    editLayout.addView(deleteButton)
     editLayout.addView(cancelButton)
   }
 
@@ -200,8 +203,21 @@ class EditEventActivity extends Activity with TypedViewHolder {
     params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
     button.setLayoutParams(params)
     button.setText("✔")
-    button.setTextColor(Color.WHITE)
+    button.setTextColor(Color.GREEN)
     button.setOnClickListener(saveEvent _)
+    button
+  }
+
+  private def createDeleteButton(leftOfId: Int): Button = {
+    val button = new Button(this)
+    button.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(dip2px(50, this), WRAP_CONTENT)
+    params.addRule(LEFT_OF, leftOfId)
+    params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+    button.setLayoutParams(params)
+    button.setText("X")
+    button.setTextColor(Color.RED)
+    button.setOnClickListener(confirmDelete _)
     button
   }
 
@@ -229,9 +245,21 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave: CalendarEvent = extractEventFromFieldValues
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[UserCalendar]
       saveOrUpdate(eventToSave, selectedCalendar)
-      val intent = new Intent
-      setResult(Activity.RESULT_OK, intent)
-      finish
+      backToRefreshedParentView
+    }
+  }
+
+  private def backToRefreshedParentView {
+    Log.i(TAG, "Going back to main view and refreshing the results")
+    val intent = new Intent
+    setResult(Activity.RESULT_OK, intent)
+    finish
+  }
+
+  def confirmDelete(view: View) {
+    idOfEventWeAreEditing match {
+      case Some(id) => new ConfirmDeleteDialogFragment(calendarEventService, id, this, backToRefreshedParentView).show(getFragmentManager, "Delete")
+      case _ => Log.i(TAG, "No saved event to delete")
     }
   }
 
@@ -338,5 +366,26 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   private def digitToStr(d: Int): String = {
     val str = d.toString
     if (str.length < 2) s"0$str" else str
+  }
+}
+
+class ConfirmDeleteDialogFragment(eventService: CalendarEventService, eventId: Long, activity: Activity, confirmedCallback: => Unit) extends DialogFragment {
+  override def onCreateDialog(savedInstanceState: Bundle): Dialog = {
+    val builder: AlertDialog.Builder = new AlertDialog.Builder(activity)
+    builder
+      .setMessage("Delete event?")
+      .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        def onClick(dialog: DialogInterface, id: Int) {
+          Log.i(TAG, s"Deleting event $eventId")
+          eventService.deleteEvent(eventId)
+          confirmedCallback
+        }
+        })
+      .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        def onClick(dialog: DialogInterface, id: Int) {
+          Log.i(TAG, s"Not deleting event $eventId")
+      }
+    })
+    builder.create()
   }
 }
