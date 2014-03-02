@@ -26,7 +26,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameHeader = createHeader("Event name", Some(calendarSelection.getId))
   private lazy val eventNameField = createTextField(getPrepopulateText { e => e.title }, eventNameHeader.getId, "Event title")
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
-  private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController)
+  private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController, Some(startTimeFocusChange))
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(getPrepopulateEndTime, endTimeHeader.getId, this, okButtonController)
   private lazy val eventLocationHeader = createHeader("Event location", Some(endDateTimeField.lastElement.getId))
@@ -140,6 +140,15 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     calendarSelection.setLayoutParams(layoutParams)
     calendarSelection
+  }
+
+  private def startTimeFocusChange(view: View, focus: Boolean) {
+    if (startDateTimeField.isValid && !focus) { //When focus is lost, we check the end date situation (no partial fillings with one digit this way)
+      val startTime = startDateTimeField.getDateTime
+      val endTime = endDateTimeField.getDateTime
+      if (endTime.isBefore(startTime)) endDateTimeField.setDateTime(startTime.plusHours(1))
+    }
+    okButtonController()
   }
 
   private def okButtonController(text: String = "") {
@@ -266,7 +275,7 @@ object EditEventActivity {
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
 }
 
-class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit)) {
+class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit), focusListener: Option[(View, Boolean) => Unit] = None) {
   val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
@@ -275,12 +284,13 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   val fields = List(dayField, monthField, yearField, hourField, minuteField)
 
   def init(editLayout: RelativeLayout) {
-    prePopulateFields(prePopulateTime)
+    setDateTime(prePopulateTime)
     fields.foreach { field =>
       editLayout.addView(field)
       field.setSelectAllOnFocus(true)
       field.addTextChangedListener(validate _)
       field.addTextChangedListener(changeListener)
+      focusListener.map { focusListener => field.setOnFocusChangeListener(focusListener) }
     }
     dayField.setNextFocusDownId(monthField.getId)
     monthField.setNextFocusDownId(yearField.getId)
@@ -293,6 +303,14 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       editText.getText.toString.toInt
     }
     new DateTime(intValue(yearField), intValue(monthField), intValue(dayField), intValue(hourField), intValue(minuteField), 0, 0)
+  }
+
+  def setDateTime(prepopulate: DateTime) {
+    dayField.setText(prepopulate.getDayOfMonth.toString)
+    monthField.setText(prepopulate.getMonthOfYear.toString)
+    yearField.setText(prepopulate.getYear.toString)
+    hourField.setText(prepopulate.getHourOfDay.toString)
+    minuteField.setText(prepopulate.getMinuteOfHour.toString)
   }
 
   def isValid: Boolean = {
@@ -310,7 +328,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   def validate(x: String) {
     Log.i(TAG, s"** valid $isValid **")
     val modifier: (EditText => Unit) =
-      if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
+    if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
     fields.foreach(modifier)
   }
 
@@ -318,11 +336,4 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   def lastElementId = minuteField.getId
   def firstElementId = dayField.getId
 
-  private def prePopulateFields(prepopulate: DateTime) {
-    dayField.setText(prepopulate.getDayOfMonth.toString)
-    monthField.setText(prepopulate.getMonthOfYear.toString)
-    yearField.setText(prepopulate.getYear.toString)
-    hourField.setText(prepopulate.getHourOfDay.toString)
-    minuteField.setText(prepopulate.getMinuteOfHour.toString)
-  }
 }

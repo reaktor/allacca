@@ -1,7 +1,7 @@
 package fi
 
 import android.view.View
-import android.view.View.OnClickListener
+import android.view.View.{OnFocusChangeListener, OnClickListener}
 import org.joda.time.LocalDate
 
 /*
@@ -21,6 +21,10 @@ package object allacca {
 
   implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
     def onClick(evt: View) = f(evt)
+  }
+
+  implicit def func2OnFocusChangeListener(f: (View, Boolean) => Unit) = new OnFocusChangeListener {
+    def onFocusChange(view: View, focus: Boolean) = f(view, focus)
   }
 
   implicit def localDateToEpochMillis(localDate: LocalDate): Long = localDate.toDate.getTime
