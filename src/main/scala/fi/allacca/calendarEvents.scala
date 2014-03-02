@@ -6,6 +6,8 @@ import android.content.Context
 import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
+import android.util.Log
+import java.util.TimeZone
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -31,18 +33,10 @@ class CalendarEventService(context: Context) {
     val values = new ContentValues()
     values.put("calendar_id", Long.box(calendarId))
     fillCommonFields(values, event)
-
-    //TODO:
-    //Move these to fillCommonFields when it's safe: when edit can prefill and edit these vals
-    values.put("eventLocation", event.location)
-    values.put("description", event.description)
-    //END_TODO
-
-    values.put("eventTimezone", "Europe/Berlin")
+    values.put("eventTimezone", TimeZone.getDefault.getID)
     values.put("selfAttendeeStatus", Int.box(1))
     val allDay = if (event.allDay) 1 else 0
     values.put("allDay", Int.box(allDay))
-    values.put("organizer", "some.mail@some.address.com")
     values.put("guestsCanInviteOthers", Int.box(1))
     values.put("guestsCanModify", Int.box(1))
     values.put("availability", Int.box(0))
@@ -58,13 +52,20 @@ class CalendarEventService(context: Context) {
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
-    val proj = Array("dtstart", "dtend", "title")
-    val cursor = context.getContentResolver().query(Events.CONTENT_URI, proj, "_id =? ", Array(eventId.toString), null)
+    val projection = Array("dtstart", "dtend", "title", "eventLocation", "description")
+    val cursor = context.getContentResolver().query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
       val title = cursor.getString(2)
-      Some(new CalendarEvent(Some(eventId), title, startTime, endTime))
+      val location = cursor.getString(3)
+      val description = cursor.getString(4)
+      Some(new CalendarEvent(id = Some(eventId), 
+                             title = title, 
+                             startTime = startTime, 
+                             endTime = endTime, 
+                             location = location, 
+                             description = description))
     } else { None }
   }
 
@@ -72,6 +73,8 @@ class CalendarEventService(context: Context) {
     values.put("dtstart", Long.box(event.startTime))
     values.put("dtend", Long.box(event.endTime))
     values.put("title", event.title)
+    values.put("eventLocation", event.location)
+    values.put("description", event.description)
   }
 
   def getCalendars: Array[UserCalendar] = {

@@ -8,9 +8,10 @@ import android.graphics.{Point, Color}
 import android.view.ViewGroup.LayoutParams
 import android.util.Log
 import java.text.DateFormatSymbols
-import java.util.Calendar
+import java.util.{Locale, Calendar}
 import android.content.Intent
 import org.joda.time.LocalDate
+import fi.allacca._
 
 
 class AllaccaMain extends Activity with TypedViewHolder {
@@ -102,13 +103,10 @@ class AllaccaMain extends Activity with TypedViewHolder {
     Log.d(TAG, "+ createNewEvent")
     val intent = new Intent(this, classOf[EditEventActivity])
 
-    //Editing existing event was manually tested with this (all we need to change creation to editing)
-    //intent.putExtra(EVENT_ID, 126L) //We're creating a new event -> no ID yet
-
     //This will create the new event after ten days:
     //intent.putExtra(EVENT_DATE, new DateTime().plusDays(10).toDate.getTime)
 
-    startActivity(intent)
+    startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
   }
 
   private def addGotoNowButton(layout: ViewGroup, leftSideId: Int) {
@@ -130,7 +128,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createDayColumnTitles(): Seq[View] = {
-    val shortWeekDays = new DateFormatSymbols().getShortWeekdays
+    val shortWeekDays = new DateFormatSymbols(Locale.ENGLISH).getShortWeekdays
     val weekDayInitials = List(
       shortWeekDays(Calendar.MONDAY),
       shortWeekDays(Calendar.TUESDAY),
@@ -153,5 +151,19 @@ class AllaccaMain extends Activity with TypedViewHolder {
       view
     }
   }
+
+  override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    Log.i(TAG, s"onActivityResult requestCode $requestCode resultCode $resultCode")
+    if (requestCode == REQUEST_CODE_EDIT_EVENT && resultCode == Activity.RESULT_OK) refresh
+  }
+
+  private def refresh {
+    Log.i(TAG, "Refreshing main view")
+    val intent = getIntent
+    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    finish()
+    startActivity(intent)
+  }
+
 }
 
