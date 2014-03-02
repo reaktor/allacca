@@ -10,12 +10,14 @@ import android.util.Log
 import java.text.DateFormatSymbols
 import java.util.Calendar
 import android.content.Intent
+import org.joda.time.LocalDate
 
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
   private lazy val weeksList = new ListView(this)
   private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
+  private lazy val agendaView = new AgendaView(this)
   private val idGenerator = new IdGenerator
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
@@ -75,19 +77,12 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def createAgenda(mainLayout: RelativeLayout): Unit = {
-    val agendaLayout = new LinearLayout(this)
-    agendaLayout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-    agendaLayout.setOrientation(LinearLayout.VERTICAL)
-    agendaLayout.setId(idGenerator.nextId)
-    val agendaView = new AgendaView(this, agendaLayout)
-
     val scrollParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
     scrollParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
     agendaView.setLayoutParams(scrollParams)
     agendaView.setId(idGenerator.nextId)
-
-    agendaView.addView(agendaLayout)
     mainLayout.addView(agendaView)
+    agendaView.start()
   }
 
   private def addAEventButton(layout: ViewGroup): Button = {
@@ -131,6 +126,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   def gotoNow(view: View) {
     weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
+    agendaView.resetTo(new LocalDate)
   }
 
   private def createDayColumnTitles(): Seq[View] = {
