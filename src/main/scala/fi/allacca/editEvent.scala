@@ -40,7 +40,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   override def onCreate(savedInstanceState: Bundle) = {
     super.onCreate(savedInstanceState)
     val editLayout = createMainLayout
-    addControls(editLayout)
+    addControlsToLayout(editLayout)
     initTextFieldListeners
     initDateFields(editLayout)
     initTabOrder()
@@ -51,12 +51,18 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private def createMainLayout: RelativeLayout = {
     val editLayout = new RelativeLayout(this)
     val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+    mainLayoutParams.bottomMargin = dip2px(50, this)
     editLayout.setPadding(dip2px(16, this), 0, dip2px(16, this), 0)
     editLayout.setLayoutParams(mainLayoutParams)
     editLayout
   }
 
-  private def addControls(editLayout: RelativeLayout) {
+  private def addControlsToLayout(editLayout: RelativeLayout) {
+    def setBottomMarginForWholeLayout {
+      val layoutParams = eventDescriptionField.getLayoutParams.asInstanceOf[RelativeLayout.LayoutParams]
+      layoutParams.bottomMargin = dip2px(50, this)
+      eventDescriptionField.setLayoutParams(layoutParams)
+    }
     editLayout.addView(calendarSelection)
     editLayout.addView(eventNameHeader)
     editLayout.addView(eventNameField)
@@ -65,7 +71,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(eventLocationHeader)
     editLayout.addView(eventLocationField)
     editLayout.addView(eventDescriptionHeader)
+    setBottomMarginForWholeLayout
     editLayout.addView(eventDescriptionField)
+    editLayout.addView(createHeader("", Some(eventDescriptionField.getId))) //Without this bottomMargin of last element doesn't work :(
     editLayout.addView(okButton)
     editLayout.addView(cancelButton)
   }
