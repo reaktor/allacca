@@ -16,8 +16,6 @@ import android.content.{Intent, Context}
 import org.joda.time.{Period, IllegalFieldValueException, DateTime}
 import android.view.View
 import scala.Array
-import android.provider.CalendarContract.Calendars
-import android.database.Cursor
 
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
