@@ -8,7 +8,7 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val weekNumberWidth = spToPx(40)
   val dayColumnWidth = spToPx(30)
   val weekRowHeight = spToPx(40)
-  val overviewHeaderTextSize = 30
+  val overviewHeaderTextSize = 25
   val overviewContentTextSize = 20
 
   val weekListWidth = weekNumberWidth + (7 * dayColumnWidth)

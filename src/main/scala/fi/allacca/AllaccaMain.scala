@@ -8,7 +8,7 @@ import android.graphics.{Point, Color}
 import android.view.ViewGroup.LayoutParams
 import android.util.Log
 import java.text.DateFormatSymbols
-import java.util.Calendar
+import java.util.{Locale, Calendar}
 import android.content.Intent
 import fi.allacca._
 
@@ -132,7 +132,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createDayColumnTitles(): Seq[View] = {
-    val shortWeekDays = new DateFormatSymbols().getShortWeekdays
+    val shortWeekDays = new DateFormatSymbols(Locale.ENGLISH).getShortWeekdays
     val weekDayInitials = List(
       shortWeekDays(Calendar.MONDAY),
       shortWeekDays(Calendar.TUESDAY),
