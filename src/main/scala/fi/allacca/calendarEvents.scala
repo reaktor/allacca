@@ -25,7 +25,15 @@ class CalendarEvent(val id: Option[Long], val title: String, val startTime: Long
   private def formatEpoch(epochMillis: Long): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(epochMillis)
 }
 
-case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent])
+case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {
+  val id: Long = day
+}
+
+object DayWithEvents {
+  implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents =>
+    dwe.day.toDateTimeAtStartOfDay.toDate.getTime
+  }
+}
 
 class CalendarEventService(context: Context) {
 
