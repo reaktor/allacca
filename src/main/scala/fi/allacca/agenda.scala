@@ -1,6 +1,6 @@
 package fi.allacca
 
-import android.app.Activity
+import android.app.{ProgressDialog, Activity}
 import android.database.Cursor
 import android.widget._
 import scala.Array
@@ -153,6 +153,11 @@ class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int,
   private var currentBeginning: LocalDate = new LocalDate
   private val daysToLoadAtTime = 30
   private var newBeginning: LocalDate = currentBeginning.minusDays(daysToLoadAtTime)
+  private lazy val progressDialog = new ProgressDialog(activity)
+  progressDialog.setTitle("Loading")
+  progressDialog.setMessage("events")
+  progressDialog.setCancelable(false)
+  progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
 
   def loadEnoughPastFrom(focusDay: LocalDate) {
     this.focusDay = focusDay
@@ -161,6 +166,8 @@ class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int,
   }
 
   private def loadBatch(start: LocalDate, end: LocalDate) {
+    progressDialog.setMessage(start.toString + " -- " + end.toString)
+    progressDialog.show()
     Log.d(TAG, getClass.getSimpleName + " loading " + start + " -- " + end)
     val loadArguments = new Bundle
     loadArguments.putLong("start", start)
@@ -195,8 +202,10 @@ class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int,
     newBeginning = currentBeginning.minusDays(daysToLoadAtTime)
     if (!model.hasEnoughContentBefore(focusDay)) {
       Log.d(TAG, "Got to load more")
+      progressDialog.setMessage(newBeginning.toString + " -- " + currentBeginning.toString)
       loadBatch(newBeginning, currentBeginning)
     } else {
+      progressDialog.dismiss()
       view.setSelectionToIndexOf(focusDay)
     }
   }
