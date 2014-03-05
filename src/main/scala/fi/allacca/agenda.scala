@@ -55,6 +55,15 @@ class AgendaView(activity: Activity) extends ListView(activity) {
     val indexOfDate = fullModel.indexOf(date)
     setSelection(indexOfDate)
   }
+
+  def goto(date: LocalDate) {
+    val indexOfDate = fullModel.indexOf(date)
+    if (indexOfDate == -1) {
+      resetTo(date)
+    } else {
+      setSelection(indexOfDate)
+    }
+  }
 }
 
 class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAdapter {
