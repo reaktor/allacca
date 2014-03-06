@@ -294,14 +294,24 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
 }
 
 class CombinedModel(past: AgendaModel, future: AgendaModel) {
-  def getItem(index: Int): DayWithEvents = contents.toArray.apply(index)
+  def getItem(index: Int): DayWithEvents = {
+    if (index < past.contents.size) {
+      past.contents.toArray.apply(index)
+    } else {
+      val i = index - past.contents.size
+      future.contents.toArray.apply(i)
+    }
+  }
 
-  private def contents: Seq[DayWithEvents] = (past.contents ++ future.contents).toSeq.sorted
-
-  def size = contents.size
+  def size = past.contents.size + future.contents.size
 
   def indexOf(date: LocalDate): Int = {
-    val item = contents.find { _.day == date }
-    item.map { contents.toIndexedSeq.indexOf(_) }.getOrElse(-1)
+    past.contents.find { _.day == date } match {
+      case Some(dayWithEvents) => past.contents.toIndexedSeq.indexOf(dayWithEvents)
+      case None => future.contents.find { _.day == date } match {
+        case Some(dayWithEvents) => future.contents.toIndexedSeq.indexOf(dayWithEvents)
+        case None => -1
+      }
+    }
   }
 }
