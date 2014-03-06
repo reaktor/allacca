@@ -11,8 +11,6 @@ import java.text.DateFormatSymbols
 import java.util.{Locale, Calendar}
 import android.content.Intent
 import org.joda.time.LocalDate
-import fi.allacca._
-
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
