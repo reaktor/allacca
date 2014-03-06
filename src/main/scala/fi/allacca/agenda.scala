@@ -29,7 +29,7 @@ class AgendaView(activity: Activity) extends ListView(activity) {
   /**
    * How much off-screen content we want to maintain loaded to facilitate scrolling
    */
-  private lazy val verticalViewPortPadding: Int = rowsVisibleAtTime
+  private lazy val verticalViewPortPadding: Int = rowsVisibleAtTime / 2
   private val howManyDaysToLoadAtTime = 30
 
   private val pastWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalDate) = { (start, end) =>
@@ -43,11 +43,26 @@ class AgendaView(activity: Activity) extends ListView(activity) {
     pastLength >= verticalViewPortPadding
   }
   private lazy val pastModel = new AgendaModel(pastWindowRoller, pastEnoughChecker)
+  private lazy val pastCreator = new AgendaCreator(activity, 19, pastModel, adapter, this)
 
-  private lazy val fullModel = new CombinedModel(pastModel)
+  private val futureWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalDate) = { (start, end) =>
+    val newStart = end
+    val newEnd = start.plusDays(howManyDaysToLoadAtTime)
+    (newStart, newEnd)
+  }
+  private val futureEnoughChecker: (LocalDate, AgendaModel) => Boolean = { (day, model) =>
+    val futureLength = model.contents.count { _.day.isAfter(day) }
+    Log.d(TAG, getClass.getSimpleName + " futureLength == " + futureLength)
+    futureLength >= verticalViewPortPadding
+  }
+  private lazy val futureModel = new AgendaModel(futureWindowRoller, futureEnoughChecker)
+  private lazy val futureCreator = new AgendaCreator(activity, 27, futureModel, adapter, this, { x: Unit =>
+    Log.d(TAG, "Setting selection after loading")
+    setSelectionToIndexOf(focusDay)
+  })
 
-  private lazy val pastCreator = new AgendaCreator(activity, pastModel, adapter, this)
-//  private lazy val futureCreator = new FutureAgendaCreator(activity, verticalViewPortPadding, ... )
+  private lazy val fullModel = new CombinedModel(pastModel, futureModel)
+
   private var focusDay: LocalDate = new LocalDate
 
   private lazy val adapter = new AgendaAdapter(activity, fullModel)
@@ -59,7 +74,8 @@ class AgendaView(activity: Activity) extends ListView(activity) {
   
   def resetTo(newFocusDay: LocalDate) {
     focusDay = newFocusDay
-    pastCreator.loadEnoughRows((focusDay.minusDays(howManyDaysToLoadAtTime), focusDay.plusDays(howManyDaysToLoadAtTime)), focusDay)
+    pastCreator.loadEnoughRows((focusDay.minusDays(howManyDaysToLoadAtTime), focusDay.minusDays(1)), focusDay)
+    futureCreator.loadEnoughRows((focusDay, focusDay.plusDays(howManyDaysToLoadAtTime)), focusDay)
   }
 
   def setSelectionToIndexOf(date: LocalDate) {
@@ -73,21 +89,34 @@ class AgendaView(activity: Activity) extends ListView(activity) {
     if (indexOfDate == -1) {
       resetTo(date)
     } else {
-      setSelection(indexOfDate)
+      smoothScrollToPosition(indexOfDate)
     }
   }
 }
 
 class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAdapter {
+  private val DAYVIEW_TAG_ID = R.id.dayViewTagId
+
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
 
-    def getItemId(position: Int): Long = getItem(position).map {
+    def getItemId(position: Int): Long = time({getItem(position).map {
       _.id
-    }.getOrElse(-1)
+    }.getOrElse(-1)}, "get item id")
 
     def getCount: Int = Integer.MAX_VALUE
 
-    def getView(position: Int, convertView: View, parent: ViewGroup): View = render(getItem(position))
+    def getView(position: Int, convertView: View, parent: ViewGroup): View = {
+      time({
+        val item = getItem(position)
+        if (convertView != null && item.isDefined && convertView.getTag(DAYVIEW_TAG_ID).asInstanceOf[Long] == item.get.id) {
+          Log.d(TAG, "\tFound convert view")
+          convertView
+        } else {
+          Log.d(TAG, "\tHave to do new view")
+          render(item)
+        }
+      }, "agendarow render")
+    }
 
     def getItem(position: Int): Option[DayWithEvents] = {
       if (fullModel.size == 0) {
@@ -148,12 +177,13 @@ class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAd
           }
           titleView.setOnClickListener(onClick)
       }
+      dayView.setTag(DAYVIEW_TAG_ID, dayWithEvents.id)
       dayView
     }
 }
 
-class AgendaCreator(activity: Activity, model: AgendaModel,
-                        adapter: AgendaAdapter, view: AgendaView) extends LoaderCallbacks[Cursor] {
+class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
+                        adapter: AgendaAdapter, view: AgendaView, onFinished: Unit => Unit = { _ => }) extends LoaderCallbacks[Cursor] {
   private lazy val loader = EventsLoaderFactory.createLoader(activity)
   private var focusDay: LocalDate = new LocalDate
   private lazy val progressDialog = new ProgressDialog(activity)
@@ -176,7 +206,7 @@ class AgendaCreator(activity: Activity, model: AgendaModel,
     val loadArguments = new Bundle
     loadArguments.putLong("start", start)
     loadArguments.putLong("end", end)
-    activity.getLoaderManager.initLoader(0, loadArguments, this)
+    activity.getLoaderManager.initLoader(loaderId, loadArguments, this)
   }
 
   def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
@@ -200,7 +230,7 @@ class AgendaCreator(activity: Activity, model: AgendaModel,
       model.add(dayWithEvents)
     }
     adapter.notifyDataSetChanged()
-    activity.getLoaderManager.destroyLoader(0) // This makes onCreateLoader run again and use fresh search URI
+    activity.getLoaderManager.destroyLoader(loaderId) // This makes onCreateLoader run again and use fresh search URI
 
     model.rollWindow()
     if (!model.hasEnoughContentCountingFrom(focusDay)) {
@@ -209,7 +239,7 @@ class AgendaCreator(activity: Activity, model: AgendaModel,
       loadBatch()
     } else {
       progressDialog.dismiss()
-      view.setSelectionToIndexOf(focusDay)
+      onFinished(Unit)
     }
   }
 
@@ -263,13 +293,15 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
   def hasEnoughContentCountingFrom(day: LocalDate): Boolean = hasEnoughContent(day, this)
 }
 
-class CombinedModel(past: AgendaModel /*, future: AgendaModel */) {
-  def getItem(index: Int): DayWithEvents = past.contents.toArray.apply(index)
+class CombinedModel(past: AgendaModel, future: AgendaModel) {
+  def getItem(index: Int): DayWithEvents = contents.toArray.apply(index)
 
-  def size = past.contents.size
+  private def contents: Seq[DayWithEvents] = (past.contents ++ future.contents).toSeq.sorted
+
+  def size = contents.size
 
   def indexOf(date: LocalDate): Int = {
-    val item = past.contents.find { _.day == date }
-    item.map { past.contents.toIndexedSeq.indexOf(_) }.getOrElse(-1)
+    val item = contents.find { _.day == date }
+    item.map { contents.toIndexedSeq.indexOf(_) }.getOrElse(-1)
   }
 }
