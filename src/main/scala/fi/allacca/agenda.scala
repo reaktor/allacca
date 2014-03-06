@@ -30,12 +30,23 @@ class AgendaView(activity: Activity) extends ListView(activity) {
    * How much off-screen content we want to maintain loaded to facilitate scrolling
    */
   private lazy val verticalViewPortPadding: Int = rowsVisibleAtTime
+  private val howManyDaysToLoadAtTime = 30
 
-  lazy val pastModel = new AgendaModel(rowsVisibleAtTime, verticalViewPortPadding)
+  private val pastWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalDate) = { (start, end) =>
+    val newStart = start.minusDays(howManyDaysToLoadAtTime)
+    val newEnd = start
+    (newStart, newEnd)
+  }
+  private val pastEnoughChecker: (LocalDate, AgendaModel) => Boolean = { (day, model) =>
+    val pastLength = model.contents.count { _.day.isBefore(day) }
+    Log.d(TAG, getClass.getSimpleName + " pastLength == " + pastLength)
+    pastLength >= verticalViewPortPadding
+  }
+  private lazy val pastModel = new AgendaModel(pastWindowRoller, pastEnoughChecker)
 
   private lazy val fullModel = new CombinedModel(pastModel)
 
-  private lazy val pastCreator = new PastAgendaCreator(activity, verticalViewPortPadding, pastModel, adapter, this)
+  private lazy val pastCreator = new AgendaCreator(activity, pastModel, adapter, this)
 //  private lazy val futureCreator = new FutureAgendaCreator(activity, verticalViewPortPadding, ... )
   private var focusDay: LocalDate = new LocalDate
 
@@ -48,11 +59,12 @@ class AgendaView(activity: Activity) extends ListView(activity) {
   
   def resetTo(newFocusDay: LocalDate) {
     focusDay = newFocusDay
-    pastCreator.loadEnoughPastFrom(focusDay)
+    pastCreator.loadEnoughRows((focusDay.minusDays(howManyDaysToLoadAtTime), focusDay.plusDays(howManyDaysToLoadAtTime)), focusDay)
   }
 
   def setSelectionToIndexOf(date: LocalDate) {
     val indexOfDate = fullModel.indexOf(date)
+    Log.d(TAG, "Selecting index " + indexOfDate + " of " + date)
     setSelection(indexOfDate)
   }
 
@@ -75,13 +87,7 @@ class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAd
 
     def getCount: Int = Integer.MAX_VALUE
 
-    def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-      if (convertView != null && false /* Seems like view reuse is difficult with variable sized model */) {
-        convertView
-      } else {
-        render(getItem(position))
-      }
-    }
+    def getView(position: Int, convertView: View, parent: ViewGroup): View = render(getItem(position))
 
     def getItem(position: Int): Option[DayWithEvents] = {
       if (fullModel.size == 0) {
@@ -146,26 +152,24 @@ class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAd
     }
 }
 
-class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int, model: AgendaModel,
+class AgendaCreator(activity: Activity, model: AgendaModel,
                         adapter: AgendaAdapter, view: AgendaView) extends LoaderCallbacks[Cursor] {
   private lazy val loader = EventsLoaderFactory.createLoader(activity)
   private var focusDay: LocalDate = new LocalDate
-  private var currentBeginning: LocalDate = new LocalDate
-  private val daysToLoadAtTime = 30
-  private var newBeginning: LocalDate = currentBeginning.minusDays(daysToLoadAtTime)
   private lazy val progressDialog = new ProgressDialog(activity)
   progressDialog.setTitle("Loading")
   progressDialog.setMessage("events")
   progressDialog.setCancelable(false)
   progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
 
-  def loadEnoughPastFrom(focusDay: LocalDate) {
+  def loadEnoughRows(initialLoadRange: (LocalDate, LocalDate), focusDay: LocalDate) {
     this.focusDay = focusDay
-    currentBeginning = focusDay.plusDays(daysToLoadAtTime)
-    loadBatch(newBeginning, currentBeginning)
+    model.currentRange = initialLoadRange
+    loadBatch()
   }
 
-  private def loadBatch(start: LocalDate, end: LocalDate) {
+  private def loadBatch() {
+    val (start, end) = model.currentRange
     progressDialog.setMessage(start.toString + " -- " + end.toString)
     progressDialog.show()
     Log.d(TAG, getClass.getSimpleName + " loading " + start + " -- " + end)
@@ -188,7 +192,7 @@ class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int,
     Log.d(TAG, "onLoadFinished starting")
     val events = readEvents(cursor)
     val eventsByDays = events.groupBy { e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate }
-    val days = eventsByDays.keys
+    val days = (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate }
     days.foreach { day =>
       val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
       val dayWithEvents = DayWithEvents(day, eventsOfDay)
@@ -198,12 +202,11 @@ class PastAgendaCreator(activity: Activity, howMuchExtraPastToLoadInPixels: Int,
     adapter.notifyDataSetChanged()
     activity.getLoaderManager.destroyLoader(0) // This makes onCreateLoader run again and use fresh search URI
 
-    currentBeginning = newBeginning
-    newBeginning = currentBeginning.minusDays(daysToLoadAtTime)
-    if (!model.hasEnoughContentBefore(focusDay)) {
+    model.rollWindow()
+    if (!model.hasEnoughContentCountingFrom(focusDay)) {
       Log.d(TAG, "Got to load more")
-      progressDialog.setMessage(newBeginning.toString + " -- " + currentBeginning.toString)
-      loadBatch(newBeginning, currentBeginning)
+      progressDialog.setMessage(model.currentRange.toString().replace(",", " -- "))
+      loadBatch()
     } else {
       progressDialog.dismiss()
       view.setSelectionToIndexOf(focusDay)
@@ -246,16 +249,18 @@ object EventsLoaderFactory {
   }
 }
 
-class AgendaModel(rowsVisibleAtTime: Int, howManyRowsToLoadInAdvance: Int) {
+class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalDate),
+                   hasEnoughContent: (LocalDate, AgendaModel) => Boolean) {
+  type LoadRange = (LocalDate, LocalDate)
+  var currentRange: LoadRange = (new LocalDate, new LocalDate)
+
   val contents = mutable.SortedSet[DayWithEvents]()
 
   def add(dwe: DayWithEvents) { contents.add(dwe) }
 
-  def hasEnoughContentBefore(day: LocalDate): Boolean = {
-    val pastLength = contents.count { _.day.isBefore(day) }
-    Log.d(TAG, getClass.getSimpleName + " pastLength == " + pastLength)
-    pastLength >= howManyRowsToLoadInAdvance
-  }
+  def rollWindow() { currentRange = loadWindowRoller(currentRange._1, currentRange._2) }
+
+  def hasEnoughContentCountingFrom(day: LocalDate): Boolean = hasEnoughContent(day, this)
 }
 
 class CombinedModel(past: AgendaModel /*, future: AgendaModel */) {
