@@ -152,13 +152,13 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
     Log.i(TAG, s"onActivityResult requestCode $requestCode resultCode $resultCode")
-    if (requestCode == REQUEST_CODE_EDIT_EVENT && resultCode == Activity.RESULT_OK) refresh
+    if (requestCode == REQUEST_CODE_EDIT_EVENT && resultCode == Activity.RESULT_OK) refresh()
   }
 
-  private def refresh {
+  private def refresh() {
     Log.i(TAG, "Refreshing main view")
     val intent = getIntent
-    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
     finish()
     startActivity(intent)
   }
