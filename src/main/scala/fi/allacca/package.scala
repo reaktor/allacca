@@ -3,6 +3,7 @@ package fi
 import android.view.View
 import android.view.View.{OnFocusChangeListener, OnClickListener}
 import org.joda.time.LocalDate
+import android.util.Log
 
 /*
  * When your code is not in allacca-package, but you need these definitions, do this import:
@@ -30,4 +31,17 @@ package object allacca {
   implicit def localDateToEpochMillis(localDate: LocalDate): Long = localDate.toDate.getTime
 
   implicit def func2Runnable(f: => Unit) = new Runnable() { def run() { f }}
+
+  /**
+   * Timing utility from http://stackoverflow.com/a/9160068
+   */
+  def time[R](block: => R, name: String = ""): R = {
+    val t0 = System.nanoTime()
+    val result = block    // call-by-name
+    val t1 = System.nanoTime()
+    val nanoSeconds = t1 - t0
+    val milliSeconds = nanoSeconds / 1000000f
+    Log.d(TAG, s"elapsed time $name: $nanoSeconds ns ($milliSeconds ms)")
+    result
+  }
 }
