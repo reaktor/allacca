@@ -99,23 +99,17 @@ class AgendaAdapter(activity: Activity, fullModel: CombinedModel) extends BaseAd
 
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
 
-    def getItemId(position: Int): Long = time({getItem(position).map {
-      _.id
-    }.getOrElse(-1)}, "get item id")
+    def getItemId(position: Int): Long = getItem(position).map { _.id }.getOrElse(-1)
 
     def getCount: Int = Integer.MAX_VALUE
 
     def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-      time({
-        val item = getItem(position)
-        if (convertView != null && item.isDefined && convertView.getTag(DAYVIEW_TAG_ID).asInstanceOf[Long] == item.get.id) {
-          Log.d(TAG, "\tFound convert view")
-          convertView
-        } else {
-          Log.d(TAG, "\tHave to do new view")
-          render(item)
-        }
-      }, "agendarow render")
+      val item = getItem(position)
+      if (convertView != null && item.isDefined && convertView.getTag(DAYVIEW_TAG_ID).asInstanceOf[Long] == item.get.id) {
+        convertView
+      } else {
+        render(item)
+      }
     }
 
     def getItem(position: Int): Option[DayWithEvents] = {
