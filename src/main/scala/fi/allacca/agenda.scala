@@ -53,7 +53,7 @@ class AgendaView(activity: Activity) extends ListView(activity) {
   private val futureEnoughChecker: (LocalDate, AgendaModel) => Boolean = { (day, model) =>
     val futureLength = model.contents.count { _.day.isAfter(day) }
     Log.d(TAG, getClass.getSimpleName + " futureLength == " + futureLength)
-    futureLength >= verticalViewPortPadding
+    futureLength >= rowsVisibleAtTime + verticalViewPortPadding
   }
   private lazy val futureModel = new AgendaModel(futureWindowRoller, futureEnoughChecker)
   private lazy val futureCreator = new AgendaCreator(activity, 27, futureModel, adapter, this, { x: Unit =>
