@@ -9,7 +9,7 @@ import android.content.{Intent, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{Days, Years, DateTime, LocalDate}
 import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
@@ -284,7 +284,24 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
 
   def rollWindow() { currentRange = loadWindowRoller(currentRange._1, currentRange._2) }
 
-  def hasEnoughContentCountingFrom(day: LocalDate): Boolean = hasEnoughContent(day, this)
+  def hasEnoughContentCountingFrom(day: LocalDate): Boolean = {
+    if (hasEnoughContent(day, this)) {
+      true
+    } else {
+      val yearsAlreadyLoaded = Years.yearsBetween(currentRange._2, day).getYears
+      if (yearsAlreadyLoaded >= 2) {
+        val endOfHistoryDay = currentRange._2
+        val endOfHistoryEvent = new CalendarEvent(None, "No events beyond " + endOfHistoryDay,
+          endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
+        val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
+        Log.i(TAG, endOfHistoryMark.toString)
+        add(endOfHistoryMark)
+        true
+      } else {
+        false
+      }
+    }
+  }
 }
 
 class CombinedModel(past: AgendaModel, future: AgendaModel) {
