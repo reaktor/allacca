@@ -278,22 +278,47 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
   type LoadRange = (LocalDate, LocalDate)
   var currentRange: LoadRange = (new LocalDate, new LocalDate)
 
+  @volatile
   var contents = mutable.ListBuffer[DayWithEvents]()
 
   def addOrUpdate(dwe: DayWithEvents) {
-    contents.find { _.day == dwe.day } match {
+    findFromContents { _.day == dwe.day } match {
       case None => add(dwe)
       case Some(oldDwe) =>
         if (oldDwe.events != dwe.events) {
-          contents -= oldDwe
+          removeFromContents(oldDwe)
           add(dwe)
         }
     }
   }
 
+  def removeFromContents(oldDwe: DayWithEvents) {
+    this.synchronized {
+      contents -= oldDwe
+    }
+  }
+
+  def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = this.synchronized {
+    contents.find(p)
+  }
+
+  def getContentsSize = this.synchronized {
+    contents.size
+  }
+
+  def getItemFromContents(index: Int) = this.synchronized {
+    contents(index)
+  }
+
+  def getIndexOfItemInContents(day: DayWithEvents) = this.synchronized {
+    contents.indexOf(day)
+  }
+
   private def add(dwe: DayWithEvents) {
-    contents.append(dwe)
-    contents = contents.sortBy { dwe => dwe.day.toDate }
+    this.synchronized {
+      contents.append(dwe)
+      contents = contents.sortBy { dwe => dwe.day.toDate }
+    }
   }
 
   def rollWindow() { currentRange = loadWindowRoller(currentRange._1, currentRange._2) }
@@ -320,21 +345,21 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
 
 class CombinedModel(past: AgendaModel, future: AgendaModel) {
   def getItem(index: Int): DayWithEvents = {
-    if (index < past.contents.size) {
-      past.contents(index)
+    if (index < past.getContentsSize) {
+      past.getItemFromContents(index)
     } else {
-      val i = index - past.contents.size
-      future.contents(i)
+      val i = index - past.getContentsSize
+      future.getItemFromContents(i)
     }
   }
 
-  def size = past.contents.size + future.contents.size
+  def size = past.getContentsSize + future.getContentsSize
 
   def indexOf(date: LocalDate): Int = {
-    past.contents.find { _.day == date } match {
-      case Some(dayWithEvents) => past.contents.indexOf(dayWithEvents)
-      case None => future.contents.find { _.day == date } match {
-        case Some(dayWithEvents) => future.contents.indexOf(dayWithEvents)
+    past.findFromContents { _.day == date } match {
+      case Some(dayWithEvents) => past.getIndexOfItemInContents(dayWithEvents)
+      case None => future.findFromContents { _.day == date } match {
+        case Some(dayWithEvents) => future.getIndexOfItemInContents(dayWithEvents)
         case None => -1
       }
     }
