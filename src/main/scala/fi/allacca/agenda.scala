@@ -221,7 +221,7 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
       val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
       val dayWithEvents = DayWithEvents(day, eventsOfDay)
       Log.d(TAG, "adding " + dayWithEvents)
-      model.add(dayWithEvents)
+      model.addOrUpdate(dayWithEvents)
     }
     adapter.notifyDataSetChanged()
     activity.getLoaderManager.destroyLoader(loaderId) // This makes onCreateLoader run again and use fresh search URI
@@ -278,9 +278,23 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
   type LoadRange = (LocalDate, LocalDate)
   var currentRange: LoadRange = (new LocalDate, new LocalDate)
 
-  val contents = mutable.SortedSet[DayWithEvents]()
+  var contents = mutable.ListBuffer[DayWithEvents]()
 
-  def add(dwe: DayWithEvents) { contents.add(dwe) }
+  def addOrUpdate(dwe: DayWithEvents) {
+    contents.find { _.day == dwe.day } match {
+      case None => add(dwe)
+      case Some(oldDwe) =>
+        if (oldDwe.events != dwe.events) {
+          contents -= oldDwe
+          add(dwe)
+        }
+    }
+  }
+
+  private def add(dwe: DayWithEvents) {
+    contents.append(dwe)
+    contents = contents.sortBy { dwe => dwe.day.toDate }
+  }
 
   def rollWindow() { currentRange = loadWindowRoller(currentRange._1, currentRange._2) }
 
@@ -295,7 +309,7 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
           endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
         val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
         Log.i(TAG, endOfHistoryMark.toString)
-        add(endOfHistoryMark)
+        addOrUpdate(endOfHistoryMark)
         true
       } else {
         false
@@ -307,10 +321,10 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
 class CombinedModel(past: AgendaModel, future: AgendaModel) {
   def getItem(index: Int): DayWithEvents = {
     if (index < past.contents.size) {
-      past.contents.toArray.apply(index)
+      past.contents(index)
     } else {
       val i = index - past.contents.size
-      future.contents.toArray.apply(i)
+      future.contents(i)
     }
   }
 
@@ -318,9 +332,9 @@ class CombinedModel(past: AgendaModel, future: AgendaModel) {
 
   def indexOf(date: LocalDate): Int = {
     past.contents.find { _.day == date } match {
-      case Some(dayWithEvents) => past.contents.toIndexedSeq.indexOf(dayWithEvents)
+      case Some(dayWithEvents) => past.contents.indexOf(dayWithEvents)
       case None => future.contents.find { _.day == date } match {
-        case Some(dayWithEvents) => future.contents.toIndexedSeq.indexOf(dayWithEvents)
+        case Some(dayWithEvents) => future.contents.indexOf(dayWithEvents)
         case None => -1
       }
     }
