@@ -277,6 +277,7 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
                    hasEnoughContent: (LocalDate, AgendaModel) => Boolean) {
   type LoadRange = (LocalDate, LocalDate)
   var currentRange: LoadRange = (new LocalDate, new LocalDate)
+  private val MAX_YEARS_TO_LOAD = 2
 
   @volatile
   var contents = mutable.ListBuffer[DayWithEvents]()
@@ -327,29 +328,31 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
     if (hasEnoughContent(day, this)) {
       true
     } else {
-      val yearsAlreadyLoaded = Years.yearsBetween(currentRange._1, day).getYears
-      if (yearsAlreadyLoaded >= 2) {
-        val endOfHistoryDay = currentRange._1
-        val endOfHistoryEvent = new CalendarEvent(None, "No events before " + endOfHistoryDay,
-          endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
-        val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
-        Log.i(TAG, endOfHistoryMark.toString)
-        addOrUpdate(endOfHistoryMark)
+      checkIfLoadingHasGoneTooFarFrom(day)
+    }
+  }
+
+  private def checkIfLoadingHasGoneTooFarFrom(day: LocalDate): Boolean = {
+    val yearsAlreadyLoaded = Years.yearsBetween(currentRange._1, day).getYears
+    if (yearsAlreadyLoaded >= MAX_YEARS_TO_LOAD) {
+      addEndOfHistoryMarker("No events before ", currentRange._1)
+      true
+    } else {
+      if (yearsAlreadyLoaded <= -MAX_YEARS_TO_LOAD) {
+        addEndOfHistoryMarker("No events after ", currentRange._2)
         true
       } else {
-        if (yearsAlreadyLoaded <= -2) {
-          val endOfHistoryDay = currentRange._2
-          val endOfHistoryEvent = new CalendarEvent(None, "No events after " + endOfHistoryDay,
-            endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
-          val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
-          Log.i(TAG, endOfHistoryMark.toString)
-          addOrUpdate(endOfHistoryMark)
-          true
-        } else {
-          false
-        }
+        false
       }
     }
+  }
+
+  private def addEndOfHistoryMarker(endOfHistoryMessage: String, endOfHistoryDay: LocalDate) {
+    val endOfHistoryEvent = new CalendarEvent(None, endOfHistoryMessage + endOfHistoryDay,
+      endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
+    val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
+    Log.i(TAG, endOfHistoryMark.toString)
+    addOrUpdate(endOfHistoryMark)
   }
 }
 
