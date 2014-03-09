@@ -19,6 +19,7 @@ import android.app.LoaderManager.LoaderCallbacks
 import scala.Some
 import scala.collection.mutable
 import java.util.Date
+import android.widget.AbsListView.OnScrollListener
 
 class AgendaView(activity: Activity) extends ListView(activity) {
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
@@ -70,6 +71,24 @@ class AgendaView(activity: Activity) extends ListView(activity) {
   def start() {
     setAdapter(adapter)
     resetTo(new LocalDate)
+    setOnScrollListener(new OnScrollListener {
+      def onScroll(listView: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalFixedToMaxInt: Int) {
+        if (firstVisibleItem <= verticalViewPortPadding && !pastCreator.loading) {
+          Log.d(TAG, "Gotta go to past")
+          pastModel.rollWindow()
+          pastCreator.loadBatch()
+        }
+        val lastVisibleItem = firstVisibleItem + visibleItemCount
+        Log.d(TAG, s"firstVisibleItem=$firstVisibleItem, lastVisibleItem=$lastVisibleItem, visibleItemCount=$visibleItemCount, totalFixedToMaxInt=$totalFixedToMaxInt")
+        if (lastVisibleItem >= (futureModel.getContentsSize - verticalViewPortPadding) && !futureCreator.loading) {
+          Log.d(TAG, "Gotta go to future")
+          futureModel.rollWindow()
+          futureCreator.loadBatch()
+        }
+      }
+
+      def onScrollStateChanged(listView: AbsListView, scrollState: Int) {}
+    })
   }
   
   def resetTo(newFocusDay: LocalDate) {
@@ -181,6 +200,7 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
   private lazy val loader = EventsLoaderFactory.createLoader(activity)
   private var focusDay: LocalDate = new LocalDate
   private lazy val progressDialog = new ProgressDialog(activity)
+  @volatile var loading = false
   progressDialog.setTitle("Loading")
   progressDialog.setMessage("events")
   progressDialog.setCancelable(false)
@@ -192,7 +212,7 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
     loadBatch()
   }
 
-  private def loadBatch() {
+  def loadBatch() {
     val (start, end) = model.currentRange
     progressDialog.setMessage(start.toString + " -- " + end.toString)
     progressDialog.show()
@@ -200,6 +220,7 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
     val loadArguments = new Bundle
     loadArguments.putLong("start", start)
     loadArguments.putLong("end", end)
+    loading = true
     activity.getLoaderManager.initLoader(loaderId, loadArguments, this)
   }
 
@@ -232,6 +253,7 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
       progressDialog.setMessage(model.currentRange.toString().replace(",", " -- "))
       loadBatch()
     } else {
+      loading = false
       progressDialog.dismiss()
       onFinished(Unit)
     }
