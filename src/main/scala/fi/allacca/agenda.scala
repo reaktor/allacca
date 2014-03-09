@@ -293,29 +293,29 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
   }
 
   def removeFromContents(oldDwe: DayWithEvents) {
-    this.synchronized {
+   synchronized {
       contents -= oldDwe
     }
   }
 
-  def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = this.synchronized {
+  def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized {
     contents.find(p)
   }
 
-  def getContentsSize = this.synchronized {
+  def getContentsSize = synchronized {
     contents.size
   }
 
-  def getItemFromContents(index: Int) = this.synchronized {
+  def getItemFromContents(index: Int) = synchronized {
     contents(index)
   }
 
-  def getIndexOfItemInContents(day: DayWithEvents) = this.synchronized {
+  def getIndexOfItemInContents(day: DayWithEvents) = synchronized {
     contents.indexOf(day)
   }
 
   private def add(dwe: DayWithEvents) {
-    this.synchronized {
+    synchronized {
       contents.append(dwe)
       contents = contents.sortBy { dwe => dwe.day.toDate }
     }
