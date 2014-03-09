@@ -327,17 +327,27 @@ class AgendaModel(loadWindowRoller: (LocalDate, LocalDate) => (LocalDate, LocalD
     if (hasEnoughContent(day, this)) {
       true
     } else {
-      val yearsAlreadyLoaded = Years.yearsBetween(currentRange._2, day).getYears
+      val yearsAlreadyLoaded = Years.yearsBetween(currentRange._1, day).getYears
       if (yearsAlreadyLoaded >= 2) {
-        val endOfHistoryDay = currentRange._2
-        val endOfHistoryEvent = new CalendarEvent(None, "No events beyond " + endOfHistoryDay,
+        val endOfHistoryDay = currentRange._1
+        val endOfHistoryEvent = new CalendarEvent(None, "No events before " + endOfHistoryDay,
           endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
         val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
         Log.i(TAG, endOfHistoryMark.toString)
         addOrUpdate(endOfHistoryMark)
         true
       } else {
-        false
+        if (yearsAlreadyLoaded <= -2) {
+          val endOfHistoryDay = currentRange._2
+          val endOfHistoryEvent = new CalendarEvent(None, "No events after " + endOfHistoryDay,
+            endOfHistoryDay.toDate.getTime, endOfHistoryDay.toDate.getTime)
+          val endOfHistoryMark = DayWithEvents(endOfHistoryDay, List(endOfHistoryEvent))
+          Log.i(TAG, endOfHistoryMark.toString)
+          addOrUpdate(endOfHistoryMark)
+          true
+        } else {
+          false
+        }
       }
     }
   }
