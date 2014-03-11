@@ -10,6 +10,7 @@ Working with Idea
 * Remove full target from Excluded folders
 * Mark all folders under target as excluded except target/android-gen
 * Mark target/android-gen as source folder
+* Mark src/test as test source folder
 * Add android lib from your SDK installation path as library (if it's not already). For example: /Applications/adt-bundle-mac-x86_64-20131030/sdk/platforms/android-19/android.jar
 
 Licensing
