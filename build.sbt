@@ -12,6 +12,8 @@ scalaVersion:= "2.11.0-M8"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
 
+scalaSource in Test := baseDirectory.value / "src" / "test" / "scala"
+
 libraryDependencies ++= Seq(
   "joda-time"         % "joda-time"           % "2.3",
   "org.joda"          % "joda-convert"        % "1.4",
