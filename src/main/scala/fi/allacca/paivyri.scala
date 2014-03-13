@@ -1,6 +1,6 @@
 package fi.allacca
 
-import android.app.{ProgressDialog, Activity}
+import android.app.Activity
 import android.database.Cursor
 import android.widget._
 import scala.Array
@@ -9,7 +9,7 @@ import android.content.{Intent, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
-import org.joda.time.{Days, Years, DateTime, LocalDate}
+import org.joda.time.{Days, DateTime, LocalDate}
 import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
@@ -18,10 +18,11 @@ import android.provider.CalendarContract.Instances
 import android.app.LoaderManager.LoaderCallbacks
 import scala.Some
 import scala.collection.mutable
-import java.util.Date
 import android.widget.AbsListView.OnScrollListener
-import android.graphics.drawable.GradientDrawable
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
 
 class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   /**
@@ -164,37 +165,42 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
   }
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
-    Log.d(TAG, "Finished")
+    val f: Future[Unit] = Future {
+      Log.d(TAG, "Starting the Finished call")
 
-    val events = EventsLoaderFactory.readEvents(cursor)
-    val eventsByDays = events.groupBy { e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate }
-    val days = (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate }
-    days.foreach { day =>
-      val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
-      val dayWithEvents = DayWithEvents(day, eventsOfDay)
-      model.addOrUpdate(dayWithEvents)
-    }
-    notifyDataSetChanged()
-    statusTextView.setText("")
-    loadWindowLock.synchronized {
-      if (setSelectionToFocusDayAfterLoading) {
-        listView.setSelection(model.indexOf(focusDay))
-        setSelectionToFocusDayAfterLoading = false
+      val events = EventsLoaderFactory.readEvents(cursor)
+      val eventsByDays = events.groupBy {
+        e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
       }
+      val days = (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate }
+      days.foreach { day =>
+        val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
+        val dayWithEvents = DayWithEvents(day, eventsOfDay)
+        model.addOrUpdate(dayWithEvents)
+      }
+      activity.runOnUiThread { statusTextView.setText("") }
     }
-    loading.set(false)
-    activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
-/*
-    model.rollWindow()
-    if (!model.hasEnoughContentCountingFrom(focusDay)) {
-      Log.d(TAG, "Got to load more")
-      progressDialog.setMessage(model.currentRange.toString().replace(",", " -- "))
-      loadBatch()
-    } else {
-      loading = false
-      progressDialog.dismiss()
-      onFinished(Unit)
-    }*/
+
+    f onComplete {
+      case Success(_) =>
+        activity.runOnUiThread(new Runnable() {
+          def run() {
+            notifyDataSetChanged()
+            loadWindowLock.synchronized {
+              if (setSelectionToFocusDayAfterLoading) {
+                listView.setSelection(model.indexOf(focusDay))
+                setSelectionToFocusDayAfterLoading = false
+              }
+            }
+            activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
+            loading.set(false)
+            Log.d(TAG, "Finished loading!")
+          }
+        })
+      case Failure(t) =>
+        loading.set(false)
+        throw t
+    }
   }
 
   override def onLoaderReset(loader: Loader[Cursor]) {}
@@ -333,5 +339,4 @@ object EventsLoaderFactory {
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
     new CalendarEvent(id = Some(cursor.getLong(0)), title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
   }
-}
 }
