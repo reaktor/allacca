@@ -301,3 +301,37 @@ class PaivyriModel {
 
   def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized { contents.find(p) }
 }
+
+object EventsLoaderFactory {
+  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end")
+
+  def createLoader(activity: Activity): CursorLoader = {
+    val loader = new CursorLoader(activity)
+    loader.setProjection(columnsToSelect)
+    loader.setSelection("")
+    loader.setSelectionArgs(null)
+    loader.setSortOrder("begin asc")
+    loader
+  }
+
+  def readEvents(cursor: Cursor): Seq[CalendarEvent] = {
+    @tailrec
+    def readEvents0(cursor: Cursor, events: Seq[CalendarEvent] = Nil): Seq[CalendarEvent] = {
+      val newEvents = events :+ readEventFrom(cursor)
+      if (!cursor.moveToNext()) {
+        newEvents
+      } else readEvents0(cursor, newEvents)
+    }
+
+    if (!cursor.moveToFirst()) {
+      Nil
+    } else {
+      readEvents0(cursor)
+    }
+  }
+
+  private def readEventFrom(cursor: Cursor): CalendarEvent = {
+    new CalendarEvent(id = Some(cursor.getLong(0)), title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
+  }
+}
+}
