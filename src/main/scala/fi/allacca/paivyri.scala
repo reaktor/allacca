@@ -32,6 +32,7 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
    * How much off-screen content we want to maintain loaded to facilitate scrolling
    */
   private lazy val verticalViewPortPadding: Int = rowsVisibleAtTime / 2
+  val howManyDaysToLoadAtTime = 30
 
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val adapter = new PaivyriAdapter(activity, this, statusTextView)
@@ -45,13 +46,14 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
-        Log.d(TAG + PaivyriView.this.getClass.getSimpleName, s"onScroll: $firstVisibleItem , $visibleItemCount, $totalItemCount")
-        if (firstVisibleItem == 0) {
-          adapter.loadMorePast()
-        }
         val lastVisibleItem = firstVisibleItem + visibleItemCount
-        if (lastVisibleItem >= (adapter.getCount - rowsVisibleAtTime)) {
-          adapter.loadMoreFuture()
+        Log.d(TAG + PaivyriView.this.getClass.getSimpleName, s"onScroll: $firstVisibleItem , $visibleItemCount, $totalItemCount, $lastVisibleItem")
+        val dayOf: Int => Option[LocalDate] = adapter.getItem(_).map { _.day }
+        if (firstVisibleItem == 0) {
+          adapter.loadMorePast(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
+        }
+        if (lastVisibleItem > (adapter.getCount - howManyDaysToLoadAtTime)) {
+          adapter.loadMoreFuture(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
         }
       }
     })
@@ -71,7 +73,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
   private val renderer = new PaivyriRenderer(activity)
   private val model = new PaivyriModel
 
-  private val howManyDaysToLoadAtTime = 30
+  private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
 
   private var loading = new AtomicBoolean(false)
   @volatile private var focusDay = new LocalDate
@@ -110,18 +112,26 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 
   private def triggerLoading() {
     if (loading.getAndSet(true)) {
+      Log.d(TAG, "Already load in progress")
       return
     }
     statusTextView.setText("Loading...")
     val args = new Bundle
     args.putLong("start", firstDayToLoad)
     args.putLong("end", lastDayToLoad)
+    Log.d(TAG, "Initing loading with " + firstDayToLoad + "--" + lastDayToLoad)
     activity.getLoaderManager.initLoader(19, args, this)
   }
 
-  def loadMorePast() {
+  def loadMorePast(firstVisibleDay: Option[LocalDate], lastVisibleDay: Option[LocalDate]) {
+    Log.d(TAG, "Going to load more past...")
+    if (loading.get()) {
+      Log.d(TAG, "Already loading, not loading past then")
+      return
+    }
     if (focusDay == model.firstDay) {
       firstDayToLoad = firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
+      lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
       setSelectionToFocusDayAfterLoading = true
       triggerLoading()
     } else {
@@ -129,8 +139,19 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
     }
   }
 
-  def loadMoreFuture() {
-    Log.d(TAG, "Gotta load more future")
+  def loadMoreFuture(firstVisibleDay: Option[LocalDate], lastVisibleDay: Option[LocalDate]) {
+    Log.d(TAG, s"Going to load more future... visible currently $firstVisibleDay -- $lastVisibleDay")
+    if (loading.get()) {
+      Log.d(TAG, "Already loading, not loading future then")
+      return
+    }
+    if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays < howManyDaysToLoadAtTime) {
+      val currentWindowEnd = lastVisibleDay.map { d => if (d.isAfter(lastDayToLoad)) d else lastDayToLoad }.get
+      Log.d(TAG, s"Going to load up to " + currentWindowEnd)
+      firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad)
+      lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
+      triggerLoading()
+    }
   }
 
   override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
