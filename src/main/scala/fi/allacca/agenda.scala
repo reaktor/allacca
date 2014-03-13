@@ -233,9 +233,9 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
     loader
   }
 
-  def onLoadFinished(loader: Loader[Cursor], cursor: Cursor): Unit = {
+  def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     Log.d(TAG, "onLoadFinished starting")
-    val events = readEvents(cursor)
+    val events = EventsLoaderFactory.readEvents(cursor)
     val eventsByDays = events.groupBy { e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate }
     val days = (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate }
     days.foreach { day =>
@@ -260,8 +260,21 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
   }
 
   def onLoaderReset(loader: Loader[Cursor]) {}
+}
 
-  private def readEvents(cursor: Cursor): Seq[CalendarEvent] = {
+object EventsLoaderFactory {
+  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end")
+
+  def createLoader(activity: Activity): CursorLoader = {
+    val loader = new CursorLoader(activity)
+    loader.setProjection(columnsToSelect)
+    loader.setSelection("")
+    loader.setSelectionArgs(null)
+    loader.setSortOrder("begin asc")
+    loader
+  }
+
+  def readEvents(cursor: Cursor): Seq[CalendarEvent] = {
     @tailrec
     def readEvents0(cursor: Cursor, events: Seq[CalendarEvent] = Nil): Seq[CalendarEvent] = {
       val newEvents = events :+ readEventFrom(cursor)
@@ -279,19 +292,6 @@ class AgendaCreator(activity: Activity, loaderId: Int, model: AgendaModel,
 
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
     new CalendarEvent(id = Some(cursor.getLong(0)), title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
-  }
-}
-
-object EventsLoaderFactory {
-  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end")
-
-  def createLoader(activity: Activity): CursorLoader = {
-    val loader = new CursorLoader(activity)
-    loader.setProjection(columnsToSelect)
-    loader.setSelection("")
-    loader.setSelectionArgs(null)
-    loader.setSortOrder("begin asc")
-    loader
   }
 }
 
