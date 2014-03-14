@@ -164,17 +164,21 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
     val f: Future[Unit] = Future {
       Log.d(TAG, "Starting the Finished call")
 
-      val events = EventsLoaderFactory.readEvents(cursor)
-      val eventsByDays = events.groupBy {
+      val events = time( {EventsLoaderFactory.readEvents(cursor)}, "readEvents")
+      val eventsByDays: Map[LocalDate, Seq[CalendarEvent]] = time({events.groupBy {
         e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
-      }
-      val days = (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate }
+      }}, "groupBy")
+
+      val days = time( { (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate } }, "getDays")
+
+      time({
       days.foreach { day =>
         val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
         val dayWithEvents = DayWithEvents(day, eventsOfDay)
         model.addOrUpdate(dayWithEvents)
       }
-      activity.runOnUiThread { statusTextView.setText("") }
+      }, "Update model")
+      time({activity.runOnUiThread { statusTextView.setText("") }}, "setViewText")
     }
 
     f onComplete {
