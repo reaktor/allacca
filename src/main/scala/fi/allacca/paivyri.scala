@@ -48,7 +48,6 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
         val lastVisibleItem = firstVisibleItem + visibleItemCount
-        Log.d(TAG + PaivyriView.this.getClass.getSimpleName, s"onScroll: $firstVisibleItem , $visibleItemCount, $totalItemCount, $lastVisibleItem")
         val dayOf: Int => Option[LocalDate] = adapter.getItem(_).map { _.day }
         if (firstVisibleItem == 0) {
           adapter.loadMorePast(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
