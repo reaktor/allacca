@@ -72,7 +72,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 
   private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
 
-  private var loading = new AtomicBoolean(false)
+  private val loading = new AtomicBoolean(false)
   @volatile private var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
