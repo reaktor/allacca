@@ -65,11 +65,8 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
 }
 
 class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
-  private val loadWindowLock = new Object {
-    def foobarize[A,B](foo: A => B)(a: A): B = foo(a)
-  }
+  private val loadWindowLock = new Object
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
-  private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val renderer = new PaivyriRenderer(activity)
   private val model = new PaivyriModel
 
