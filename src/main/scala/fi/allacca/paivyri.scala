@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
+import scala.collection.mutable
 
 class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   /**
@@ -163,9 +164,19 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
       Log.d(TAG, "Starting the Finished call")
 
       val events = time( {EventsLoaderFactory.readEvents(cursor)}, "readEvents")
-      val eventsByDays: Map[LocalDate, Seq[CalendarEvent]] = time({events.groupBy {
-        e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
-      }}, "groupBy")
+
+      val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
+
+      time({
+        events.foreach { e =>
+          val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
+          val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
+          daysEventsOption match {
+            case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
+            case None => eventsByDays.put(day, List(e))
+          }
+        }
+      }, "groupBy")
 
       val days = time( { eventsByDays.keys.toSet + focusDay }, "getDays")
 
