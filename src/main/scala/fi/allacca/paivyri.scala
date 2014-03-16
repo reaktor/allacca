@@ -75,11 +75,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 
   override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val item = getItem(position)
-    if (convertView != null && item.isDefined && convertView.getTag(DAYVIEW_TAG_ID).asInstanceOf[Long] == item.get.id) {
-      convertView
-    } else {
-      renderer.createLoadingOrRealViewFor(item)
-    }
+    renderer.createLoadingOrRealViewFor(item)
   }
 
   def focusOn(day: LocalDate) {
@@ -217,7 +213,7 @@ class PaivyriRenderer(activity: Activity) {
         val pendingView = new TextView(activity)
         pendingView.setText("Loading")
         pendingView
-      case Some(dayWithEvents) => createDayView(dayWithEvents)
+      case Some(dayWithEvents) => time( { createDayView(dayWithEvents) }, "createDayView")
     }
     view.setId(View.generateViewId())
     val dayViewParams = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
@@ -226,7 +222,6 @@ class PaivyriRenderer(activity: Activity) {
   }
 
   private def createDayView(dayWithEvents: DayWithEvents): View = {
-    Log.d(TAG, dayWithEvents.toString)
     val dayView = new LinearLayout(activity)
     dayView.setOrientation(LinearLayout.VERTICAL)
 
