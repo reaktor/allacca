@@ -171,12 +171,14 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 
       val days = time( { eventsByDays.keys.toSet + focusDay }, "getDays")
 
+      val daysWithEvents: Set[DayWithEvents] = time({
+        days.map { day =>
+            val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime }
+            DayWithEvents(day, eventsOfDay)
+        }
+      }, "create daysWithEventsMap")
       time({
-      days.foreach { day =>
-        val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime }
-        val dayWithEvents = DayWithEvents(day, eventsOfDay)
-        model.addOrUpdate(dayWithEvents)
-      }
+        model.addOrUpdate(daysWithEvents)
       }, "Update model")
       time({activity.runOnUiThread { statusTextView.setText("") }}, "setViewText")
     }
@@ -285,7 +287,17 @@ class PaivyriModel {
     }
   }
 
-  def addOrUpdate(dwe: DayWithEvents) {
+  def addOrUpdate(dwes: Set[DayWithEvents]) {
+    synchronized {
+      dwes.foreach { addOrUpdate }
+      contents = contents.sortBy { dwe => dwe.day.toDate }
+    }
+  }
+
+  /**
+   * Leaves contents in unsorted state, remember to sort afterwards
+   */
+  private def addOrUpdate(dwe: DayWithEvents) {
     findFromContents { _.day == dwe.day } match {
       case None => add(dwe)
       case Some(oldDwe) =>
@@ -296,16 +308,16 @@ class PaivyriModel {
     }
   }
 
+  /**
+   * Leaves contents in unsorted state, remember to sort afterwards
+   */
   private def add(dwe: DayWithEvents) {
-    synchronized {
-      contents.append(dwe)
-      contents = contents.sortBy { dwe => dwe.day.toDate }
-    }
+    contents.append(dwe)
   }
 
-  def removeFromContents(oldDwe: DayWithEvents) { synchronized { contents -= oldDwe } }
+  private def removeFromContents(oldDwe: DayWithEvents) { synchronized { contents -= oldDwe } }
 
-  def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized { contents.find(p) }
+  private def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized { contents.find(p) }
 }
 
 object EventsLoaderFactory {
