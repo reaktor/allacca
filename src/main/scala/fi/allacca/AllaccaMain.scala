@@ -17,7 +17,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val weeksList = new ListView(this)
   private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
   private lazy val cornerView = new TextView(this)
-  private lazy val agendaView = new PaivyriView(this, cornerView)
+  private lazy val agendaView = new AgendaView(this, cornerView)
   private val idGenerator = new IdGenerator
 
   override def onCreate(savedInstanceState: Bundle) {

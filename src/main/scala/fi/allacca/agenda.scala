@@ -22,17 +22,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import scala.collection.mutable
 
-class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
+class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 60
 
-  private val adapter = new PaivyriAdapter(activity, this, statusTextView)
+  private val adapter = new AgendaAdapter(activity, this, statusTextView)
 
   def start() {
     setAdapter(adapter)
     focusOn(new LocalDate)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
-        Log.d(TAG + PaivyriView.this.getClass.getSimpleName, s"scrollState==$scrollState")
+        Log.d(TAG + AgendaView.this.getClass.getSimpleName, s"scrollState==$scrollState")
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
@@ -53,11 +53,11 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
   }
 }
 
-class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
+class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
   private val loadWindowLock = new Object
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
-  private val renderer = new PaivyriRenderer(activity)
-  private val model = new PaivyriModel
+  private val renderer = new AgendaRenderer(activity)
+  private val model = new AgendaModel
 
   private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
 
@@ -203,7 +203,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
   override def onLoaderReset(loader: Loader[Cursor]) {}
 }
 
-class PaivyriRenderer(activity: Activity) {
+class AgendaRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
@@ -263,7 +263,7 @@ class PaivyriRenderer(activity: Activity) {
   }
 }
 
-class PaivyriModel {
+class AgendaModel {
   @volatile
   private var contents: Map[Long, DayWithEvents] = Map()
   @volatile
