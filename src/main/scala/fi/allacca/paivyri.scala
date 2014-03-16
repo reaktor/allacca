@@ -178,7 +178,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
         }
       }, "create daysWithEventsMap")
       time({
-        model.addOrUpdate(daysWithEvents)
+        model.addOrUpdate(daysWithEvents, days)
       }, "Update model")
       time({activity.runOnUiThread { statusTextView.setText("") }}, "setViewText")
     }
@@ -287,35 +287,17 @@ class PaivyriModel {
     }
   }
 
-  def addOrUpdate(dwes: Set[DayWithEvents]) {
+  /**
+   * @param newDaysAndEventsFromLoader data to add
+   * @param days days in data to add, passed in redundantly for performance reasons
+   */
+  def addOrUpdate(newDaysAndEventsFromLoader: Set[DayWithEvents], days: Set[LocalDate]) {
     synchronized {
-      dwes.foreach { addOrUpdate }
-      contents = contents.sortBy { dwe => dwe.day.toDate }
+      val newContents = contents.filter { dwe => !days.contains(dwe.day) }
+      newContents ++= newDaysAndEventsFromLoader
+      contents = newContents.sortBy { dwe => dwe.day.toDate }
     }
   }
-
-  /**
-   * Leaves contents in unsorted state, remember to sort afterwards
-   */
-  private def addOrUpdate(dwe: DayWithEvents) {
-    findFromContents { _.day == dwe.day } match {
-      case None => add(dwe)
-      case Some(oldDwe) =>
-        if (oldDwe.events != dwe.events) {
-          removeFromContents(oldDwe)
-          add(dwe)
-        }
-    }
-  }
-
-  /**
-   * Leaves contents in unsorted state, remember to sort afterwards
-   */
-  private def add(dwe: DayWithEvents) {
-    contents.append(dwe)
-  }
-
-  private def removeFromContents(oldDwe: DayWithEvents) { synchronized { contents -= oldDwe } }
 
   private def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized { contents.find(p) }
 }
