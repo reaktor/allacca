@@ -320,7 +320,14 @@ class PaivyriModel {
         contents.values.filter { dwe => !days.contains(dwe.day) }
       }, "\tfilter which contents are new")
       val itemsInTotal: Iterable[DayWithEvents] = time({ oldItemsToRetain ++ newDaysAndEventsFromLoader }, "\tconcatenating")
-      val newIdsArray = time( { itemsInTotal.map { _.day.toDate.getTime }.toArray } , "\tId array creation")
+      val newIdsArray = new Array[Long](itemsInTotal.size)
+      time({
+        var i = 0
+        itemsInTotal.foreach { dwe =>
+          newIdsArray.update(i, dwe.id)
+          i = i + 1
+        }
+      } , "\tId array creation")
       sortedIds = time ( { listSortedDistinctValues(newIdsArray) }, "\tFast(?) sort")
       contents = time( { itemsInTotal.map { dwe => (dwe.day.toDate.getTime, dwe) }.toMap }, "\tConstruct new contents")
     }
