@@ -10,7 +10,6 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.view.ViewGroup.LayoutParams
 import org.joda.time.{Days, DateTime, LocalDate}
-import scala.annotation.tailrec
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
 import android.view.{ViewGroup, View}
@@ -24,17 +23,8 @@ import scala.util.{Failure, Success}
 import scala.collection.mutable
 
 class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
-  /**
-   * Approximation of how many items (day + events) can fit on the screen.
-   */
-  private lazy val rowsVisibleAtTime: Int = (activity.getResources.getDisplayMetrics.heightPixels.toFloat / dimensions.overviewHeaderTextSize).toInt
-  /**
-   * How much off-screen content we want to maintain loaded to facilitate scrolling
-   */
-  private lazy val verticalViewPortPadding: Int = rowsVisibleAtTime / 2
-  val howManyDaysToLoadAtTime = 30
+  val howManyDaysToLoadAtTime = 60
 
-  private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val adapter = new PaivyriAdapter(activity, this, statusTextView)
 
   def start() {
@@ -51,7 +41,7 @@ class PaivyriView(activity: Activity, statusTextView: TextView) extends ListView
         if (firstVisibleItem == 0) {
           adapter.loadMorePast(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
         }
-        if (lastVisibleItem > (adapter.getCount - howManyDaysToLoadAtTime)) {
+        if (lastVisibleItem > (adapter.getCount - (howManyDaysToLoadAtTime * 2))) {
           adapter.loadMoreFuture(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
         }
       }
