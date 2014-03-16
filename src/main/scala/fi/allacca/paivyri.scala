@@ -329,7 +329,7 @@ class PaivyriModel {
         }
       } , "\tId array creation")
       sortedIds = time ( { listSortedDistinctValues(newIdsArray) }, "\tFast(?) sort")
-      contents = time( { itemsInTotal.map { dwe => (dwe.day.toDate.getTime, dwe) }.toMap }, "\tConstruct new contents")
+      contents = time( { itemsInTotal.map { dwe => (dwe.id, dwe) }.toMap }, "\tConstruct new contents")
     }
   }
 

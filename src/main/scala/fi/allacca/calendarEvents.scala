@@ -31,7 +31,7 @@ case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {
 
 object DayWithEvents {
   implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents =>
-    dwe.day.toDateTimeAtStartOfDay.toDate.getTime
+    dwe.id
   }
 }
 
