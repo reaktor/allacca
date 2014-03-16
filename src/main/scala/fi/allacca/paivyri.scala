@@ -365,19 +365,13 @@ object EventsLoaderFactory {
   }
 
   def readEvents(cursor: Cursor): Seq[CalendarEvent] = {
-    @tailrec
-    def readEvents0(cursor: Cursor, events: Seq[CalendarEvent] = Nil): Seq[CalendarEvent] = {
-      val newEvents = events :+ readEventFrom(cursor)
-      if (!cursor.moveToNext()) {
-        newEvents
-      } else readEvents0(cursor, newEvents)
+    val result = new Array[CalendarEvent](cursor.getCount)
+    var i = 0
+    while (cursor.moveToNext()) {
+      result.update(i, readEventFrom(cursor))
+      i = i + 1
     }
-
-    if (!cursor.moveToFirst()) {
-      Nil
-    } else {
-      readEvents0(cursor)
-    }
+    result.toSeq
   }
 
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
