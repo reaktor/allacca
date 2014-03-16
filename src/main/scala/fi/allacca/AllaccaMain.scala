@@ -16,20 +16,21 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
   private lazy val weeksList = new ListView(this)
   private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
-  private lazy val agendaView = new AgendaView(this)
+  private lazy val cornerView = new TextView(this)
+  private lazy val agendaView = new AgendaView(this, cornerView)
   private val idGenerator = new IdGenerator
 
-  override def onCreate(savedInstanceState: Bundle): Unit = {
+  override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
     val mainLayout = createMainLayout
 
-    val cornerView = createTopLeftCornerView
+    createTopLeftCornerView
     mainLayout.addView(cornerView)
 
     val titles = createDayColumnTitles()
     titles.foreach { mainLayout.addView }
 
-    val weeksList = createWeeksList(cornerView)
+    val weeksList = createWeeksList()
     mainLayout.addView(weeksList)
 
     createAgenda(mainLayout)
@@ -48,8 +49,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     mainLayout
   }
 
-  private def createTopLeftCornerView: View = {
-    val cornerView = new TextView(this)
+  private def createTopLeftCornerView: TextView = {
     cornerView.setId(idGenerator.nextId)
     cornerView.setText("Hello")
     cornerView.setWidth(dimensions.weekNumberWidth)
@@ -57,7 +57,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     cornerView
   }
 
-  def createWeeksList(cornerView: View): View = {
+  def createWeeksList(): View = {
     weeksList.setId(idGenerator.nextId)
     weeksList.setAdapter(weeksAdapter)
     weeksList.setSelection(weeksAdapter.positionOfNow)
@@ -75,7 +75,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     size
   }
 
-  def createAgenda(mainLayout: RelativeLayout): Unit = {
+  def createAgenda(mainLayout: RelativeLayout) {
     val scrollParams = new RelativeLayout.LayoutParams(screenSize.x - weeksList.getWidth, LayoutParams.MATCH_PARENT)
     scrollParams.addRule(RelativeLayout.RIGHT_OF, weeksList.getId)
     agendaView.setLayoutParams(scrollParams)
@@ -121,8 +121,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def gotoNow(view: View) {
-    weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
-    agendaView.goto(new LocalDate)
+    //weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
+    //agendaView.goto(new LocalDate)
   }
 
   private def createDayColumnTitles(): Seq[View] = {

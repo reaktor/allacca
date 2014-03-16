@@ -6,8 +6,8 @@ import android.content.Context
 import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
-import android.util.Log
 import java.util.TimeZone
+import scala.annotation.tailrec
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -30,9 +30,7 @@ case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {
 }
 
 object DayWithEvents {
-  implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents =>
-    dwe.day.toDateTimeAtStartOfDay.toDate.getTime
-  }
+  implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents => dwe.id }
 }
 
 class CalendarEventService(context: Context) {
@@ -56,16 +54,16 @@ class CalendarEventService(context: Context) {
   def saveEvent(eventId: Long, event: CalendarEvent): Int = {
     val values = new ContentValues()
     fillCommonFields(values, event)
-    context.getContentResolver().update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
+    context.getContentResolver.update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
   }
 
   def deleteEvent(eventId: Long): Int = {
-    context.getContentResolver().delete(Events.CONTENT_URI, "_id =? ", Array(eventId.toString))
+    context.getContentResolver.delete(Events.CONTENT_URI, "_id =? ", Array(eventId.toString))
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
     val projection = Array("dtstart", "dtend", "title", "eventLocation", "description")
-    val cursor = context.getContentResolver().query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
+    val cursor = context.getContentResolver.query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
@@ -90,6 +88,7 @@ class CalendarEventService(context: Context) {
   }
 
   def getCalendars: Array[UserCalendar] = {
+    @tailrec
     def getCalendars0(calCursor: Cursor, calendars: Array[UserCalendar]): Array[UserCalendar] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
