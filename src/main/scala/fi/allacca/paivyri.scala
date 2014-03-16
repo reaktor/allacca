@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.database.Cursor
 import android.widget._
-import scala.Array
+import scala.{volatile, Array, Some}
 import android.os.Bundle
 import android.content.{Intent, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
@@ -16,8 +16,6 @@ import android.graphics.Color
 import android.view.{ViewGroup, View}
 import android.provider.CalendarContract.Instances
 import android.app.LoaderManager.LoaderCallbacks
-import scala.Some
-import scala.collection.mutable
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent._
@@ -271,20 +269,45 @@ class PaivyriRenderer(activity: Activity) {
 
 class PaivyriModel {
   @volatile
-  private var contents = mutable.ListBuffer[DayWithEvents]()
+  private var contents: Map[Long, DayWithEvents] = Map()
+  @volatile
+  private var sortedIds = List[Long]()
 
-  def size = synchronized { contents.size }
+  def size = synchronized { sortedIds.size }
 
-  def firstDay: LocalDate = synchronized { contents.headOption.map { _.day }.getOrElse(new LocalDate) }
-  def lastDay: LocalDate = synchronized { contents.lastOption.map { _.day }.getOrElse(new LocalDate) }
+  def firstDay: LocalDate = synchronized {
+    if (size < 1) {
+      new LocalDate
+    } else {
+      val firstItemsKey = sortedIds.head
+      contents(firstItemsKey).day
+    }
+  }
 
-  def getItemFromContents(index: Int): Option[DayWithEvents] = synchronized { contents.lift(index) }
+  def lastDay: LocalDate = synchronized {
+    if (size < 1) {
+      new LocalDate
+    } else {
+      val lastItemsKey = sortedIds.last
+      contents(lastItemsKey).day
+    }
+  }
+
+  def getItemFromContents(index: Int): Option[DayWithEvents] = synchronized {
+    if (sortedIds.isEmpty) {
+      None
+    } else {
+      if (sortedIds.size < index + 1) {
+        None
+      } else {
+        val keyOfIndex = sortedIds(index)
+        contents.lift(keyOfIndex)
+      }
+    }
+  }
 
   def indexOf(day: LocalDate) = synchronized {
-    findFromContents { _.day == day } match {
-      case Some(dayWithEvents) => contents.indexOf(dayWithEvents)
-      case None => -1
-    }
+    sortedIds.indexOf(day.toDate.getTime)
   }
 
   /**
@@ -293,13 +316,37 @@ class PaivyriModel {
    */
   def addOrUpdate(newDaysAndEventsFromLoader: Set[DayWithEvents], days: Set[LocalDate]) {
     synchronized {
-      val newContents = contents.filter { dwe => !days.contains(dwe.day) }
-      newContents ++= newDaysAndEventsFromLoader
-      contents = newContents.sortBy { dwe => dwe.day.toDate }
+      val oldItemsToRetain = time({
+        contents.values.filter { dwe => !days.contains(dwe.day) }
+      }, "\tfilter which contents are new")
+      val itemsInTotal: Iterable[DayWithEvents] = time({ oldItemsToRetain ++ newDaysAndEventsFromLoader }, "\tconcatenating")
+      val newIdsArray = time( { itemsInTotal.map { _.day.toDate.getTime }.toArray } , "\tId array creation")
+      sortedIds = time ( { listSortedDistinctValues(newIdsArray) }, "\tFast(?) sort")
+      contents = time( { itemsInTotal.map { dwe => (dwe.day.toDate.getTime, dwe) }.toMap }, "\tConstruct new contents")
     }
   }
 
-  private def findFromContents(p: DayWithEvents => Boolean): Option[DayWithEvents] = synchronized { contents.find(p) }
+  /**
+   * Fast unique sort from http://stackoverflow.com/a/8162643
+   */
+  def listSortedDistinctValues(someArray: Array[Long]): List[Long] = {
+    if (someArray.length == 0) List[Long]()
+    else {
+      java.util.Arrays.sort(someArray)
+      var last = someArray(someArray.length - 1)
+      var list = last :: Nil
+      var i = someArray.length - 2
+      while (i >= 0) {
+        if (someArray(i) < last) {
+          last = someArray(i)
+          if (last <= 0) return list
+          list = last :: list
+        }
+        i -= 1
+      }
+      list
+    }
+  }
 }
 
 object EventsLoaderFactory {
