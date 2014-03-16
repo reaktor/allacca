@@ -6,7 +6,6 @@ import android.content.Context
 import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
-import android.util.Log
 import java.util.TimeZone
 
 class UserCalendar(val id: Long, val name: String) {
@@ -54,16 +53,16 @@ class CalendarEventService(context: Context) {
   def saveEvent(eventId: Long, event: CalendarEvent): Int = {
     val values = new ContentValues()
     fillCommonFields(values, event)
-    context.getContentResolver().update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
+    context.getContentResolver.update(Events.CONTENT_URI, values, "_id =? ", Array(eventId.toString))
   }
 
   def deleteEvent(eventId: Long): Int = {
-    context.getContentResolver().delete(Events.CONTENT_URI, "_id =? ", Array(eventId.toString))
+    context.getContentResolver.delete(Events.CONTENT_URI, "_id =? ", Array(eventId.toString))
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
     val projection = Array("dtstart", "dtend", "title", "eventLocation", "description")
-    val cursor = context.getContentResolver().query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
+    val cursor = context.getContentResolver.query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
