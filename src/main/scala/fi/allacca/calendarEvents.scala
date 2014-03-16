@@ -30,9 +30,7 @@ case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {
 }
 
 object DayWithEvents {
-  implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents =>
-    dwe.id
-  }
+  implicit val DayWithEventsOrdering = Ordering.by { dwe: DayWithEvents => dwe.id }
 }
 
 class CalendarEventService(context: Context) {
