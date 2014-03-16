@@ -23,7 +23,7 @@ import scala.util.{Failure, Success}
 import scala.collection.mutable
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
-  val howManyDaysToLoadAtTime = 60
+  val howManyDaysToLoadAtTime = 120
 
   private val adapter = new AgendaAdapter(activity, this, statusTextView)
 
@@ -41,7 +41,7 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         if (firstVisibleItem == 0) {
           adapter.loadMorePast(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
         }
-        if (lastVisibleItem > (adapter.getCount - (howManyDaysToLoadAtTime * 2))) {
+        if (lastVisibleItem > (adapter.getCount - howManyDaysToLoadAtTime)) {
           adapter.loadMoreFuture(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
         }
       }
