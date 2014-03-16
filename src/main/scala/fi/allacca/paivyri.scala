@@ -316,20 +316,16 @@ class PaivyriModel {
    */
   def addOrUpdate(newDaysAndEventsFromLoader: Set[DayWithEvents], days: Set[LocalDate]) {
     synchronized {
-      val oldItemsToRetain = time({
-        contents.values.filter { dwe => !days.contains(dwe.day) }
-      }, "\tfilter which contents are new")
-      val itemsInTotal: Iterable[DayWithEvents] = time({ oldItemsToRetain ++ newDaysAndEventsFromLoader }, "\tconcatenating")
+      val oldItemsToRetain = contents.values.filter { dwe => !days.contains(dwe.day) }
+      val itemsInTotal: Iterable[DayWithEvents] = oldItemsToRetain ++ newDaysAndEventsFromLoader
       val newIdsArray = new Array[Long](itemsInTotal.size)
-      time({
-        var i = 0
-        itemsInTotal.foreach { dwe =>
-          newIdsArray.update(i, dwe.id)
-          i = i + 1
-        }
-      } , "\tId array creation")
-      sortedIds = time ( { listSortedDistinctValues(newIdsArray) }, "\tFast(?) sort")
-      contents = time( { itemsInTotal.map { dwe => (dwe.id, dwe) }.toMap }, "\tConstruct new contents")
+      var i = 0
+      itemsInTotal.foreach { dwe =>
+        newIdsArray.update(i, dwe.id)
+        i = i + 1
+      }
+      sortedIds = listSortedDistinctValues(newIdsArray)
+      contents = itemsInTotal.map { dwe => (dwe.id, dwe) }.toMap
     }
   }
 
