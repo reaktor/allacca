@@ -169,7 +169,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
         e => new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
       }}, "groupBy")
 
-      val days = time( { (eventsByDays.keys.toSet + focusDay).toList.sortBy { _.toDate } }, "getDays")
+      val days = time( { eventsByDays.keys.toSet + focusDay }, "getDays")
 
       time({
       days.foreach { day =>
