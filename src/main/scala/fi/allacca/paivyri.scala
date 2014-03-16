@@ -206,6 +206,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 class PaivyriRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
+  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents]): View = {
     val view: View = content match {
@@ -230,7 +231,6 @@ class PaivyriRenderer(activity: Activity) {
     val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     dayNameView.setLayoutParams(dayNameParams)
     dayNameView.setTextSize(dimensions.overviewContentTextSize)
-    val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
     val day = dayWithEvents.day
     dayNameView.setText(dateFormat.print(day))
     dayView.addView(dayNameView)
