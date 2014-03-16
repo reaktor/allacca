@@ -173,7 +173,7 @@ class PaivyriAdapter(activity: Activity, listView: PaivyriView, statusTextView: 
 
       time({
       days.foreach { day =>
-        val eventsOfDay = events.filter { _.isDuring(day.toDateTimeAtStartOfDay) } sortBy { _.startTime }
+        val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime }
         val dayWithEvents = DayWithEvents(day, eventsOfDay)
         model.addOrUpdate(dayWithEvents)
       }
