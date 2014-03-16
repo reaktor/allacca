@@ -7,6 +7,7 @@ import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone
+import scala.annotation.tailrec
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -87,6 +88,7 @@ class CalendarEventService(context: Context) {
   }
 
   def getCalendars: Array[UserCalendar] = {
+    @tailrec
     def getCalendars0(calCursor: Cursor, calendars: Array[UserCalendar]): Array[UserCalendar] = {
       val id = calCursor.getLong(0)
       val displayName = calCursor.getString(1)
