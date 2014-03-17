@@ -11,6 +11,8 @@ import java.text.DateFormatSymbols
 import java.util.{Locale, Calendar}
 import android.content.Intent
 import org.joda.time.LocalDate
+import android.view.animation.{Animation, AlphaAnimation}
+import android.view.animation.Animation.AnimationListener
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
@@ -18,6 +20,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
   private lazy val cornerView = new TextView(this)
   private lazy val agendaView = new AgendaView(this, cornerView)
+  private lazy val flashingPanel = createFlashingPanel
+  private lazy val fade = new AlphaAnimation(1, 0)
   private val idGenerator = new IdGenerator
 
   override def onCreate(savedInstanceState: Bundle) {
@@ -34,6 +38,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     mainLayout.addView(weeksList)
 
     createAgenda(mainLayout)
+    mainLayout.addView(flashingPanel)
 
     val addEventButton = addAEventButton(mainLayout)
     addGotoNowButton(mainLayout, addEventButton.getId)
@@ -120,9 +125,33 @@ class AllaccaMain extends Activity with TypedViewHolder {
     layout.addView(b)
   }
 
+  private def createFlashingPanel: View = {
+    val panel = new FrameLayout(this)
+    panel.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(getResources.getDisplayMetrics.widthPixels, getResources.getDisplayMetrics.heightPixels)
+    panel.setLayoutParams(params)
+    panel.setBackgroundColor(dimensions.pavlova)
+    panel.setVisibility(View.GONE)
+
+    fade.setDuration(300)
+    fade.setAnimationListener(new AnimationListener() {
+      def onAnimationEnd(animation: Animation) {
+        panel.setVisibility(View.GONE)
+      }
+
+      def onAnimationStart(animation: Animation) {
+        panel.setVisibility(View.VISIBLE)
+      }
+
+      def onAnimationRepeat(animation: Animation) {}
+    })
+    panel
+  }
   def gotoNow(view: View) {
     //weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
     agendaView.focusOn(new LocalDate)
+
+    flashingPanel.startAnimation(fade)
   }
 
   private def createDayColumnTitles(): Seq[View] = {
