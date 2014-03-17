@@ -232,7 +232,7 @@ class AgendaRenderer(activity: Activity) {
         val pendingView = new TextView(activity)
         pendingView.setText("Loading")
         pendingView
-      case Some(dayWithEvents) => time( { createDayView(dayWithEvents) }, "createDayView")
+      case Some(dayWithEvents) => createDayView(dayWithEvents)
     }
     view.setId(View.generateViewId())
     val dayViewParams = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
