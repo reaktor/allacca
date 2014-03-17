@@ -224,6 +224,7 @@ class AgendaRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
+  private val timeFormat = DateTimeFormat.forPattern("HH:mm")
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents]): View = {
     val view: View = content match {
@@ -261,7 +262,8 @@ class AgendaRenderer(activity: Activity) {
         val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         titleView.setLayoutParams(params)
         titleView.setTextSize(dimensions.overviewContentTextSize)
-        titleView.setText(event.title)
+        val timeRangeDisplay = timeFormat.print(event.startTime) + "-" + timeFormat.print(event.endTime)
+        titleView.setText(timeRangeDisplay + " " + event.title)
         titleView.setBackgroundColor(dimensions.pavlova)
         titleView.setTextColor(Color.BLACK)
         activity.runOnUiThread(dayView.addView(titleView))
