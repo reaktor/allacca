@@ -11,7 +11,7 @@ import android.util.Log
 import android.view.ViewGroup.LayoutParams
 import org.joda.time.{Days, DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
-import android.graphics.Color
+import android.graphics.{Typeface, Color}
 import android.view.{ViewGroup, View}
 import android.provider.CalendarContract.Instances
 import android.app.LoaderManager.LoaderCallbacks
@@ -62,6 +62,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
 
   private val loading = new AtomicBoolean(false)
+  private val tooMuchPast = new AtomicBoolean(false)
+  private val tooMuchFuture = new AtomicBoolean(false) // TODO: Handle going too much to future
   @volatile private var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
@@ -74,8 +76,16 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   override def getItemId(position: Int): Long = getItem(position).map { _.id }.getOrElse(-1)
 
   override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-    val item = getItem(position)
-    renderer.createLoadingOrRealViewFor(item)
+    if (position == 0 && tooMuchPast.get()) {
+      val loadMoreHandler: View => Unit = { _ =>
+        tooMuchPast.set(false)
+        focusOn(firstDayToLoad)
+      }
+      renderer.createPastLoadingStopper(firstDayToLoad, { loadMoreHandler })
+    } else {
+      val item = getItem(position)
+      renderer.createLoadingOrRealViewFor(item)
+    }
   }
 
   def focusOn(day: LocalDate) {
@@ -112,15 +122,22 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       return
     }
     if (focusDay == model.firstDay) {
-      firstDayToLoad = firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
+      firstDayToLoad = if (tooMuchPast.get()) firstDayToLoad else firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
       lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
       setSelectionToFocusDayAfterLoading = true
-      triggerLoading()
+      val currentLoadWindowDays = Days.daysBetween(firstDayToLoad, lastDayToLoad).getDays
+      if (currentLoadWindowDays > 3 * 360) {
+        Log.d(TAG, "currentLoadWindowSize == " + currentLoadWindowDays)
+        tooMuchPast.set(true)
+        notifyDataSetChanged()
+      } else {
+        triggerLoading()
+      }
     } else {
       focusOn(model.firstDay)
     }
   }
-
+  
   def loadMoreFuture(firstVisibleDay: Option[LocalDate], lastVisibleDay: Option[LocalDate]) {
     Log.d(TAG, s"Going to load more future... visible currently $firstVisibleDay -- $lastVisibleDay")
     if (loading.get()) {
@@ -260,6 +277,18 @@ class AgendaRenderer(activity: Activity) {
     }
     dayView.setTag(DAYVIEW_TAG_ID, dayWithEvents.id)
     dayView
+  }
+
+  def createPastLoadingStopper(day: LocalDate, loadingHandler: View => Unit ): View = {
+    val view = new TextView(activity)
+    view.setId(View.generateViewId())
+    val params = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+    view.setLayoutParams(params)
+    view.setTextSize(dimensions.overviewContentTextSize)
+    view.setTypeface(null, Typeface.BOLD)
+    view.setText("Click to load events before " + dateFormat.print(day))
+    view.setOnClickListener(loadingHandler)
+    view
   }
 }
 
