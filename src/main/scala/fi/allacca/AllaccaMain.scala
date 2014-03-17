@@ -122,7 +122,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   def gotoNow(view: View) {
     //weeksList.smoothScrollToPosition(weeksAdapter.positionOfNow)
-    //agendaView.goto(new LocalDate)
+    agendaView.focusOn(new LocalDate)
   }
 
   private def createDayColumnTitles(): Seq[View] = {
