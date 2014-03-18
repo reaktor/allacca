@@ -223,7 +223,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 class AgendaRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
-  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy")
+  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E")
   private val timeFormat = DateTimeFormat.forPattern("HH:mm")
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents]): View = {
@@ -244,13 +244,7 @@ class AgendaRenderer(activity: Activity) {
     val dayView = new LinearLayout(activity)
     dayView.setOrientation(LinearLayout.VERTICAL)
 
-    val dayNameView = new TextView(activity)
-    dayNameView.setId(View.generateViewId())
-    val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-    dayNameView.setLayoutParams(dayNameParams)
-    dayNameView.setTextSize(dimensions.overviewContentTextSize)
-    val day = dayWithEvents.day
-    dayNameView.setText(dateFormat.print(day))
+    val dayNameView = createDayNameView(dayWithEvents)
     dayView.addView(dayNameView)
 
     val eventsOfDay = dayWithEvents.events
@@ -287,6 +281,17 @@ class AgendaRenderer(activity: Activity) {
     titleView.setBackgroundColor(dimensions.pavlova)
     titleView.setTextColor(Color.BLACK)
     titleView
+  }
+
+  def createDayNameView(dayWithEvents: DayWithEvents): TextView = {
+    val dayNameView = new TextView(activity)
+    dayNameView.setId(View.generateViewId())
+    val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+    dayNameView.setLayoutParams(dayNameParams)
+    dayNameView.setTextSize(dimensions.overviewContentTextSize)
+    val day = dayWithEvents.day
+    dayNameView.setText(dateFormat.print(day))
+    dayNameView
   }
 
   def createPastLoadingStopper(day: LocalDate, loadingHandler: View => Unit ): View = {
