@@ -39,11 +39,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val cancelButton = createCancelButton(deleteButton.getId)
   private lazy val idOfEventWeAreEditing: Option[Long] = getIdOfEditedEvent
 
-  override def onCreate(savedInstanceState: Bundle) = {
+  override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
     val editLayout = createMainLayout
     addControlsToLayout(editLayout)
-    initTextFieldListeners
+    initTextFieldListeners()
     initDateFields(editLayout)
     initTabOrder()
     setContentView(wrapInScroller(editLayout))
@@ -89,7 +89,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     scrollView
   }
 
-  private def initTextFieldListeners {
+  private def initTextFieldListeners() {
     eventNameField.addTextChangedListener(okButtonController _)
     eventLocationField.addTextChangedListener(okButtonController _)
   }
@@ -246,20 +246,20 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave: CalendarEvent = extractEventFromFieldValues
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[UserCalendar]
       saveOrUpdate(eventToSave, selectedCalendar)
-      backToRefreshedParentView
+      backToRefreshedParentView()
     }
   }
 
-  private def backToRefreshedParentView {
+  private def backToRefreshedParentView() {
     Log.i(TAG, "Going back to main view and refreshing the results")
     val intent = new Intent
     setResult(Activity.RESULT_OK, intent)
-    finish
+    finish()
   }
 
   def confirmDelete(view: View) {
     idOfEventWeAreEditing match {
-      case Some(id) => new ConfirmDeleteDialogFragment(calendarEventService, id, this, backToRefreshedParentView).show(getFragmentManager, "Delete")
+      case Some(id) => new ConfirmDeleteDialogFragment(calendarEventService, id, this, backToRefreshedParentView()).show(getFragmentManager, "Delete")
       case _ => Log.i(TAG, "No saved event to delete")
     }
   }
