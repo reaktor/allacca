@@ -257,15 +257,7 @@ class AgendaRenderer(activity: Activity) {
 
     eventsOfDay foreach {
       event =>
-        val titleView = new TextView(activity)
-        titleView.setId(View.generateViewId())
-        val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-        titleView.setLayoutParams(params)
-        titleView.setTextSize(dimensions.overviewContentTextSize)
-        val timeRangeDisplay = timeFormat.print(event.startTime) + "-" + timeFormat.print(event.endTime)
-        titleView.setText(timeRangeDisplay + " " + event.title)
-        titleView.setBackgroundColor(dimensions.pavlova)
-        titleView.setTextColor(Color.BLACK)
+        val titleView = createTitleView(event)
         activity.runOnUiThread(dayView.addView(titleView))
         val onClick: (View => Unit) = {
           _ =>
@@ -279,6 +271,22 @@ class AgendaRenderer(activity: Activity) {
     }
     dayView.setTag(DAYVIEW_TAG_ID, dayWithEvents.id)
     dayView
+  }
+
+
+  private def createTitleView(event: CalendarEvent): TextView = {
+    val titleView = new TextView(activity)
+    titleView.setId(View.generateViewId())
+    val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+    titleView.setLayoutParams(params)
+    titleView.setTextSize(dimensions.overviewContentTextSize)
+    val timeRangePrefix = if (event.allDay) "" else {
+      timeFormat.print(event.startTime) + "-" + timeFormat.print(event.endTime) + " "
+    }
+    titleView.setText(timeRangePrefix + event.title)
+    titleView.setBackgroundColor(dimensions.pavlova)
+    titleView.setTextColor(Color.BLACK)
+    titleView
   }
 
   def createPastLoadingStopper(day: LocalDate, loadingHandler: View => Unit ): View = {
@@ -380,7 +388,7 @@ class AgendaModel {
 }
 
 object EventsLoaderFactory {
-  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end")
+  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end", "allDay")
 
   def createLoader(activity: Activity): CursorLoader = {
     val loader = new CursorLoader(activity)
@@ -402,6 +410,12 @@ object EventsLoaderFactory {
   }
 
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
-    new CalendarEvent(id = Some(cursor.getLong(0)), title = cursor.getString(1), startTime = cursor.getLong(2), endTime = cursor.getLong(3))
+    val id = cursor.getLong(0)
+    val title = cursor.getString(1)
+    val startTime = cursor.getLong(2)
+    val endTime = cursor.getLong(3)
+    val allDayFromDb = cursor.getInt(4)
+    val allDay = allDayFromDb == 1
+    new CalendarEvent(id = Some(id), title = title, startTime = startTime, endTime = endTime, allDay = allDay)
   }
 }
