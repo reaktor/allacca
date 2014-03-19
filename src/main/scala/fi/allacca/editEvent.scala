@@ -17,6 +17,7 @@ import org.joda.time.{LocalDate, Period, IllegalFieldValueException, DateTime}
 import android.view.{ViewGroup, View}
 import scala.Array
 import fi.allacca.ui.util.TextChangeListener
+import org.joda.time.format.DateTimeFormat
 
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -321,7 +322,7 @@ object EditEventActivity {
     textField
   }
 
-  def addTextView(context: Context, text: String, layoutParamRules: (Int, Int)*) : TextView = {
+  def addTextView(context: Context, text: => String, layoutParamRules: (Int, Int)*) : TextView = {
     val view = new TextView(context)
     view.setId(idGenerator.nextId)
     val params = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
@@ -339,10 +340,12 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
   val colon: TextView = EditEventActivity.addTextView(context, ":", (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
   val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, colon.getId))
-  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, minuteField.getId))
+  val weekDay: TextView = EditEventActivity.addTextView(context, weekDayText, (BELOW, placeBelowFieldId), (RIGHT_OF, minuteField.getId))
+  val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, weekDay.getId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
   val fields = List(hourField, minuteField, dayField, monthField, yearField)
+  private val weekDayFormat = DateTimeFormat.forPattern("E")
 
   def init(editLayout: RelativeLayout) {
     setDateTime(prePopulateTime)
@@ -351,13 +354,16 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       field.setSelectAllOnFocus(true)
       field.addTextChangedListener(validate _)
       field.addTextChangedListener(changeListener)
+      field.addTextChangedListener(weekDayTextUpdater _)
       focusListener.map { focusListener => field.setOnFocusChangeListener(focusListener) }
     }
     editLayout.addView(colon)
+    editLayout.addView(weekDay)
     hourField.setNextFocusDownId(minuteField.getId)
     minuteField.setNextFocusDownId(dayField.getId)
     dayField.setNextFocusDownId(monthField.getId)
     monthField.setNextFocusDownId(yearField.getId)
+    weekDayTextUpdater("")
   }
 
   def getDateTime: DateTime = {
@@ -385,6 +391,16 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       case e: IllegalFieldValueException =>
         false
     }
+  }
+
+  private def weekDayTextUpdater(text: String) {
+    weekDay.setText(weekDayText)
+  }
+
+  private def weekDayText: String = try {
+    weekDayFormat.print(getDateTime)
+  } catch {
+    case e: Exception => "-"
   }
 
   def validate(x: String) {
