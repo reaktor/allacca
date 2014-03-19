@@ -16,8 +16,9 @@ import android.view.animation.Animation.AnimationListener
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
-  private lazy val weeksList = new ListView(this)
-  private lazy val weeksAdapter = new WeeksAdapter(this, dimensions)
+  private lazy val weeksAdapter = new WeeksAdapter2(this)
+  private lazy val weeksList = new WeeksView(this, weeksAdapter)
+
   private lazy val cornerView = new TextView(this)
   private lazy val agendaView = new AgendaView(this, cornerView)
   private lazy val flashingPanel = createFlashingPanel
@@ -65,7 +66,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
   def createWeeksList(): View = {
     weeksList.setId(idGenerator.nextId)
     weeksList.setAdapter(weeksAdapter)
-    weeksList.setSelection(weeksAdapter.positionOfNow)
+    weeksList.setSelection(0)
+    weeksList.start()
     val weeksListParams = new RelativeLayout.LayoutParams(dimensions.weekListWidth, LayoutParams.WRAP_CONTENT)
     weeksListParams.addRule(RelativeLayout.BELOW, cornerView.getId)
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
