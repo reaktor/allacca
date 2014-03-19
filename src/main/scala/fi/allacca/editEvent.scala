@@ -320,12 +320,25 @@ object EditEventActivity {
     })
     textField
   }
+
+  def addTextView(context: Context, text: String, layoutParamRules: (Int, Int)*) : TextView = {
+    val view = new TextView(context)
+    view.setId(idGenerator.nextId)
+    val params = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+    params.setMargins(0, dip2px(10, context), 0, 0)
+    layoutParamRules.foreach { rule => params.addRule(rule._1, rule._2) }
+    view.setLayoutParams(params)
+    view.setText(text)
+    view
+  }
+
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
 }
 
 class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit), focusListener: Option[(View, Boolean) => Unit] = None) {
   val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
-  val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
+  val colon: TextView = EditEventActivity.addTextView(context, ":", (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
+  val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, colon.getId))
   val dayField: EditText = EditEventActivity.addTextField(context, 50, 2, "d", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, minuteField.getId))
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
@@ -340,6 +353,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       field.addTextChangedListener(changeListener)
       focusListener.map { focusListener => field.setOnFocusChangeListener(focusListener) }
     }
+    editLayout.addView(colon)
     hourField.setNextFocusDownId(minuteField.getId)
     minuteField.setNextFocusDownId(dayField.getId)
     dayField.setNextFocusDownId(monthField.getId)
