@@ -14,8 +14,9 @@ import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{DialogInterface, Intent, Context}
 import org.joda.time.{LocalDate, Period, IllegalFieldValueException, DateTime}
-import android.view.View
+import android.view.{ViewGroup, View}
 import scala.Array
+import fi.allacca.ui.util.TextChangeListener
 
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -307,6 +308,16 @@ object EditEventActivity {
     textField.setHint(hint)
     textField.setFilters(Array[InputFilter](new InputFilter.LengthFilter(inputLength)))
     textField.setInputType(inputType)
+    textField.addTextChangedListener(new TextChangeListener {
+      def changed(text: String) {
+        if (text.length >= inputLength && textField.hasFocus && (textField.getParent != null)) {
+          textField.clearFocus()
+          val parent = textField.getParent.asInstanceOf[ViewGroup]
+          val nextFocusTarget = parent.findViewById(textField.getNextFocusDownId)
+          nextFocusTarget.requestFocus()
+        }
+      }
+    })
     textField
   }
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
