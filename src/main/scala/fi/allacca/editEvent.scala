@@ -263,7 +263,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
     }
     intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, dateToFocusOn)
     setResult(Activity.RESULT_OK, intent)
-    startActivity(intent)
     finish()
   }
 
