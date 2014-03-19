@@ -21,6 +21,7 @@ import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import scala.collection.mutable
+import android.view.View.OnLongClickListener
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 120
@@ -293,6 +294,17 @@ class AgendaRenderer(activity: Activity) {
     dayNameView.setTextSize(dimensions.overviewContentTextSize)
     val day = dayWithEvents.day
     dayNameView.setText(dateFormat.print(day))
+    dayNameView.setOnLongClickListener(new OnLongClickListener {
+      def onLongClick(v: View): Boolean = {
+        Log.d(TAG, "+ createNewEvent from agenda day name")
+        val intent = new Intent(activity, classOf[EditEventActivity])
+        val chosenDayAsMillis: Long = day
+        intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, chosenDayAsMillis)
+        intent.putExtra(EVENT_DATE, chosenDayAsMillis)
+        activity.startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
+        true
+      }
+    })
     dayNameView
   }
 
