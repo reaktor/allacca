@@ -16,6 +16,7 @@ package object allacca {
   //Intent keys
   val EVENT_ID = "fi.allacca.eventID"
   val EVENT_DATE = "fi.allacca.eventDate"
+  val FOCUS_DATE_EPOCH_MILLIS = "fi.allacca.focusEpochMilliseconds"
   val NULL_VALUE = -1L
 
   val REQUEST_CODE_EDIT_EVENT = 1

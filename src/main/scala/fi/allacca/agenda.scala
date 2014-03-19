@@ -27,9 +27,9 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
 
   private val adapter = new AgendaAdapter(activity, this, statusTextView)
 
-  def start() {
+  def start(initialFocusDate: LocalDate) {
     setAdapter(adapter)
-    focusOn(new LocalDate)
+    focusOn(initialFocusDate)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
         Log.d(TAG + AgendaView.this.getClass.getSimpleName, s"scrollState==$scrollState")
@@ -51,6 +51,8 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
   def focusOn(day: LocalDate) {
     adapter.focusOn(day)
   }
+
+  def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
 }
 
 class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
@@ -64,7 +66,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val loading = new AtomicBoolean(false)
   private val tooMuchPast = new AtomicBoolean(false)
   private val tooMuchFuture = new AtomicBoolean(false) // TODO: Handle going too much to future
-  @volatile private var focusDay = new LocalDate
+  @volatile var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
   @volatile private var setSelectionToFocusDayAfterLoading = false

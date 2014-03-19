@@ -86,7 +86,16 @@ class AllaccaMain extends Activity with TypedViewHolder {
     agendaView.setLayoutParams(scrollParams)
     agendaView.setId(idGenerator.nextId)
     mainLayout.addView(agendaView)
-    agendaView.start()
+    agendaView.start(initialFocusDate)
+  }
+
+  private def initialFocusDate: LocalDate = {
+    val focusDateMillis = getIntent.getLongExtra(FOCUS_DATE_EPOCH_MILLIS, NULL_VALUE)
+    if (focusDateMillis == NULL_VALUE) {
+      new LocalDate
+    } else {
+      new LocalDate(focusDateMillis)
+    }
   }
 
   private def addAEventButton(layout: ViewGroup): Button = {
@@ -108,7 +117,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
     //This will create the new event after ten days:
     //intent.putExtra(EVENT_DATE, new DateTime().plusDays(10).toDate.getTime)
-
+    intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, agendaView.focusDay.toDate.getTime)
     startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
   }
 

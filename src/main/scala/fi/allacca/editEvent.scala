@@ -13,7 +13,7 @@ import android.widget.RelativeLayout.{BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{DialogInterface, Intent, Context}
-import org.joda.time.{Period, IllegalFieldValueException, DateTime}
+import org.joda.time.{LocalDate, Period, IllegalFieldValueException, DateTime}
 import android.view.View
 import scala.Array
 
@@ -94,9 +94,13 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventLocationField.addTextChangedListener(okButtonController _)
   }
 
-  private def getIdOfEditedEvent: Option[Long] = {
-    val eventIdWeAreEditing = getIntent.getLongExtra(EVENT_ID, NULL_VALUE)
-    if (eventIdWeAreEditing == NULL_VALUE) None else Some(eventIdWeAreEditing)
+  private def getIdOfEditedEvent: Option[Long] = getOptionalLongFromIntentExtra(EVENT_ID)
+
+  private def getOriginalFocusDay: Option[Long] = getOptionalLongFromIntentExtra(FOCUS_DATE_EPOCH_MILLIS)
+
+  private def getOptionalLongFromIntentExtra(key: String): Option[Long] = {
+    val value = getIntent.getLongExtra(key, NULL_VALUE)
+    if (value == NULL_VALUE) None else Some(value)
   }
 
   private def getPrepopulateText(extractor: CalendarEvent => String): String = {
@@ -246,14 +250,20 @@ class EditEventActivity extends Activity with TypedViewHolder {
       val eventToSave: CalendarEvent = extractEventFromFieldValues
       val selectedCalendar = calendarSelection.getSelectedItem.asInstanceOf[UserCalendar]
       saveOrUpdate(eventToSave, selectedCalendar)
-      backToRefreshedParentView()
+      backToRefreshedParentView(Some(eventToSave))
     }
   }
 
-  private def backToRefreshedParentView() {
+  private def backToRefreshedParentView(savedEvent: Option[CalendarEvent] = None) {
     Log.i(TAG, "Going back to main view and refreshing the results")
-    val intent = new Intent
+    val intent = new Intent(this, classOf[AllaccaMain])
+    val dateToFocusOn: Long = savedEvent match {
+      case Some(event) => event.startTime
+      case None => getOriginalFocusDay.getOrElse(new LocalDate)
+    }
+    intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, dateToFocusOn)
     setResult(Activity.RESULT_OK, intent)
+    startActivity(intent)
     finish()
   }
 
