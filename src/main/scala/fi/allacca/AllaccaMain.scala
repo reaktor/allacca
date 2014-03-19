@@ -16,7 +16,7 @@ import android.view.animation.Animation.AnimationListener
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
-  private lazy val weeksAdapter = new WeeksAdapter2(this)
+  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions)
   private lazy val weeksList = new WeeksView(this, weeksAdapter)
 
   private lazy val cornerView = new TextView(this)
