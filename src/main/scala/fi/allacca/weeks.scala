@@ -69,15 +69,18 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends B
     val text = s"${item.week} ${item.year}"
     weekView.setText(text)
     weekView*/
-    renderer.createWeekView(yearAndWeek)
+    renderer.createWeekView(model.getFocusDay, yearAndWeek)
   }
 }
 
 class WeeksModel {
   @volatile private var startDay: DateTime = new DateTime().withTimeAtStartOfDay
+  @volatile private var focusDay: DateTime = new DateTime().withTimeAtStartOfDay
 
   def getCount = Config.initialWeekCount
   def getStartDay = startDay
+  def getFocusDay = focusDay
+  def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def startWeek = startDay.weekOfWeekyear()
   def startYear = startDay.year()
@@ -86,24 +89,24 @@ class WeeksModel {
 
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
 
-  def createWeekView(yearAndWeek: YearAndWeek) = {
+  def createWeekView(focusDay: DateTime, yearAndWeek: YearAndWeek) = {
     val wholeLineLayout : LinearLayout = new LinearLayout(activity)
     wholeLineLayout.setOrientation(LinearLayout.HORIZONTAL)
-    val dayViews = createDayViews(yearAndWeek)
+    val dayViews = createDayViews(focusDay, yearAndWeek)
     val weekNumberView = createWeekNumberView(yearAndWeek)
     wholeLineLayout.addView(weekNumberView)
     dayViews.foreach { dayView =>  wholeLineLayout.addView(dayView) }
     wholeLineLayout.getRootView
   }
 
-  def createDayViews(yearAndWeek: YearAndWeek) = {
+  def createDayViews(focusDay: DateTime, yearAndWeek: YearAndWeek) = {
     yearAndWeek.days map { day =>
       val dayView = new TextView(activity)
       dayView.setPadding(5, 5, 5, 5)
       val fmt = DateTimeFormat.forPattern("d")
       val dayNumber = fmt.print(day)
       dayView.setText(dayNumber)
-      dayView.setTextColor(Color.WHITE)
+      if (focusDay.withTimeAtStartOfDay == day) dayView.setTextColor(Color.RED) else dayView.setTextColor(Color.WHITE)
       dayView.setBackgroundColor(Color.BLACK)
       dayView.setTextSize(dimensions.overviewContentTextSize)
       dayView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
