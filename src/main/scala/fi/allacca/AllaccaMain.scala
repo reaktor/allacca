@@ -20,6 +20,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val weeksList = new WeeksView(this, weeksAdapter)
 
   private lazy val cornerView = new TextView(this)
+  private lazy val shownMonthsView = new TextView(this)
   private lazy val agendaView = new AgendaView(this, cornerView)
   private lazy val flashingPanel = createFlashingPanel
   private lazy val fade = new AlphaAnimation(1, 0)
@@ -29,6 +30,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
     super.onCreate(savedInstanceState)
     val mainLayout = createMainLayout
 
+    createShownMonthsView
+    mainLayout.addView(shownMonthsView)
     createTopLeftCornerView
     mainLayout.addView(cornerView)
 
@@ -56,11 +59,25 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createTopLeftCornerView: TextView = {
+    val params = new RelativeLayout.LayoutParams(dimensions.weekNumberWidth, dimensions.weekRowHeight)
+    params.addRule(RelativeLayout.BELOW, shownMonthsView.getId)
+    params.addRule(RelativeLayout.ALIGN_LEFT)
+    cornerView.setLayoutParams(params)
     cornerView.setId(idGenerator.nextId)
     cornerView.setText("Hello")
     cornerView.setWidth(dimensions.weekNumberWidth)
     cornerView.setHeight(dimensions.weekRowHeight)
     cornerView
+  }
+
+  private def createShownMonthsView: TextView = {
+    val params = new RelativeLayout.LayoutParams(dimensions.weekListWidth, dimensions.weekRowHeight)
+    params.setMargins(dimensions.weekNumberWidth, 0, 0, 0)
+    shownMonthsView.setLayoutParams(params)
+    shownMonthsView.setId(idGenerator.nextId)
+    shownMonthsView.setText("Jan 2014 – Apr 2014")
+    shownMonthsView.setTextSize(dimensions.overviewContentTextSize)
+    shownMonthsView
   }
 
   def createWeeksList(): View = {
@@ -183,6 +200,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
       view.setHeight(dimensions.weekRowHeight)
       val layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
       layoutParams.addRule(RelativeLayout.RIGHT_OF, view.getId - 1)
+      layoutParams.addRule(RelativeLayout.BELOW, shownMonthsView.getId)
       view.setLayoutParams(layoutParams)
       view.setTextSize(dimensions.overviewHeaderTextSize)
       view.setText(c)
