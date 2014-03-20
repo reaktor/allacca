@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.widget._
 import android.view.{Gravity, ViewGroup, View}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{Weeks, DateTime, LocalDate}
 import android.widget.AbsListView.OnScrollListener
 import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,6 +29,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2) extends ListView(act
         val lastVisibleItem = firstVisibleItem + visibleItemCount
         if (firstVisibleItem == 0) {
           adapter.loadMorePast()
+          view.setSelection(adapter.getFocusDayIndex)
         }
         if (lastVisibleItem > (adapter.getCount - Config.howManyWeeksToLoadAtTime)) {
           adapter.loadMoreFuture()
@@ -45,16 +46,17 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends B
   private val model = new WeeksModel
   private val loading = new AtomicBoolean(false)
 
-  //focusDay will always be the first day to load
-  def firstDayToLoad = model.getStartDay
-  def lastDayToLoad = model.getStartDay.plusWeeks(Config.howManyWeeksToLoadAtTime)
-
   def loadMorePast() {
     println("adapter.loadMorePast")
+    model.setFocusDay(model.getStartDay)
+    model.setStartDay(model.getStartDay.minusWeeks(Config.howManyWeeksToLoadAtTime))
+    notifyDataSetChanged()
   }
   def loadMoreFuture() {
     println("adapter.loadMoreFuture")
   }
+
+  def getFocusDayIndex = model.getFocusDayIndex
 
   def getCount: Int = model.getCount
 
@@ -77,7 +79,9 @@ class WeeksModel {
 
   def getCount = Config.initialWeekCount
   def getStartDay = startDay
+  def setStartDay(startDay: DateTime) { this.startDay = startDay }
   def getFocusDay = focusDay
+  def getFocusDayIndex = Weeks.weeksBetween(startDay, focusDay).getWeeks
   def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def startWeek = startDay.weekOfWeekyear()
