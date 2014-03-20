@@ -32,7 +32,10 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2) extends ListView(act
           view.setSelection(adapter.getFocusDayIndex)
         }
         if (lastVisibleItem > (adapter.getCount - Config.howManyWeeksToLoadAtTime)) {
+          val firstVisibleYearAndWeek = adapter.getItem(firstVisibleItem)
           adapter.loadMoreFuture()
+          val indexOfFirstVisibleBeforeLoading = adapter.getIndex(firstVisibleYearAndWeek)
+          view.setSelection(indexOfFirstVisibleBeforeLoading)
         }
       }
     })
@@ -47,16 +50,19 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends B
   private val loading = new AtomicBoolean(false)
 
   def loadMorePast() {
-    println("adapter.loadMorePast")
+    Log.i(TAG, "adapter.loadMorePast")
     model.setFocusDay(model.getStartDay)
     model.setStartDay(model.getStartDay.minusWeeks(Config.howManyWeeksToLoadAtTime))
     notifyDataSetChanged()
   }
   def loadMoreFuture() {
-    println("adapter.loadMoreFuture")
+    Log.i(TAG, "adapter.loadMoreFuture")
+    model.setStartDay(model.getStartDay.plusWeeks(Config.howManyWeeksToLoadAtTime))
+    notifyDataSetChanged()
   }
 
   def getFocusDayIndex = model.getFocusDayIndex
+  def getIndex(yearAndWeek: YearAndWeek) = model.getIndex(yearAndWeek)
 
   def getCount: Int = model.getCount
 
@@ -85,6 +91,7 @@ class WeeksModel {
   def getFocusDay = focusDay
   def getChosenDay = chosenDay
   def getFocusDayIndex = Weeks.weeksBetween(startDay, focusDay).getWeeks
+  def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def startWeek = startDay.weekOfWeekyear()
