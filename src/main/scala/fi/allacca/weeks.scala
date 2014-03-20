@@ -64,12 +64,10 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends B
 
   def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val yearAndWeek: YearAndWeek = getItem(position)
-    /*val weekView = new TextView(activity)
-    weekView.setId(idGenerator.nextId)
-    val text = s"${item.week} ${item.year}"
-    weekView.setText(text)
-    weekView*/
-    renderer.createWeekView(model.getFocusDay, yearAndWeek)
+    if (convertView == null)
+      renderer.createWeekView(model.getFocusDay, yearAndWeek)
+    else
+      renderer.updateView(model.getFocusDay, yearAndWeek, convertView)
   }
 }
 
@@ -84,47 +82,65 @@ class WeeksModel {
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def startWeek = startDay.weekOfWeekyear()
   def startYear = startDay.year()
-
 }
 
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
+  val fmt = DateTimeFormat.forPattern("d")
+
+  def updateView(focusDay: DateTime, yearAndWeek: YearAndWeek, convertView: View) = {
+    val viewGroup = convertView.asInstanceOf[ViewGroup]
+    def getTextView(index: Int, viewGroup: ViewGroup) = viewGroup.getChildAt(index).asInstanceOf[TextView]
+    val weekNumberView = getTextView(0, viewGroup)
+    weekNumberView.setText(yearAndWeek.week.toString)
+    0 to 6 map { index =>
+      val dayView = getTextView(index+1, viewGroup)
+      val day  = yearAndWeek.days(index)
+      setDayValue(day, dayView, focusDay)
+    }
+    convertView
+  }
 
   def createWeekView(focusDay: DateTime, yearAndWeek: YearAndWeek) = {
     val wholeLineLayout : LinearLayout = new LinearLayout(activity)
     wholeLineLayout.setOrientation(LinearLayout.HORIZONTAL)
-    val dayViews = createDayViews(focusDay, yearAndWeek)
     val weekNumberView = createWeekNumberView(yearAndWeek)
+    val dayViews = createDayViews(focusDay, yearAndWeek)
     wholeLineLayout.addView(weekNumberView)
     dayViews.foreach { dayView =>  wholeLineLayout.addView(dayView) }
     wholeLineLayout.getRootView
   }
 
   def createDayViews(focusDay: DateTime, yearAndWeek: YearAndWeek) = {
-    yearAndWeek.days map { day =>
+    0 to 6 map { index =>
+      val day = yearAndWeek.days(index)
       val dayView = new TextView(activity)
       dayView.setPadding(5, 5, 5, 5)
-      val fmt = DateTimeFormat.forPattern("d")
-      val dayNumber = fmt.print(day)
-      dayView.setText(dayNumber)
-      if (focusDay.withTimeAtStartOfDay == day) dayView.setTextColor(Color.RED) else dayView.setTextColor(Color.WHITE)
       dayView.setBackgroundColor(Color.BLACK)
       dayView.setTextSize(dimensions.overviewContentTextSize)
       dayView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
       dayView.setHeight(dimensions.weekRowHeight)
       dayView.setWidth(dimensions.dayColumnWidth)
-      dayView.setId(View.generateViewId)
+      dayView.setId(index+1)
+      setDayValue(day, dayView, focusDay)
       dayView
     }
   }
 
   def createWeekNumberView(yearAndWeek: YearAndWeek) = {
     val weekNumberView = new TextView(activity)
-    weekNumberView.setId(View.generateViewId())
+    weekNumberView.setId(0)
     weekNumberView.setWidth(dimensions.weekNumberWidth)
     weekNumberView.setHeight(dimensions.weekRowHeight)
-    weekNumberView.setText(yearAndWeek.week.toString)
     weekNumberView.setTextSize(dimensions.overviewContentTextSize)
     weekNumberView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
+    weekNumberView.setText(yearAndWeek.week.toString)
     weekNumberView
   }
+
+  private def setDayValue(day: DateTime, dayView: TextView, focusDay: DateTime) {
+    val dayNumber = fmt.print(day)
+    dayView.setText(dayNumber)
+    if (focusDay.withTimeAtStartOfDay == day) dayView.setTextColor(Color.RED) else dayView.setTextColor(Color.WHITE)
+  }
+
 }
