@@ -17,10 +17,10 @@ import android.view.animation.Animation.AnimationListener
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
   private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions)
-  private lazy val weeksList = new WeeksView(this, weeksAdapter)
+  private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
-  private lazy val shownMonthsView = new TextView(this)
+  private lazy val shownMonthsView = new ShownMonthsView(this)
   private lazy val agendaView = new AgendaView(this, cornerView)
   private lazy val flashingPanel = createFlashingPanel
   private lazy val fade = new AlphaAnimation(1, 0)
@@ -70,12 +70,11 @@ class AllaccaMain extends Activity with TypedViewHolder {
     cornerView
   }
 
-  private def createShownMonthsView: TextView = {
+  private def createShownMonthsView: ShownMonthsView = {
     val params = new RelativeLayout.LayoutParams(dimensions.weekListWidth, dimensions.weekRowHeight)
     params.setMargins(dimensions.weekNumberWidth, 0, 0, 0)
     shownMonthsView.setLayoutParams(params)
     shownMonthsView.setId(idGenerator.nextId)
-    shownMonthsView.setText("Jan 2014 – Apr 2014")
     shownMonthsView.setTextSize(dimensions.overviewContentTextSize)
     shownMonthsView
   }

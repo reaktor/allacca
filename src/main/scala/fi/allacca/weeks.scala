@@ -10,13 +10,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
 import org.joda.time.format.DateTimeFormat
 import android.graphics.Color
+import java.util.Locale
 
 object Config{
   val howManyWeeksToLoadAtTime = 20
   val initialWeekCount = 104
 }
 
-class WeeksView(activity: Activity, adapter: WeeksAdapter2) extends ListView(activity) {
+class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: ShownMonthsView) extends ListView(activity) {
   def start() {
     setAdapter(adapter)
     setOnScrollListener(new OnScrollListener {
@@ -37,6 +38,8 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2) extends ListView(act
           val indexOfFirstVisibleBeforeLoading = adapter.getIndex(firstVisibleYearAndWeek)
           view.setSelection(indexOfFirstVisibleBeforeLoading)
         }
+        val shownMonths = shownMonthsView.render(adapter.getItem(firstVisibleItem), adapter.getItem(lastVisibleItem))
+        shownMonthsView.setText(shownMonths)
       }
     })
   }
@@ -156,5 +159,13 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     dayView.setText(dayNumber)
     if (focusDay.withTimeAtStartOfDay == day) dayView.setTextColor(Color.RED) else dayView.setTextColor(Color.WHITE)
   }
+}
 
+class ShownMonthsView(activity: Activity) extends TextView(activity) {
+  private val fmt = DateTimeFormat.forPattern("MMM yyyy").withLocale(Locale.ENGLISH)
+
+  def render(first: YearAndWeek, last: YearAndWeek): String = {
+    def render(dateTime: DateTime): String = fmt.print(dateTime)
+    render(first.firstDay) + "–" + render(last.lastDay)
+  }
 }
