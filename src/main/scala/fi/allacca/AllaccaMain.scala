@@ -16,7 +16,7 @@ import android.view.animation.Animation.AnimationListener
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
-  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions, onWeeksListDayClick)
+  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions, onWeeksListDayClick, onWeeksListDayLongClick)
   private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
@@ -140,6 +140,16 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   private def onWeeksListDayClick (day: DateTime) {
     agendaView.focusOn(new LocalDate(day.getMillis))
+  }
+
+  private def onWeeksListDayLongClick(day: DateTime) = {
+    agendaView.focusOn(new LocalDate(day.getMillis))
+    Log.i(TAG, "onWeeksListDayLongClick")
+    val intent = new Intent(this, classOf[EditEventActivity])
+    intent.putExtra(EVENT_DATE, day.getMillis)
+    intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, day.getMillis)
+    startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
+    true
   }
 
   private def addGotoNowButton(layout: ViewGroup, leftSideId: Int) {

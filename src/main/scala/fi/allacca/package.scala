@@ -1,7 +1,7 @@
 package fi
 
 import android.view.View
-import android.view.View.{OnFocusChangeListener, OnClickListener}
+import android.view.View.{OnLongClickListener, OnFocusChangeListener, OnClickListener}
 import org.joda.time.LocalDate
 import android.util.Log
 
@@ -23,6 +23,10 @@ package object allacca {
 
   implicit def func2OnClickListener(f: View => Unit) = new OnClickListener() {
     def onClick(evt: View) { f(evt) }
+  }
+
+  implicit def func2OnLongClickListener(f: View => Boolean) = new OnLongClickListener() {
+    def onLongClick(evt: View): Boolean = { f(evt) }
   }
 
   implicit def func2OnFocusChangeListener(f: (View, Boolean) => Unit) = new OnFocusChangeListener {
