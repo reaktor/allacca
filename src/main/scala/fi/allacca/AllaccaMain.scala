@@ -10,13 +10,13 @@ import android.util.Log
 import java.text.DateFormatSymbols
 import java.util.{Locale, Calendar}
 import android.content.Intent
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import android.view.animation.{Animation, AlphaAnimation}
 import android.view.animation.Animation.AnimationListener
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
-  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions)
+  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions, onWeeksListDayClick)
   private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
@@ -49,7 +49,6 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
     setContentView(mainLayout)
   }
-
 
   def createMainLayout: RelativeLayout = {
     val mainLayout = new RelativeLayout(this)
@@ -137,6 +136,10 @@ class AllaccaMain extends Activity with TypedViewHolder {
     //intent.putExtra(EVENT_DATE, new DateTime().plusDays(10).toDate.getTime)
     intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, agendaView.focusDay.toDate.getTime)
     startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
+  }
+
+  private def onWeeksListDayClick (day: DateTime) {
+    agendaView.focusOn(new LocalDate(day.getMillis))
   }
 
   private def addGotoNowButton(layout: ViewGroup, leftSideId: Int) {

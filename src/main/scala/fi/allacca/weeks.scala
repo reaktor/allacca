@@ -46,7 +46,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
 
 }
 
-class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends BaseAdapter {
+class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit)  extends BaseAdapter {
   private val idGenerator = new IdGenerator
   private val renderer = new WeekViewRenderer(activity, dimensions)  
   private val model = new WeeksModel
@@ -76,10 +76,11 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters)  extends B
   def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val yearAndWeek: YearAndWeek = getItem(position)
     if (convertView == null)
-      renderer.createWeekView(model.getChosenDay, yearAndWeek)
+      renderer.createWeekView(model.getChosenDay, yearAndWeek, onDayClickCallback)
     else
-      renderer.updateView(model.getChosenDay, yearAndWeek, convertView)
+      renderer.updateView(model.getChosenDay, yearAndWeek, convertView, onDayClickCallback)
   }
+
 }
 
 class WeeksModel {
@@ -104,7 +105,7 @@ class WeeksModel {
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   val fmt = DateTimeFormat.forPattern("d")
 
-  def updateView(focusDay: DateTime, yearAndWeek: YearAndWeek, convertView: View) = {
+  def updateView(focusDay: DateTime, yearAndWeek: YearAndWeek, convertView: View, onDayClick: DateTime => Unit) = {
     val viewGroup = convertView.asInstanceOf[ViewGroup]
     def getTextView(index: Int, viewGroup: ViewGroup) = viewGroup.getChildAt(index).asInstanceOf[TextView]
     val weekNumberView = getTextView(0, viewGroup)
@@ -113,21 +114,24 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       val dayView = getTextView(index+1, viewGroup)
       val day  = yearAndWeek.days(index)
       setDayValue(day, dayView, focusDay)
+      dayView.setOnClickListener { view: View =>
+        onDayClick(day)
+      }
     }
     convertView
   }
 
-  def createWeekView(chosenDay: DateTime, yearAndWeek: YearAndWeek) = {
+  def createWeekView(chosenDay: DateTime, yearAndWeek: YearAndWeek, onDayClick: DateTime => Unit) = {
     val wholeLineLayout : LinearLayout = new LinearLayout(activity)
     wholeLineLayout.setOrientation(LinearLayout.HORIZONTAL)
     val weekNumberView = createWeekNumberView(yearAndWeek)
-    val dayViews = createDayViews(chosenDay, yearAndWeek)
+    val dayViews = createDayViews(chosenDay, yearAndWeek, onDayClick)
     wholeLineLayout.addView(weekNumberView)
     dayViews.foreach { dayView =>  wholeLineLayout.addView(dayView) }
     wholeLineLayout.getRootView
   }
 
-  def createDayViews(chosenDay: DateTime, yearAndWeek: YearAndWeek) = {
+  def createDayViews(chosenDay: DateTime, yearAndWeek: YearAndWeek, onDayClick: DateTime => Unit) = {
     0 to 6 map { index =>
       val day = yearAndWeek.days(index)
       val dayView = new TextView(activity)
@@ -139,6 +143,9 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       dayView.setWidth(dimensions.dayColumnWidth)
       dayView.setId(index+1)
       setDayValue(day, dayView, chosenDay)
+      dayView.setOnClickListener { view: View =>
+        onDayClick(day)
+      }
       dayView
     }
   }
