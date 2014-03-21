@@ -146,7 +146,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     agendaView.focusOn(new LocalDate(day.getMillis))
     Log.i(TAG, "onWeeksListDayLongClick")
     val intent = new Intent(this, classOf[EditEventActivity])
-    intent.putExtra(EVENT_DATE, day.getMillis)
+    intent.putExtra(EVENT_DATE, day.getMillis + new DateTime().getMillisOfDay)
     intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, day.getMillis)
     startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
     true
