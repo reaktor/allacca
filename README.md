@@ -18,3 +18,29 @@ Licensing
 
 GPL v3 (see LICENSE.txt), copyright by the authors.
 
+
+Releasing
+---------
+
+Make sure there are no logging statements.
+
+Create application key e.g. like this
+
+    keytool -genkey -v -alias allacca  -keysize 1024 -validity 11586 -dname "CN=Timo Rantalaiho, OU=Unknown, O=Allacca, L=Helsinki, ST=Unknown, C=FI"
+
+Configure access to the relevant keystore in ````local.settings```` , e.g. something like this:
+
+    key.alias: allacca
+    key.store: /home/my_account/.keystore
+    key.store.password: my_password
+
+Start sbt console
+
+    ./sbt
+
+and enter something like
+
+    ;reload;clean;android:package-release;android:signRelease;android:uninstall;android:run
+
+If the application works well, it might be time to upload to APK to Play Store.
+
