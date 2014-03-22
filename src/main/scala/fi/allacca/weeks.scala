@@ -22,11 +22,9 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
     setAdapter(adapter)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
-        Log.d(TAG + WeeksView.this.getClass.getSimpleName, s"scrollState==$scrollState")
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
-        Log.i(TAG, "WeeksView.onScroll") //Let's keep this still, there was some bug which caused this to be constantly called. Doesn't occur all the time.
         val lastVisibleItem = firstVisibleItem + visibleItemCount
         if (firstVisibleItem == 0) {
           adapter.loadMorePast()
@@ -52,12 +50,10 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
   private val loading = new AtomicBoolean(false)
 
   def loadMorePast() {
-    Log.i(TAG, "adapter.loadMorePast")
     model.setStartDay(model.getStartDay.minusWeeks(Config.howManyWeeksToLoadAtTime))
     notifyDataSetChanged()
   }
   def loadMoreFuture() {
-    Log.i(TAG, "adapter.loadMoreFuture")
     model.setStartDay(model.getStartDay.plusWeeks(Config.howManyWeeksToLoadAtTime))
     notifyDataSetChanged()
   }

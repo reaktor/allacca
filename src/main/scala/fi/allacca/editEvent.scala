@@ -161,7 +161,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def okButtonController(text: String = "") {
-    Log.i(TAG, s"Setting ok button enabled status to $isValid")
     okButton.setEnabled(isValid)
   }
 
@@ -257,7 +256,6 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def backToRefreshedParentView(savedEvent: Option[CalendarEvent] = None) {
-    Log.i(TAG, "Going back to main view and refreshing the results")
     val intent = new Intent(this, classOf[AllaccaMain])
     val dateToFocusOn: Long = savedEvent match {
       case Some(event) => event.startTime
@@ -271,17 +269,14 @@ class EditEventActivity extends Activity with TypedViewHolder {
   def confirmDelete(view: View) {
     idOfEventWeAreEditing match {
       case Some(id) => new ConfirmDeleteDialogFragment(calendarEventService, id, this, backToRefreshedParentView()).show(getFragmentManager, "Delete")
-      case _ => Log.i(TAG, "No saved event to delete")
     }
   }
 
   private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: UserCalendar) {
     if (idOfEventWeAreEditing.isDefined) {
       val updateCount = calendarEventService.saveEvent(idOfEventWeAreEditing.get, eventToSave)
-      Log.i(TAG, s"Updated event $updateCount")
     } else {
       val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
-      Log.i(TAG, s"Saved event with id $savedId")
     }
   }
 
@@ -404,7 +399,6 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   }
 
   def validate(x: String) {
-    Log.i(TAG, s"** valid $isValid **")
     val modifier: (EditText => Unit) =
     if (isValid) { _.setTextColor(Color.WHITE) } else { _.setTextColor(Color.RED) }
     fields.foreach(modifier)
@@ -427,14 +421,12 @@ class ConfirmDeleteDialogFragment(eventService: CalendarEventService, eventId: L
       .setMessage("Delete event?")
       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
         def onClick(dialog: DialogInterface, id: Int) {
-          Log.i(TAG, s"Deleting event $eventId")
           eventService.deleteEvent(eventId)
           confirmedCallback
         }
         })
       .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
         def onClick(dialog: DialogInterface, id: Int) {
-          Log.i(TAG, s"Not deleting event $eventId")
       }
     })
     builder.create()

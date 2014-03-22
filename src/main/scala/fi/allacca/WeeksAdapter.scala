@@ -39,7 +39,6 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters) extends Bas
     val weeksEventsFuture = Future { loadEventsOf(yearAndWeek) }
     weeksEventsFuture.onComplete {
       case Success(events) => render(events)
-      case Failure(t) => Log.e(TAG, "Error when loading", t)
     }
 
     def render(eventsOfWeek: Seq[CalendarEvent]): Unit = {
