@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.widget._
 import android.view.{Gravity, ViewGroup, View}
-import org.joda.time.{Weeks, DateTime, LocalDate}
+import org.joda.time.{Weeks, DateTime}
 import android.widget.AbsListView.OnScrollListener
 import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,7 +26,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
-        println("WeeksView.onScroll")
+        Log.i(TAG, "WeeksView.onScroll") //Let's keep this still, there was some bug which caused this to be constantly called. Doesn't occur all the time.
         val lastVisibleItem = firstVisibleItem + visibleItemCount
         if (firstVisibleItem == 0) {
           adapter.loadMorePast()
@@ -47,14 +47,12 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
 }
 
 class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
-  private val idGenerator = new IdGenerator
-  private val renderer = new WeekViewRenderer(activity, dimensions)  
+  private val renderer = new WeekViewRenderer(activity, dimensions)
   private val model = new WeeksModel
   private val loading = new AtomicBoolean(false)
 
   def loadMorePast() {
     Log.i(TAG, "adapter.loadMorePast")
-    model.setFocusDay(model.getStartDay)
     model.setStartDay(model.getStartDay.minusWeeks(Config.howManyWeeksToLoadAtTime))
     notifyDataSetChanged()
   }
@@ -73,12 +71,18 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
 
   def getItemId(position: Int): Long = position
 
+  def onDayClick(day: DateTime) {
+    onDayClickCallback(day)
+    model.setChosenDay(day)
+    notifyDataSetChanged()
+  }
+
   def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val yearAndWeek: YearAndWeek = getItem(position)
     if (convertView == null)
-      renderer.createWeekView(model.getChosenDay, yearAndWeek, onDayClickCallback, onDayLongClickCallback)
+      renderer.createWeekView(model.getChosenDay, yearAndWeek, onDayClick, onDayLongClickCallback)
     else
-      renderer.updateView(model.getChosenDay, yearAndWeek, convertView, onDayClickCallback, onDayLongClickCallback)
+      renderer.updateView(model.getChosenDay, yearAndWeek, convertView, onDayClick, onDayLongClickCallback)
   }
 
 }
@@ -93,7 +97,8 @@ class WeeksModel {
   def getStartDay = startDay
   def setStartDay(startDay: DateTime) { this.startDay = startDay }
   def getFocusDay = focusDay
-  def getChosenDay = chosenDay
+  def getChosenDay = { chosenDay }
+  def setChosenDay(chosen: DateTime) { chosenDay = chosen }
   def getFocusDayIndex = Weeks.weeksBetween(startDay, focusDay).getWeeks
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
@@ -105,7 +110,7 @@ class WeeksModel {
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   val fmt = DateTimeFormat.forPattern("d")
 
-  def updateView(focusDay: DateTime, yearAndWeek: YearAndWeek, convertView: View, onDayClick: DateTime => Unit, onDayLongClick: DateTime => Boolean) = {
+  def updateView(chosenDay: DateTime, yearAndWeek: YearAndWeek, convertView: View, onDayClick: DateTime => Unit, onDayLongClick: DateTime => Boolean) = {
     val viewGroup = convertView.asInstanceOf[ViewGroup]
     def getTextView(index: Int, viewGroup: ViewGroup) = viewGroup.getChildAt(index).asInstanceOf[TextView]
     val weekNumberView = getTextView(0, viewGroup)
@@ -113,7 +118,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     0 to 6 map { index =>
       val dayView = getTextView(index+1, viewGroup)
       val day  = yearAndWeek.days(index)
-      setDayValue(day, dayView, focusDay)
+      setDayValue(day, dayView, chosenDay)
       setListeners(dayView, onDayClick, day, onDayLongClick)
     }
     convertView
@@ -172,7 +177,14 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   private def setDayValue(day: DateTime, dayView: TextView, focusDay: DateTime) {
     val dayNumber = fmt.print(day)
     dayView.setText(dayNumber)
-    if (focusDay.withTimeAtStartOfDay == day) dayView.setTextColor(Color.RED) else dayView.setTextColor(Color.WHITE)
+    if (new DateTime().withTimeAtStartOfDay() == day) {
+      dayView.setTextColor(Color.YELLOW)
+    }
+    else if (focusDay.withTimeAtStartOfDay == day) {
+      dayView.setTextColor(Color.RED)
+    } else {
+      dayView.setTextColor(Color.WHITE)
+    }
   }
 }
 
