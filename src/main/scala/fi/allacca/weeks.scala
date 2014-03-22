@@ -118,7 +118,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     0 to 6 map { index =>
       val dayView = getTextView(index+1, viewGroup)
       val day  = yearAndWeek.days(index)
-      setDayValue(day, dayView, chosenDay)
+      initDayView(day, dayView, chosenDay)
       setListeners(dayView, onDayClick, day, onDayLongClick)
     }
     convertView
@@ -157,7 +157,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       dayView.setHeight(dimensions.weekRowHeight)
       dayView.setWidth(dimensions.dayColumnWidth)
       dayView.setId(index+1)
-      setDayValue(day, dayView, chosenDay)
+      initDayView(day, dayView, chosenDay)
       setListeners(dayView, onDayClick, day, onDayLongClick)
       dayView
     }
@@ -174,7 +174,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     weekNumberView
   }
 
-  private def setDayValue(day: DateTime, dayView: TextView, focusDay: DateTime) {
+  private def initDayView(day: DateTime, dayView: TextView, focusDay: DateTime) {
     val dayNumber = fmt.print(day)
     dayView.setText(dayNumber)
     if (new DateTime().withTimeAtStartOfDay() == day) {
@@ -184,6 +184,11 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       dayView.setTextColor(Color.RED)
     } else {
       dayView.setTextColor(Color.WHITE)
+    }
+    if ((day.getMonthOfYear % 2) == 0) {
+      dayView.setBackgroundColor(dimensions.darkGrey)
+    } else {
+      dayView.setBackgroundColor(Color.BLACK)
     }
   }
 }

@@ -16,6 +16,7 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val governorBay = Color.parseColor("#a22fbb")
   val pavlova = Color.parseColor("#bba378")
   val funBlue = Color.parseColor("#2e4d7c")
+  val darkGrey = Color.parseColor("#2B2B2B")
 
   private def spToPx(scaledPixels: Int): Int = {
     val floatPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, scaledPixels, displayMetrics)
