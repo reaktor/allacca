@@ -281,8 +281,9 @@ class AgendaRenderer(activity: Activity) {
       timeFormat.print(event.startTime) + "-" + timeFormat.print(event.endTime) + " "
     }
     titleView.setText(timeRangePrefix + event.title)
-    titleView.setBackgroundColor(dimensions.pavlova)
-    titleView.setTextColor(Color.BLACK)
+    titleView.setBackgroundColor(Color.BLACK)
+    titleView.setTextColor(Color.WHITE)
+
     titleView
   }
 
@@ -292,6 +293,8 @@ class AgendaRenderer(activity: Activity) {
     val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     dayNameView.setLayoutParams(dayNameParams)
     dayNameView.setTextSize(dimensions.overviewContentTextSize)
+    dayNameView.setTextColor(dimensions.pavlova)
+    dayNameView.setTypeface(null, Typeface.BOLD_ITALIC)
     val day = dayWithEvents.day
     dayNameView.setText(dateFormat.print(day))
     dayNameView.setOnLongClickListener(new OnLongClickListener {
