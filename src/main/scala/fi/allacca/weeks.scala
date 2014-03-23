@@ -63,15 +63,10 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
 
   /* returns the index of the date/week to be selected in view */
   def rollToDate(day: DateTime): Int = {
+    model.setStartDay(day.minusWeeks(Config.howManyWeeksToLoadAtTime))
+    notifyDataSetChanged()
     val week = YearAndWeek.from(day)
-    val index = getIndex(week)
-    if (index >= 0) {
-      index
-    } else {
-      model.setStartDay(day.minusWeeks(Config.howManyWeeksToLoadAtTime))
-      notifyDataSetChanged()
-      getIndex(week)
-    }
+    getIndex(week)
   }
 
   def getStartDayIndex = model.getStartDayIndex
