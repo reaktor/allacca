@@ -80,12 +80,20 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   def initTabOrder() {
+    if (isEditMode) setFocusToCalendarSelectionToPreventKeyboardInYourFace()
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.initTabOrder()
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
     endDateTimeField.initTabOrder()
     endDateTimeField.lastElement.setNextFocusDownId(eventLocationField.getId)
     eventLocationField.setNextFocusDownId(eventDescriptionField.getId)
+  }
+
+  private def setFocusToCalendarSelectionToPreventKeyboardInYourFace() {
+    calendarSelection.setFocusable(true)
+    calendarSelection.setFocusableInTouchMode(true)
+    calendarSelection.requestFocus()
+    calendarSelection.setNextFocusDownId(eventNameField.getId)
   }
 
   private def wrapInScroller(editLayout: RelativeLayout): ScrollView = {
@@ -311,13 +319,17 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: UserCalendar) {
-    if (idOfEventWeAreEditing.isDefined) {
+    if (isEditMode) {
       val updateCount = calendarEventService.saveEvent(idOfEventWeAreEditing.get, eventToSave)
       Log.i(TAG, s"Updated event $updateCount")
     } else {
       val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
       Log.i(TAG, s"Saved event with id $savedId")
     }
+  }
+
+  private def isEditMode: Boolean = {
+    idOfEventWeAreEditing.isDefined
   }
 
   private def extractEventFromFieldValues: CalendarEvent = {
