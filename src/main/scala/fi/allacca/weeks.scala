@@ -175,6 +175,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     weekNumberView.setHeight(dimensions.weekRowHeight)
     weekNumberView.setTextSize(dimensions.overviewContentTextSize)
     weekNumberView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
+    weekNumberView.setTextColor(dimensions.pavlova)
     weekNumberView.setText(yearAndWeek.week.toString)
     weekNumberView
   }
