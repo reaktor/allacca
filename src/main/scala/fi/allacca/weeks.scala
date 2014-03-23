@@ -186,7 +186,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       dayView.setTextColor(Color.WHITE)
     }
     if ((day.getMonthOfYear % 2) == 0) {
-      dayView.setBackgroundColor(dimensions.darkGrey)
+      dayView.setBackgroundColor(dimensions.funBlue)
     } else {
       dayView.setBackgroundColor(Color.BLACK)
     }
