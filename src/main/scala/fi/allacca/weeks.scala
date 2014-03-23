@@ -43,7 +43,11 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
       }
     })
   }
-
+  def focusOn(day: DateTime) {
+    val week = YearAndWeek.from(day)
+    val index = adapter.getIndex(week)
+    setSelection(index)
+  }
 }
 
 class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
@@ -63,6 +67,7 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
   }
 
   def getStartDayIndex = model.getStartDayIndex
+
   def getIndex(yearAndWeek: YearAndWeek) = model.getIndex(yearAndWeek)
 
   def getCount: Int = model.getCount
