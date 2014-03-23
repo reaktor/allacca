@@ -23,6 +23,7 @@ import org.joda.time.format.DateTimeFormat
 class EditEventActivity extends Activity with TypedViewHolder {
   import EditEventActivity._
 
+  private lazy val screenParams = new ScreenParameters(getResources.getDisplayMetrics)
   private lazy val calendarEventService = new CalendarEventService(this)
 
   private lazy val calendarSelection = createCalendarSelection
@@ -212,6 +213,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val header = new TextView(this)
     header.setId(idGenerator.nextId)
     header.setText(text)
+    header.setTextColor(screenParams.pavlova)
     val layoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
     belowField.map { fieldId => layoutParams.addRule(BELOW, fieldId) }
     header.setLayoutParams(layoutParams)
