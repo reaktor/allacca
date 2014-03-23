@@ -43,11 +43,6 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
       }
     })
   }
-  def focusOn(day: DateTime) {
-    val week = YearAndWeek.from(day)
-    val index = adapter.getIndex(week)
-    setSelection(index)
-  }
 }
 
 class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
@@ -64,6 +59,19 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
     Log.i(TAG, "adapter.loadMoreFuture")
     model.setStartDay(model.getStartDay.plusWeeks(Config.howManyWeeksToLoadAtTime))
     notifyDataSetChanged()
+  }
+
+  /* returns the index of the date/week to be selected in view */
+  def rollToDate(day: DateTime): Int = {
+    val week = YearAndWeek.from(day)
+    val index = getIndex(week)
+    if (index >= 0) {
+      index
+    } else {
+      model.setStartDay(day.minusWeeks(Config.howManyWeeksToLoadAtTime))
+      notifyDataSetChanged()
+      getIndex(week)
+    }
   }
 
   def getStartDayIndex = model.getStartDayIndex

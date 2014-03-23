@@ -189,7 +189,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
     panel
   }
   def gotoNow(view: View) {
-    weeksList.focusOn(new DateTime)
+    val index = weeksAdapter.rollToDate(new DateTime)
+    weeksList.setSelection(index)
     agendaView.focusOn(new LocalDate)
     flashingPanel.startAnimation(fade)
   }
