@@ -20,7 +20,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
-  private lazy val shownMonthsView = new ShownMonthsView(this)
+  private lazy val shownMonthsView = new ShownMonthsView(this, dimensions)
   private lazy val agendaView = new AgendaView(this, cornerView)
   private lazy val flashingPanel = createFlashingPanel
   private lazy val fade = new AlphaAnimation(1, 0)

@@ -9,7 +9,7 @@ import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
 import org.joda.time.format.DateTimeFormat
-import android.graphics.Color
+import android.graphics.{Typeface, Color}
 import java.util.Locale
 
 object Config{
@@ -193,8 +193,10 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   }
 }
 
-class ShownMonthsView(activity: Activity) extends TextView(activity) {
+class ShownMonthsView(activity: Activity, dimensions: ScreenParameters) extends TextView(activity) {
   private val fmt = DateTimeFormat.forPattern("MMM yyyy").withLocale(Locale.ENGLISH)
+  setTextColor(dimensions.pavlova)
+  setTypeface(null, Typeface.BOLD_ITALIC)
 
   def render(first: YearAndWeek, last: YearAndWeek): String = {
     def render(dateTime: DateTime): String = fmt.print(dateTime)
