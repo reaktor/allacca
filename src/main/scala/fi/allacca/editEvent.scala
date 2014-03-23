@@ -421,7 +421,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   }
 
   def hideHoursAndMinutes() {
-    hourAndMinuteElements.foreach { _.setVisibility(View.INVISIBLE) }
+    hourAndMinuteElements.foreach { _.setVisibility(View.GONE) }
     context.initTabOrder()
   }
 
