@@ -12,6 +12,7 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val overviewContentTextSize = 20
 
   val weekListWidth = weekNumberWidth + (7 * dayColumnWidth)
+  val weekListRightMargin = spToPx(3)
 
   val governorBay = Color.parseColor("#a22fbb")
   val pavlova = Color.parseColor("#bba378")

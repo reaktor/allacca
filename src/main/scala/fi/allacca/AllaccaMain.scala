@@ -85,6 +85,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksList.setSelection(0)
     weeksList.start()
     val weeksListParams = new RelativeLayout.LayoutParams(dimensions.weekListWidth, LayoutParams.WRAP_CONTENT)
+    weeksListParams.setMargins(0, 0, dimensions.weekListRightMargin, 0)
     weeksListParams.addRule(RelativeLayout.BELOW, cornerView.getId)
     weeksListParams.addRule(RelativeLayout.ABOVE, addEventButton.getId)
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
