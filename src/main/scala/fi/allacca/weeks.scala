@@ -30,7 +30,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
         val lastVisibleItem = firstVisibleItem + visibleItemCount
         if (firstVisibleItem == 0) {
           adapter.loadMorePast()
-          view.setSelection(adapter.getFocusDayIndex)
+          view.setSelection(adapter.getStartDayIndex)
         }
         if (lastVisibleItem > (adapter.getCount - Config.howManyWeeksToLoadAtTime)) {
           val firstVisibleYearAndWeek = adapter.getItem(firstVisibleItem)
@@ -62,7 +62,7 @@ class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClick
     notifyDataSetChanged()
   }
 
-  def getFocusDayIndex = model.getFocusDayIndex
+  def getStartDayIndex = model.getStartDayIndex
   def getIndex(yearAndWeek: YearAndWeek) = model.getIndex(yearAndWeek)
 
   def getCount: Int = model.getCount
@@ -99,7 +99,7 @@ class WeeksModel {
   def getFocusDay = focusDay
   def getChosenDay = { chosenDay }
   def setChosenDay(chosen: DateTime) { chosenDay = chosen }
-  def getFocusDayIndex = Weeks.weeksBetween(startDay, focusDay).getWeeks
+  def getStartDayIndex = Config.howManyWeeksToLoadAtTime
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
