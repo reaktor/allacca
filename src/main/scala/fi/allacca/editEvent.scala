@@ -79,9 +79,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
     editLayout.addView(cancelButton)
   }
 
-  private def initTabOrder() {
+  def initTabOrder() {
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
+    startDateTimeField.initTabOrder()
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
+    endDateTimeField.initTabOrder()
     endDateTimeField.lastElement.setNextFocusDownId(eventLocationField.getId)
     eventLocationField.setNextFocusDownId(eventDescriptionField.getId)
   }
@@ -163,6 +165,21 @@ class EditEventActivity extends Activity with TypedViewHolder {
     labelParams.setMargins(dip2px(2, this), dip2px(11, this), 0, 0)
     allDayLabel.setLayoutParams(labelParams)
     editLayout.addView(allDayLabel)
+
+    toggleAllDay(editLayout)
+    allDayCheckbox.setOnClickListener(toggleAllDay _)
+    allDayLabel.setOnClickListener(toggleAllDay _)
+  }
+
+  private def toggleAllDay(v: View) {
+    val allDay = allDayCheckbox.isChecked
+    if (allDay) {
+      startDateTimeField.hideHoursAndMinutes()
+      endDateTimeField.hideHoursAndMinutes()
+    } else {
+      startDateTimeField.showHoursAndMinutes()
+      endDateTimeField.showHoursAndMinutes()
+    }
   }
 
   private def createCalendarSelection: Spinner = {
@@ -363,7 +380,7 @@ object EditEventActivity {
   def dip2px(dip: Float, context: Context): Int = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources.getDisplayMetrics))
 }
 
-class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: Context, changeListener: (String => Unit), focusListener: Option[(View, Boolean) => Unit] = None) {
+class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val context: EditEventActivity, changeListener: (String => Unit), focusListener: Option[(View, Boolean) => Unit] = None) {
   val hourField: EditText = EditEventActivity.addTextField(context, 50, 2, "h", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId))
   val colon: TextView = EditEventActivity.addTextView(context, ":", (BELOW, placeBelowFieldId), (RIGHT_OF, hourField.getId))
   val minuteField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, colon.getId))
@@ -372,6 +389,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   val monthField: EditText = EditEventActivity.addTextField(context, 50, 2, "m", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, dayField.getId))
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
   val fields = List(hourField, minuteField, dayField, monthField, yearField)
+  private val hourAndMinuteElements = List(hourField, colon, minuteField)
   private val weekDayFormat = DateTimeFormat.forPattern("E")
 
   def init(editLayout: RelativeLayout) {
@@ -386,11 +404,25 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
     }
     editLayout.addView(colon)
     editLayout.addView(weekDay)
+    weekDayTextUpdater("")
+  }
+
+
+  def initTabOrder() {
     hourField.setNextFocusDownId(minuteField.getId)
     minuteField.setNextFocusDownId(dayField.getId)
     dayField.setNextFocusDownId(monthField.getId)
     monthField.setNextFocusDownId(yearField.getId)
-    weekDayTextUpdater("")
+  }
+
+  def hideHoursAndMinutes() {
+    hourAndMinuteElements.foreach { _.setVisibility(View.INVISIBLE) }
+    context.initTabOrder()
+  }
+
+  def showHoursAndMinutes() {
+    hourAndMinuteElements.foreach { _.setVisibility(View.VISIBLE) }
+    context.initTabOrder()
   }
 
   def getDateTime: DateTime = {
@@ -439,7 +471,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
 
   def lastElement = yearField
   def lastElementId = yearField.getId
-  def firstElementId = hourField.getId
+  def firstElementId = fields.find { _.getVisibility == View.VISIBLE }.map { _.getId }.getOrElse(-1)
 
   private def digitToStr(d: Int): String = {
     val str = d.toString
