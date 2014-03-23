@@ -22,6 +22,8 @@ GPL v3 (see LICENSE.txt), copyright by the authors.
 Releasing
 ---------
 
+Set correct application version to AndroidManifest.xml
+
 Make sure there are no logging statements.
 
 Create application key e.g. like this
