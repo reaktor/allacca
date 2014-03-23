@@ -41,8 +41,6 @@ class CalendarEventService(context: Context) {
     fillCommonFields(values, event)
     values.put("eventTimezone", TimeZone.getDefault.getID)
     values.put("selfAttendeeStatus", Int.box(1))
-    val allDay = if (event.allDay) 1 else 0
-    values.put("allDay", Int.box(allDay))
     values.put("guestsCanInviteOthers", Int.box(1))
     values.put("guestsCanModify", Int.box(1))
     values.put("availability", Int.box(0))
@@ -62,7 +60,7 @@ class CalendarEventService(context: Context) {
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
-    val projection = Array("dtstart", "dtend", "title", "eventLocation", "description")
+    val projection = Array("dtstart", "dtend", "title", "eventLocation", "description", "allDay")
     val cursor = context.getContentResolver.query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
@@ -70,12 +68,14 @@ class CalendarEventService(context: Context) {
       val title = cursor.getString(2)
       val location = cursor.getString(3)
       val description = cursor.getString(4)
+      val allDay = cursor.getInt(5) == 1
       Some(new CalendarEvent(id = Some(eventId), 
                              title = title, 
                              startTime = startTime, 
                              endTime = endTime, 
                              location = location, 
-                             description = description))
+                             description = description,
+                             allDay = allDay))
     } else { None }
   }
 
@@ -85,6 +85,8 @@ class CalendarEventService(context: Context) {
     values.put("title", event.title)
     values.put("eventLocation", event.location)
     values.put("description", event.description)
+    val allDay = if (event.allDay) 1 else 0
+    values.put("allDay", Int.box(allDay))
   }
 
   def getCalendars: Array[UserCalendar] = {

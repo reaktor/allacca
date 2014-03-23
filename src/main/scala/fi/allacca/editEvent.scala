@@ -9,7 +9,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.text.InputFilter
 import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_CLASS_TEXT
-import android.widget.RelativeLayout.{BELOW, RIGHT_OF, LEFT_OF}
+import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{DialogInterface, Intent, Context}
@@ -30,6 +30,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private lazy val eventNameField = createTextField(getPrepopulateText { e => e.title }, eventNameHeader.getId, "Event title")
   private lazy val startTimeHeader = createHeader("Start time", Some(eventNameField.getId))
   private lazy val startDateTimeField = new DateTimeField(getPrepopulateStartTime, startTimeHeader.getId, this, okButtonController, Some(startTimeFocusChange))
+  private lazy val allDayCheckbox = new CheckBox(this)
+  private lazy val allDayLabel = new TextView(this)
   private lazy val endTimeHeader = createHeader("End time", Some(startDateTimeField.lastElementId))
   private lazy val endDateTimeField = new DateTimeField(getPrepopulateEndTime, endTimeHeader.getId, this, okButtonController)
   private lazy val eventLocationHeader = createHeader("Event location", Some(endDateTimeField.lastElement.getId))
@@ -137,7 +139,30 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def initDateFields(editLayout: RelativeLayout) {
     startDateTimeField.init(editLayout)
+    initAllDayCheckboxAndLabel(editLayout)
     endDateTimeField.init(editLayout)
+  }
+
+
+  private def initAllDayCheckboxAndLabel(editLayout: RelativeLayout) {
+    allDayCheckbox.setId(idGenerator.nextId)
+    val checkboxParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    checkboxParams.addRule(RelativeLayout.RIGHT_OF, startDateTimeField.lastElementId)
+    checkboxParams.addRule(RelativeLayout.BELOW, startTimeHeader.getId)
+    checkboxParams.setMargins(dip2px(25, this), dip2px(6, this), 0, 0)
+    allDayCheckbox.setLayoutParams(checkboxParams)
+    Log.d(TAG, "initing all day " + getEventWeAreEditing + " , " + getEventWeAreEditing.exists( { _.allDay }))
+    allDayCheckbox.setChecked(getEventWeAreEditing.exists { _.allDay })
+    editLayout.addView(allDayCheckbox)
+
+    allDayLabel.setId(idGenerator.nextId)
+    allDayLabel.setText("All day")
+    val labelParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    labelParams.addRule(RelativeLayout.BELOW, startTimeHeader.getId)
+    labelParams.addRule(RelativeLayout.RIGHT_OF, allDayCheckbox.getId)
+    labelParams.setMargins(dip2px(2, this), dip2px(11, this), 0, 0)
+    allDayLabel.setLayoutParams(labelParams)
+    editLayout.addView(allDayLabel)
   }
 
   private def createCalendarSelection: Spinner = {
@@ -291,7 +316,9 @@ class EditEventActivity extends Activity with TypedViewHolder {
     val endMillis = endDateTimeField.getDateTime.toDate.getTime
     val eventLocation = eventLocationField.getText.toString
     val eventDescription = eventDescriptionField.getText.toString
-    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis, location = eventLocation, description = eventDescription)
+    val allDay = allDayCheckbox.isChecked
+    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis,
+      location = eventLocation, description = eventDescription, allDay = allDay)
     eventToSave
   }
 }
