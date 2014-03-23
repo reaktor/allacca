@@ -20,6 +20,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
+  private lazy val addEventButton = new Button(this)
   private lazy val shownMonthsView = new ShownMonthsView(this, dimensions)
   private lazy val agendaView = new AgendaView(this, cornerView)
   private lazy val flashingPanel = createFlashingPanel
@@ -38,14 +39,14 @@ class AllaccaMain extends Activity with TypedViewHolder {
     val titles = createDayColumnTitles()
     titles.foreach { mainLayout.addView }
 
+    createAddEventButton(mainLayout)
+    addGotoNowButton(mainLayout, addEventButton.getId)
+
     val weeksList = createWeeksList()
     mainLayout.addView(weeksList)
 
     createAgenda(mainLayout)
     mainLayout.addView(flashingPanel)
-
-    val addEventButton = addAEventButton(mainLayout)
-    addGotoNowButton(mainLayout, addEventButton.getId)
 
     setContentView(mainLayout)
   }
@@ -85,6 +86,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksList.start()
     val weeksListParams = new RelativeLayout.LayoutParams(dimensions.weekListWidth, LayoutParams.WRAP_CONTENT)
     weeksListParams.addRule(RelativeLayout.BELOW, cornerView.getId)
+    weeksListParams.addRule(RelativeLayout.ABOVE, addEventButton.getId)
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
     weeksList.setLayoutParams(weeksListParams)
     weeksList
@@ -115,17 +117,16 @@ class AllaccaMain extends Activity with TypedViewHolder {
     }
   }
 
-  private def addAEventButton(layout: ViewGroup): Button = {
-    val b = new Button(this)
-    b.setId(idGenerator.nextId)
+  private def createAddEventButton(layout: ViewGroup): Button = {
+    addEventButton.setId(idGenerator.nextId)
     val params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-    b.setLayoutParams(params)
-    b.setText("+")
-    b.setTextColor(Color.WHITE)
-    b.setOnClickListener(createNewEvent _)
-    layout.addView(b)
-    b
+    addEventButton.setLayoutParams(params)
+    addEventButton.setText("+")
+    addEventButton.setTextColor(Color.WHITE)
+    addEventButton.setOnClickListener(createNewEvent _)
+    layout.addView(addEventButton)
+    addEventButton
   }
 
   def createNewEvent (view: View) {
