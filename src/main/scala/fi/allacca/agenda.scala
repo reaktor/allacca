@@ -68,7 +68,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 
   private val loading = new AtomicBoolean(false)
   private val tooMuchPast = new AtomicBoolean(false)
-  private val tooMuchFuture = new AtomicBoolean(false) // TODO: Handle going too much to future
+  private val tooMuchFuture = new AtomicBoolean(false) // TODO: Set to stop loading too much future
   @volatile var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
@@ -87,6 +87,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
         focusOn(firstDayToLoad)
       }
       renderer.createPastLoadingStopper(firstDayToLoad, { loadMoreHandler })
+    } else if (tooMuchFuture.get()) {
+      renderer.createFutureLoadingStopper(lastDayToLoad, { v: View => tooMuchFuture.set(false) })
     } else {
       val item = getItem(position)
       renderer.createLoadingOrRealViewFor(item)
@@ -313,14 +315,22 @@ class AgendaRenderer(activity: Activity) {
     dayNameView
   }
 
-  def createPastLoadingStopper(day: LocalDate, loadingHandler: View => Unit ): View = {
+  def createPastLoadingStopper(day: LocalDate, loadingHandler: => View => Unit ): View = {
+    createLoadingStopper("Click to load events before " + dateFormat.print(day), loadingHandler)
+  }
+
+  def createFutureLoadingStopper(day: LocalDate, loadingHandler: => View => Unit ): View = {
+    createLoadingStopper("Click to load events after " + dateFormat.print(day), loadingHandler)
+  }
+
+  def createLoadingStopper(message: String, loadingHandler: => View => Unit ): View = {
     val view = new TextView(activity)
     view.setId(View.generateViewId())
     val params = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     view.setLayoutParams(params)
     view.setTextSize(dimensions.overviewContentTextSize)
     view.setTypeface(null, Typeface.BOLD)
-    view.setText("Click to load events before " + dateFormat.print(day))
+    view.setText(message)
     view.setOnClickListener(loadingHandler)
     view
   }
