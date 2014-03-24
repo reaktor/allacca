@@ -316,7 +316,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   def confirmDelete(view: View) {
     idOfEventWeAreEditing match {
       case Some(id) => new ConfirmDeleteDialogFragment(calendarEventService, id, this, backToRefreshedParentView()).show(getFragmentManager, "Delete")
-      case _ => Log.i(TAG, "No saved event to delete")
+      case _ => Unit
     }
   }
 
