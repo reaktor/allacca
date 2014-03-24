@@ -15,6 +15,8 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val weekListWidth = monthLetterWidth + weekNumberWidth + (7 * dayColumnWidth)
   val weekListRightMargin = spToPx(3)
 
+  val weekendDayColor = Color.WHITE
+  val weekDayColor = darkenSlightly(Color.WHITE)
   val governorBay = Color.parseColor("#a22fbb")
   val pavlova = Color.parseColor("#bba378")
   val funBlue = Color.parseColor("#2e4d7c")
@@ -23,5 +25,12 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   private def spToPx(scaledPixels: Int): Int = {
     val floatPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, scaledPixels, displayMetrics)
     (floatPixels + 0.5).asInstanceOf[Int]
+  }
+
+  def darkenSlightly(color: Int): Int = {
+    val hsv = new Array[Float](3)
+    Color.colorToHSV(color, hsv)
+    hsv(2) = hsv(2) * 0.8f
+    Color.HSVToColor(hsv)
   }
 }

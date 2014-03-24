@@ -224,14 +224,14 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   private def initDayView(day: DateTime, dayView: TextView, focusDay: DateTime) {
     val dayNumber = fmt.print(day)
     dayView.setText(dayNumber)
-    if (new DateTime().withTimeAtStartOfDay() == day) {
-      dayView.setTextColor(Color.YELLOW)
-    }
-    else if (focusDay.withTimeAtStartOfDay == day) {
-      dayView.setTextColor(Color.RED)
+    val textColor = if (new DateTime().withTimeAtStartOfDay() == day) {
+      Color.YELLOW
+    } else if (focusDay.withTimeAtStartOfDay == day) {
+      Color.RED
     } else {
-      dayView.setTextColor(Color.WHITE)
+      if (day.getDayOfWeek >= 6) dimensions.weekendDayColor else { dimensions.weekDayColor }
     }
+    dayView.setTextColor(textColor)
     if ((day.getMonthOfYear % 2) == 0) {
       dayView.setBackgroundColor(dimensions.funBlue)
     } else {
