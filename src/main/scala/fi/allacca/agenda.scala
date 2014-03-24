@@ -63,6 +63,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val model = new AgendaModel
 
   private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
+  private val maxEventlessDaysToLoad = 3 * 360
 
   private val loading = new AtomicBoolean(false)
   private val tooMuchPast = new AtomicBoolean(false)
@@ -128,9 +129,9 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       firstDayToLoad = if (tooMuchPast.get()) firstDayToLoad else firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
       lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
       setSelectionToFocusDayAfterLoading = true
-      val currentLoadWindowDays = Days.daysBetween(firstDayToLoad, lastDayToLoad).getDays
-      if (currentLoadWindowDays > 3 * 360) {
-        Log.d(TAG, "currentLoadWindowSize == " + currentLoadWindowDays)
+      val currentPastDays = Days.daysBetween(firstDayToLoad, focusDay).getDays
+      if (currentPastDays > maxEventlessDaysToLoad) {
+        Log.d(TAG, "currentPastDays == " + currentPastDays)
         tooMuchPast.set(true)
         notifyDataSetChanged()
       } else {
