@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
 import org.joda.time.format.DateTimeFormat
 import android.graphics.{Typeface, Color}
-import java.util.Locale
+import java.util.{Calendar, Locale}
+import java.text.DateFormatSymbols
 
 object Config{
   val howManyWeeksToLoadAtTime = 20
@@ -121,10 +122,13 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   def updateView(chosenDay: DateTime, yearAndWeek: YearAndWeek, convertView: View, onDayClick: DateTime => Unit, onDayLongClick: DateTime => Boolean) = {
     val viewGroup = convertView.asInstanceOf[ViewGroup]
     def getTextView(index: Int, viewGroup: ViewGroup) = viewGroup.getChildAt(index).asInstanceOf[TextView]
-    val weekNumberView = getTextView(0, viewGroup)
-    weekNumberView.setText(yearAndWeek.week.toString)
+    val monthLetterView = getTextView(0, viewGroup)
+    initMonthLetterView(yearAndWeek, monthLetterView)
+    val weekNumberView = getTextView(1, viewGroup)
+    initWeekNumberView(yearAndWeek, weekNumberView)
+    //weekNumberView.setText(yearAndWeek.week.toString)
     0 to 6 map { index =>
-      val dayView = getTextView(index+1, viewGroup)
+      val dayView = getTextView(index+2, viewGroup)
       val day  = yearAndWeek.days(index)
       initDayView(day, dayView, chosenDay)
       setListeners(dayView, onDayClick, day, onDayLongClick)
@@ -132,6 +136,25 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     convertView
   }
 
+  def initWeekNumberView(yearAndWeek: YearAndWeek, weekNumberView: TextView) {
+    weekNumberView.setText(yearAndWeek.week.toString)
+  }
+
+  def initMonthLetterView(yearAndWeek: YearAndWeek, view: TextView) {
+    val monthLetterForThisWeek = getMonthLetterForWeek(yearAndWeek)
+    view.setText(monthLetterForThisWeek)
+  }
+
+  private def getMonthLetterForWeek(yearAndWeek: YearAndWeek): String = {
+    val day =  yearAndWeek.firstDay
+    val currentDayCalendar = day.toCalendar(Locale.getDefault())
+    val weekOfMonth = currentDayCalendar.get(Calendar.WEEK_OF_MONTH)
+    if (weekOfMonth < 5) {
+      val shortMonths = new DateFormatSymbols(Locale.ENGLISH).getShortMonths
+      val weekOfMonthIndex = weekOfMonth - 2
+      if (weekOfMonthIndex < 0) "" else (shortMonths(day.getMonthOfYear - 1)(weekOfMonthIndex) + "").toUpperCase
+    } else { "" }
+  }
 
   def setListeners(dayView: TextView, onDayClick: (DateTime) => Unit, day: DateTime, onDayLongClick: (DateTime) => Boolean) {
     dayView.setOnClickListener {
@@ -147,8 +170,10 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   def createWeekView(chosenDay: DateTime, yearAndWeek: YearAndWeek, onDayClick: DateTime => Unit, onDayLongClick: DateTime => Boolean) = {
     val wholeLineLayout : LinearLayout = new LinearLayout(activity)
     wholeLineLayout.setOrientation(LinearLayout.HORIZONTAL)
+    val monthLetterView = createMonthLetterView(yearAndWeek)
     val weekNumberView = createWeekNumberView(yearAndWeek)
     val dayViews = createDayViews(chosenDay, yearAndWeek, onDayClick, onDayLongClick)
+    wholeLineLayout.addView(monthLetterView)
     wholeLineLayout.addView(weekNumberView)
     dayViews.foreach { dayView =>  wholeLineLayout.addView(dayView) }
     wholeLineLayout.getRootView
@@ -164,7 +189,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       dayView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
       dayView.setHeight(dimensions.weekRowHeight)
       dayView.setWidth(dimensions.dayColumnWidth)
-      dayView.setId(index+1)
+      dayView.setId(index+2)
       initDayView(day, dayView, chosenDay)
       setListeners(dayView, onDayClick, day, onDayLongClick)
       dayView
@@ -173,14 +198,27 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
 
   def createWeekNumberView(yearAndWeek: YearAndWeek) = {
     val weekNumberView = new TextView(activity)
-    weekNumberView.setId(0)
+    weekNumberView.setId(1)
     weekNumberView.setWidth(dimensions.weekNumberWidth)
     weekNumberView.setHeight(dimensions.weekRowHeight)
     weekNumberView.setTextSize(dimensions.overviewContentTextSize)
     weekNumberView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
     weekNumberView.setTextColor(dimensions.pavlova)
-    weekNumberView.setText(yearAndWeek.week.toString)
+    initWeekNumberView(yearAndWeek, weekNumberView)
     weekNumberView
+  }
+
+  def createMonthLetterView(yearAndWeek: YearAndWeek) = {
+    val monthLetterView = new TextView(activity)
+    monthLetterView.setId(0)
+    monthLetterView.setWidth(dimensions.monthLetterWidth)
+    monthLetterView.setHeight(dimensions.weekRowHeight)
+    monthLetterView.setTextSize(dimensions.overviewContentTextSize)
+    monthLetterView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL)
+    monthLetterView.setTextColor(dimensions.pavlova)
+    monthLetterView.setTypeface(null, Typeface.BOLD)
+    initMonthLetterView(yearAndWeek, monthLetterView)
+    monthLetterView
   }
 
   private def initDayView(day: DateTime, dayView: TextView, focusDay: DateTime) {

@@ -5,13 +5,14 @@ import android.graphics.Color
 
 class ScreenParameters(displayMetrics: DisplayMetrics) {
   val calendarScrollWidth = spToPx(500)
-  val weekNumberWidth = spToPx(40)
-  val dayColumnWidth = spToPx(30)
+  val weekNumberWidth = spToPx(25)
   val weekRowHeight = spToPx(40)
+  val monthLetterWidth = spToPx(25)
+  val dayColumnWidth = spToPx(30)
   val overviewHeaderTextSize = 25
   val overviewContentTextSize = 20
 
-  val weekListWidth = weekNumberWidth + (7 * dayColumnWidth)
+  val weekListWidth = monthLetterWidth + weekNumberWidth + (7 * dayColumnWidth)
   val weekListRightMargin = spToPx(3)
 
   val governorBay = Color.parseColor("#a22fbb")
