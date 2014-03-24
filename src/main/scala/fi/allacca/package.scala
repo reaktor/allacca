@@ -46,7 +46,6 @@ package object allacca {
     val t1 = System.nanoTime()
     val nanoSeconds = t1 - t0
     val milliSeconds = nanoSeconds / 1000000f
-    Log.d(TAG, s"elapsed time $name: $nanoSeconds ns ($milliSeconds ms)")
     result
   }
 }
