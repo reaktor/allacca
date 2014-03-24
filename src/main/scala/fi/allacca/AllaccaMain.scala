@@ -70,7 +70,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   private def createShownMonthsView: ShownMonthsView = {
     val params = new RelativeLayout.LayoutParams(dimensions.weekListWidth, dimensions.weekRowHeight)
-    params.setMargins(dimensions.weekNumberWidth, 0, 0, 0)
+    params.setMargins(dimensions.monthLetterWidth + dimensions.weekNumberWidth, 0, 0, 0)
     shownMonthsView.setLayoutParams(params)
     shownMonthsView.setId(idGenerator.nextId)
     shownMonthsView.setTextSize(dimensions.overviewContentTextSize)
