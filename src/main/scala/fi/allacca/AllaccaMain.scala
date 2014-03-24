@@ -59,14 +59,12 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createTopLeftCornerView: TextView = {
-    val params = new RelativeLayout.LayoutParams(dimensions.weekNumberWidth, dimensions.weekRowHeight)
+    val params = new RelativeLayout.LayoutParams(dimensions.monthLetterWidth + dimensions.weekNumberWidth, dimensions.weekRowHeight)
     params.addRule(RelativeLayout.BELOW, shownMonthsView.getId)
     params.addRule(RelativeLayout.ALIGN_LEFT)
     cornerView.setLayoutParams(params)
     cornerView.setId(idGenerator.nextId)
     cornerView.setText("Hello")
-    cornerView.setWidth(dimensions.weekNumberWidth)
-    cornerView.setHeight(dimensions.weekRowHeight)
     cornerView
   }
 
