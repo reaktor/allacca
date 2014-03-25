@@ -19,6 +19,7 @@ import scala.Array
 import fi.allacca.ui.util.TextChangeListener
 import org.joda.time.format.DateTimeFormat
 import fi.allacca.Logger._
+import java.util.Locale
 
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -398,7 +399,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   val yearField: EditText = EditEventActivity.addTextField(context, 65, 4, "year", TYPE_CLASS_NUMBER, (BELOW, placeBelowFieldId), (RIGHT_OF, monthField.getId))
   val fields = List(hourField, minuteField, dayField, monthField, yearField)
   private val hourAndMinuteElements = List(hourField, colon, minuteField)
-  private val weekDayFormat = DateTimeFormat.forPattern("E")
+  private val weekDayFormat = DateTimeFormat.forPattern("E").withLocale(Locale.ENGLISH)
 
   def init(editLayout: RelativeLayout) {
     setDateTime(prePopulateTime)

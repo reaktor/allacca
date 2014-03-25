@@ -22,6 +22,7 @@ import scala.util.{Failure, Success}
 import scala.collection.mutable
 import android.view.View.OnLongClickListener
 import fi.allacca.Logger._
+import java.util.Locale
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 120
@@ -227,7 +228,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 class AgendaRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
-  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E")
+  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
   private val timeFormat = DateTimeFormat.forPattern("HH:mm")
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents]): View = {
