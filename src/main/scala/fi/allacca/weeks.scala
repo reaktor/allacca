@@ -5,7 +5,6 @@ import android.widget._
 import android.view.{Gravity, ViewGroup, View}
 import org.joda.time.{Weeks, DateTime}
 import android.widget.AbsListView.OnScrollListener
-import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
 import org.joda.time.format.DateTimeFormat
@@ -13,6 +12,9 @@ import android.graphics.{Typeface, Color}
 import java.util.{Calendar, Locale}
 import java.text.DateFormatSymbols
 import fi.allacca.Logger._
+import android.graphics.drawable.shapes.RectShape
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.Paint.Style
 
 object Config{
   val howManyWeeksToLoadAtTime = 20
@@ -225,18 +227,27 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   private def initDayView(day: DateTime, dayView: TextView, focusDay: DateTime) {
     val dayNumber = fmt.print(day)
     dayView.setText(dayNumber)
+    val isFocus = focusDay.withTimeAtStartOfDay == day
     val textColor = if (new DateTime().withTimeAtStartOfDay() == day) {
       Color.YELLOW
-    } else if (focusDay.withTimeAtStartOfDay == day) {
-      Color.RED
     } else {
       if (day.getDayOfWeek >= 6) dimensions.weekendDayColor else { dimensions.weekDayColor }
     }
     dayView.setTextColor(textColor)
-    if ((day.getMonthOfYear % 2) == 0) {
-      dayView.setBackgroundColor(dimensions.funBlue)
+    val backgroundColor = if ((day.getMonthOfYear % 2) == 0) {
+      dimensions.funBlue
     } else {
-      dayView.setBackgroundColor(Color.BLACK)
+      Color.BLACK
+    }
+    dayView.setBackgroundColor(backgroundColor)
+    if (isFocus) {
+      val rect = new RectShape()
+      val rectShapeDrawable = new ShapeDrawable(rect)
+      val paint = rectShapeDrawable.getPaint()
+      paint.setColor(Color.WHITE)
+      paint.setStyle(Style.STROKE)
+      paint.setStrokeWidth(5)
+      dayView.setBackground(rectShapeDrawable)
     }
   }
 }
