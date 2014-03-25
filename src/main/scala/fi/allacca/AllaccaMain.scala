@@ -6,13 +6,13 @@ import android.widget._
 import android.view.{View, ViewGroup}
 import android.graphics.{Point, Color}
 import android.view.ViewGroup.LayoutParams
-import android.util.Log
 import java.text.DateFormatSymbols
 import java.util.{Locale, Calendar}
 import android.content.Intent
 import org.joda.time.{DateTime, LocalDate}
 import android.view.animation.{Animation, AlphaAnimation}
 import android.view.animation.Animation.AnimationListener
+import fi.allacca.Logger._
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
@@ -129,7 +129,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   def createNewEvent (view: View) {
-    Log.d(TAG, "+ createNewEvent")
+    debug("+ createNewEvent")
     val intent = new Intent(this, classOf[EditEventActivity])
 
     //This will create the new event after ten days:
@@ -144,7 +144,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   private def onWeeksListDayLongClick(day: DateTime) = {
     agendaView.focusOn(new LocalDate(day.getMillis))
-    Log.i(TAG, "onWeeksListDayLongClick")
+    debug("onWeeksListDayLongClick")
     val intent = new Intent(this, classOf[EditEventActivity])
     intent.putExtra(EVENT_DATE, day.getMillis + new DateTime().getMillisOfDay)
     intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, day.getMillis)
@@ -219,12 +219,12 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-    Log.i(TAG, s"onActivityResult requestCode $requestCode resultCode $resultCode")
+    info(s"onActivityResult requestCode $requestCode resultCode $resultCode")
     if (requestCode == REQUEST_CODE_EDIT_EVENT && resultCode == Activity.RESULT_OK) refresh(data)
   }
 
   private def refresh(intentFromOtherActivity: Intent) {
-    Log.i(TAG, "Refreshing main view")
+    info("Refreshing main view")
     val intent = getIntent
     intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, intentFromOtherActivity.getLongExtra(FOCUS_DATE_EPOCH_MILLIS, NULL_VALUE))
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)

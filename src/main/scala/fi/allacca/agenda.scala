@@ -7,7 +7,6 @@ import scala.{volatile, Array, Some}
 import android.os.Bundle
 import android.content.{Intent, CursorLoader, ContentUris, Loader}
 import android.provider.CalendarContract
-import android.util.Log
 import android.view.ViewGroup.LayoutParams
 import org.joda.time.{Days, DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
@@ -22,6 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import scala.collection.mutable
 import android.view.View.OnLongClickListener
+import fi.allacca.Logger._
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 120
@@ -33,7 +33,7 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
     focusOn(initialFocusDate)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
-        Log.d(TAG + AgendaView.this.getClass.getSimpleName, s"scrollState==$scrollState")
+        Logger.debug(s"${AgendaView.this.getClass.getSimpleName} scrollState==$scrollState")
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
@@ -108,21 +108,21 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 
   private def triggerLoading() {
     if (loading.getAndSet(true)) {
-      Log.d(TAG, "Already load in progress")
+      debug("Already load in progress")
       return
     }
     statusTextView.setText("Load")
     val args = new Bundle
     args.putLong("start", firstDayToLoad)
     args.putLong("end", lastDayToLoad)
-    Log.d(TAG, "Initing loading with " + firstDayToLoad + "--" + lastDayToLoad)
+    debug("Initing loading with " + firstDayToLoad + "--" + lastDayToLoad)
     activity.getLoaderManager.initLoader(19, args, this)
   }
 
   def loadMorePast(firstVisibleDay: Option[LocalDate], lastVisibleDay: Option[LocalDate]) {
-    Log.d(TAG, "Going to load more past...")
+    debug("Going to load more past...")
     if (loading.get()) {
-      Log.d(TAG, "Already loading, not loading past then")
+      debug("Already loading, not loading past then")
       return
     }
     if (focusDay == model.firstDay) {
@@ -131,7 +131,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       setSelectionToFocusDayAfterLoading = true
       val currentPastDays = Days.daysBetween(firstDayToLoad, focusDay).getDays
       if (currentPastDays > maxEventlessDaysToLoad) {
-        Log.d(TAG, "currentPastDays == " + currentPastDays)
+        debug("currentPastDays == " + currentPastDays)
         tooMuchPast.set(true)
         notifyDataSetChanged()
       } else {
@@ -143,14 +143,14 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   }
   
   def loadMoreFuture(firstVisibleDay: Option[LocalDate], lastVisibleDay: Option[LocalDate]) {
-    Log.d(TAG, s"Going to load more future... visible currently $firstVisibleDay -- $lastVisibleDay")
+    debug(s"Going to load more future... visible currently $firstVisibleDay -- $lastVisibleDay")
     if (loading.get()) {
-      Log.d(TAG, "Already loading, not loading future then")
+      debug("Already loading, not loading future then")
       return
     }
     if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays < howManyDaysToLoadAtTime) {
       val currentWindowEnd = lastVisibleDay.map { d => if (d.isAfter(lastDayToLoad)) d else lastDayToLoad }.get
-      Log.d(TAG, s"Going to load up to " + currentWindowEnd)
+      debug(s"Going to load up to " + currentWindowEnd)
       firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad)
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
       triggerLoading()
@@ -168,7 +168,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     val f: Future[Unit] = Future {
-      Log.d(TAG, "Starting the Finished call")
+      debug("Starting the Finished call")
 
       val events = time( {EventsLoaderFactory.readEvents(cursor)}, "readEvents")
 
@@ -212,12 +212,12 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
             }
             activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
             loading.set(false)
-            Log.d(TAG, "Finished loading!")
+            debug("Finished loading!")
           }
         })
       case Failure(t) =>
         loading.set(false)
-        throw t
+        info(s"Error occurred while loading agenda $t")
     }
   }
 
@@ -259,11 +259,11 @@ class AgendaRenderer(activity: Activity) {
         activity.runOnUiThread(dayView.addView(titleView))
         val onClick: (View => Unit) = {
           _ =>
-            Log.i(TAG, "event clicked, starting activity")
+            debug("event clicked, starting activity")
             val intent = new Intent(activity, classOf[EditEventActivity])
             intent.putExtra(EVENT_ID, event.id.get)
             activity.startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
-            Log.i(TAG, "After start activity")
+            debug("After start activity")
         }
         titleView.setOnClickListener(onClick)
     }
@@ -300,7 +300,7 @@ class AgendaRenderer(activity: Activity) {
     dayNameView.setText(dateFormat.print(day))
     dayNameView.setOnLongClickListener(new OnLongClickListener {
       def onLongClick(v: View): Boolean = {
-        Log.d(TAG, "+ createNewEvent from agenda day name")
+        debug("+ createNewEvent from agenda day name")
         val intent = new Intent(activity, classOf[EditEventActivity])
         val chosenDayAsMillis: Long = day
         intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, chosenDayAsMillis)
