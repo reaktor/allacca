@@ -29,6 +29,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    Logger.setDebugFlag(this)
     val mainLayout = createMainLayout
 
     createShownMonthsView
