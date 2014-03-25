@@ -118,6 +118,7 @@ class WeeksModel {
 
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
   val fmt = DateTimeFormat.forPattern("d")
+  val shortMonths = new DateFormatSymbols(Locale.ENGLISH).getShortMonths
 
   def updateView(chosenDay: DateTime, yearAndWeek: YearAndWeek, convertView: View, onDayClick: DateTime => Unit, onDayLongClick: DateTime => Boolean) = {
     val viewGroup = convertView.asInstanceOf[ViewGroup]
@@ -150,7 +151,6 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     val currentDayCalendar = day.toCalendar(Locale.getDefault())
     val weekOfMonth = currentDayCalendar.get(Calendar.WEEK_OF_MONTH)
     if (weekOfMonth < 5) {
-      val shortMonths = new DateFormatSymbols(Locale.ENGLISH).getShortMonths
       val weekOfMonthIndex = weekOfMonth - 2
       if (weekOfMonthIndex < 0) "" else (shortMonths(day.getMonthOfYear - 1)(weekOfMonthIndex) + "").toUpperCase
     } else { "" }
