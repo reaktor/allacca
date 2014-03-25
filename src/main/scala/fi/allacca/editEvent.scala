@@ -20,6 +20,7 @@ import fi.allacca.ui.util.TextChangeListener
 import org.joda.time.format.DateTimeFormat
 import fi.allacca.Logger._
 import java.util.Locale
+import android.view.inputmethod.EditorInfo
 
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -48,6 +49,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    hideKeyboardWhenEnteringEditMode
     val editLayout = createMainLayout
     addControlsToLayout(editLayout)
     initTextFieldListeners()
@@ -56,7 +58,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
     setContentView(wrapInScroller(editLayout))
     okButtonController()
   }
-  
+
   private def createMainLayout: RelativeLayout = {
     val editLayout = new RelativeLayout(this)
     val mainLayoutParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -83,20 +85,12 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   def initTabOrder() {
-    if (isEditMode) setFocusToCalendarSelectionToPreventKeyboardInYourFace()
     eventNameField.setNextFocusDownId(startDateTimeField.firstElementId)
     startDateTimeField.initTabOrder()
     startDateTimeField.lastElement.setNextFocusDownId(endDateTimeField.firstElementId)
     endDateTimeField.initTabOrder()
     endDateTimeField.lastElement.setNextFocusDownId(eventLocationField.getId)
     eventLocationField.setNextFocusDownId(eventDescriptionField.getId)
-  }
-
-  private def setFocusToCalendarSelectionToPreventKeyboardInYourFace() {
-    calendarSelection.setFocusable(true)
-    calendarSelection.setFocusableInTouchMode(true)
-    calendarSelection.requestFocus()
-    calendarSelection.setNextFocusDownId(eventNameField.getId)
   }
 
   private def wrapInScroller(editLayout: RelativeLayout): ScrollView = {
@@ -347,6 +341,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
       location = eventLocation, description = eventDescription, allDay = allDay)
     eventToSave
   }
+
+  private def hideKeyboardWhenEnteringEditMode {
+    if (isEditMode) getWindow().setSoftInputMode(EditorInfo.IME_ACTION_NONE)
+  }
+
 }
 
 object EditEventActivity {
