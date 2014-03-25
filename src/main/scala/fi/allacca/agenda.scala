@@ -111,7 +111,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       Log.d(TAG, "Already load in progress")
       return
     }
-    statusTextView.setText("Loading...")
+    statusTextView.setText("Load")
     val args = new Bundle
     args.putLong("start", firstDayToLoad)
     args.putLong("end", lastDayToLoad)

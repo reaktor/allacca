@@ -59,7 +59,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createTopLeftCornerView: TextView = {
-    val params = new RelativeLayout.LayoutParams(dimensions.monthLetterWidth + dimensions.weekNumberWidth, dimensions.weekRowHeight)
+    val params = new RelativeLayout.LayoutParams(dimensions.monthLetterWidth + dimensions.weekNumberWidth, dimensions.weekDayHeaderHeight)
     params.addRule(RelativeLayout.BELOW, shownMonthsView.getId)
     params.addRule(RelativeLayout.ALIGN_LEFT)
     cornerView.setLayoutParams(params)
@@ -69,7 +69,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def createShownMonthsView: ShownMonthsView = {
-    val params = new RelativeLayout.LayoutParams(dimensions.weekListWidth, dimensions.weekRowHeight)
+    val params = new RelativeLayout.LayoutParams(dimensions.weekListWidth, dimensions.weekDayHeaderHeight)
     params.setMargins(dimensions.monthLetterWidth + dimensions.weekNumberWidth, 0, 0, 0)
     shownMonthsView.setLayoutParams(params)
     shownMonthsView.setId(idGenerator.nextId)
@@ -208,9 +208,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weekDayInitials.map { c =>
       val view = new TextView(this)
       view.setId(idGenerator.nextId)
-      view.setWidth(dimensions.dayColumnWidth)
-      view.setHeight(dimensions.weekRowHeight)
-      val layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+      val layoutParams = new RelativeLayout.LayoutParams(dimensions.dayColumnWidth, dimensions.weekDayHeaderHeight)
       layoutParams.addRule(RelativeLayout.RIGHT_OF, view.getId - 1)
       layoutParams.addRule(RelativeLayout.BELOW, shownMonthsView.getId)
       view.setLayoutParams(layoutParams)

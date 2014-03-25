@@ -7,9 +7,10 @@ class ScreenParameters(displayMetrics: DisplayMetrics) {
   val calendarScrollWidth = spToPx(500)
   val weekNumberWidth = spToPx(25)
   val weekRowHeight = spToPx(40)
+  val weekDayHeaderHeight = spToPx(28)
   val monthLetterWidth = spToPx(15)
   val dayColumnWidth = spToPx(30)
-  val overviewHeaderTextSize = 25
+  val overviewHeaderTextSize = 20
   val overviewContentTextSize = 20
 
   val weekListWidth = monthLetterWidth + weekNumberWidth + (7 * dayColumnWidth)
