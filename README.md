@@ -31,7 +31,7 @@ Create application key e.g. like this
     keytool -genkey -v -alias allacca  -keysize 1024 -validity 11586 \
     -dname "CN=Timo Rantalaiho, OU=Unknown, O=Allacca, L=Helsinki, ST=Unknown, C=FI"
 
-Configure access to the relevant keystore in ````local.settings```` , e.g. something like this:
+Configure access to the relevant keystore in ````local.properties```` , e.g. something like this:
 
     key.alias: allacca
     key.store: /home/my_account/.keystore
