@@ -375,7 +375,7 @@ class AgendaModel {
    */
   def addOrUpdate(newDaysAndEventsFromLoader: Set[DayWithEvents], days: Set[LocalDate]) {
     synchronized {
-      val oldItemsToRetain = contents.values.filter { dwe => !days.contains(dwe.day) }
+      val oldItemsToRetain = contents.values.filter { dwe => !days.contains(dwe.day) && !dwe.events.isEmpty }
       val itemsInTotal: Iterable[DayWithEvents] = oldItemsToRetain ++ newDaysAndEventsFromLoader
       val newIdsArray = new Array[Long](itemsInTotal.size)
       var i = 0
