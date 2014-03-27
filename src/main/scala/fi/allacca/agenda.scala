@@ -29,8 +29,9 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
   val howManyDaysToLoadAtTime = 120
   private val adapter = new AgendaAdapter(activity, this, statusTextView)
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
-  lazy val headerView = new LoadingStopper(activity, dimensions)
-  lazy val footerView = new LoadingStopper(activity, dimensions)
+  private val idGenerator = new IdGenerator
+  lazy val headerView = new LoadingStopper(activity, dimensions, idGenerator)
+  lazy val footerView = new LoadingStopper(activity, dimensions, idGenerator)
 
   def start(initialFocusDate: LocalDate) {
     addHeaderView(headerView)
@@ -69,12 +70,12 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
  * To add header and footer view that can be hidden without taking up screen space,
  * they must be wrapped to LinearLayouts http://pivotallabs.com/android-tidbits-6-22-2011-hiding-header-views/
  */
-class LoadingStopper(context: Context, dimensions: ScreenParameters) extends LinearLayout(context) {
-  setId(View.generateViewId())
+class LoadingStopper(context: Context, dimensions: ScreenParameters, idGenerator: IdGenerator) extends LinearLayout(context) {
+  setId(idGenerator.nextId)
   setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
   setOrientation(LinearLayout.VERTICAL)
   private val view = new TextView(context)
-  view.setId(View.generateViewId())
+  view.setId(idGenerator.nextId)
   view.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
   view.setTextSize(dimensions.overviewContentTextSize)
   view.setTypeface(null, Typeface.BOLD)
@@ -280,6 +281,7 @@ class AgendaRenderer(activity: Activity) {
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
   private val timeFormat = DateTimeFormat.forPattern("HH:mm")
+  private val idGenerator = new IdGenerator()
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents], focusDay: LocalDate): View = {
     val view: View = content match {
@@ -289,7 +291,7 @@ class AgendaRenderer(activity: Activity) {
         pendingView
       case Some(dayWithEvents) => createDayView(dayWithEvents, focusDay)
     }
-    view.setId(View.generateViewId())
+    view.setId(idGenerator.nextId)
     val dayViewParams = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     view.setLayoutParams(dayViewParams)
     view
@@ -324,7 +326,7 @@ class AgendaRenderer(activity: Activity) {
 
   private def createTitleView(event: CalendarEvent): TextView = {
     val titleView = new TextView(activity)
-    titleView.setId(View.generateViewId())
+    titleView.setId(idGenerator.nextId)
     val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     titleView.setLayoutParams(params)
     titleView.setTextSize(dimensions.overviewContentTextSize)
@@ -340,7 +342,7 @@ class AgendaRenderer(activity: Activity) {
 
   def createDayNameView(dayWithEvents: DayWithEvents, focusDay: LocalDate): TextView = {
     val dayNameView = new TextView(activity)
-    dayNameView.setId(View.generateViewId())
+    dayNameView.setId(idGenerator.nextId)
     val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     dayNameView.setLayoutParams(dayNameParams)
     dayNameView.setTextSize(dimensions.overviewContentTextSize)

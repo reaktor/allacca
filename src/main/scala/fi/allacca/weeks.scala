@@ -242,7 +242,9 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     dayView.setBackgroundColor(backgroundColor)
     if (isFocus) {
       val rectShapeDrawable: ShapeDrawable = ui.util.Draw.createBoundingBoxBackground
-      dayView.setBackground(rectShapeDrawable)
+      dayView.setBackgroundDrawable(rectShapeDrawable)
+      //The above deprecation is necessary for android 4.0.4 support. Newer versions can/should use this:
+      //dayView.setBackground(rectShapeDrawable)
     }
   }
 }
