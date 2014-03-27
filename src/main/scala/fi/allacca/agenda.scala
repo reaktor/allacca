@@ -3,9 +3,8 @@ package fi.allacca
 import android.app.Activity
 import android.database.Cursor
 import android.widget._
-import scala.{volatile, Array, Some}
 import android.os.Bundle
-import android.content.{Intent, CursorLoader, ContentUris, Loader}
+import android.content._
 import android.provider.CalendarContract
 import android.view.ViewGroup.LayoutParams
 import org.joda.time.{Days, DateTime, LocalDate}
@@ -18,16 +17,20 @@ import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 import scala.collection.mutable
 import android.view.View.OnLongClickListener
 import fi.allacca.Logger._
 import java.util.Locale
+import scala.util.Failure
+import scala.Some
+import scala.util.Success
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 120
-
   private val adapter = new AgendaAdapter(activity, this, statusTextView)
+  private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
+  lazy val headerView = new LoadingStopper(activity, dimensions)
+  lazy val footerView = new LoadingStopper(activity, dimensions)
 
   def start(initialFocusDate: LocalDate) {
     setAdapter(adapter)
@@ -48,6 +51,8 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         }
       }
     })
+    addHeaderView(headerView)
+    addFooterView(footerView)
   }
 
   def focusOn(day: LocalDate) {
@@ -57,11 +62,32 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
   def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
 }
 
+class LoadingStopper(context: Context, dimensions: ScreenParameters) extends LinearLayout(context) {
+  setId(View.generateViewId())
+  setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+  setOrientation(LinearLayout.VERTICAL)
+  private val view = new TextView(context)
+  view.setId(View.generateViewId())
+  view.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+  view.setTextSize(dimensions.overviewContentTextSize)
+  view.setTypeface(null, Typeface.BOLD)
+  view.setVisibility(View.GONE)
+  addView(view)
+
+  def show(message: String, loadingHandler: => View => Unit) {
+    view.setText(message)
+    view.setOnClickListener(loadingHandler)
+    view.setVisibility(View.VISIBLE)
+  }
+
+  def hide() { view.setVisibility(View.GONE) }
+}
+
 class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
   private val loadWindowLock = new Object
-  private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val renderer = new AgendaRenderer(activity)
   private val model = new AgendaModel
+  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
 
   private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
   private val maxEventlessDaysToLoad = 3 * 360
@@ -84,15 +110,19 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     if (position == 0 && tooMuchPast.get()) {
       val loadMoreHandler: View => Unit = { _ =>
         tooMuchPast.set(false)
+        listView.headerView.hide()
         focusOn(firstDayToLoad)
       }
-      renderer.createPastLoadingStopper(firstDayToLoad, { loadMoreHandler })
+      listView.headerView.show("Click to load events before " + dateFormat.print(firstDayToLoad), loadMoreHandler)
     } else if (tooMuchFuture.get()) {
-      renderer.createFutureLoadingStopper(lastDayToLoad, { v: View => tooMuchFuture.set(false) })
-    } else {
-      val item = getItem(position)
-      renderer.createLoadingOrRealViewFor(item)
+      listView.footerView.show("Click to load events after" + dateFormat.print(lastDayToLoad),
+        { v: View => {
+          tooMuchFuture.set(false)
+          listView.footerView.hide()
+        } })
     }
+    val item = getItem(position)
+    renderer.createLoadingOrRealViewFor(item)
   }
 
   def focusOn(day: LocalDate) {
