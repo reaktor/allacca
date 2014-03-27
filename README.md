@@ -24,7 +24,8 @@ Releasing
 
 Set correct application version to AndroidManifest.xml
 
-Make sure there are no logging statements.
+Make sure there are all logging statements go via our own ````Logger```` object which
+does not invoke Android ````Log```` except in debug mode.
 
 Create application key e.g. like this
 
