@@ -40,14 +40,17 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         Logger.debug(s"${AgendaView.this.getClass.getSimpleName} scrollState==$scrollState")
       }
 
-      def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
-        val lastVisibleItem = firstVisibleItem + visibleItemCount
+      def onScroll(view: AbsListView, firstVisibleItemIndex: Int, visibleItemCount: Int, totalItemCount: Int) {
+        val numberOfExtraViewsSuchAsHeaderAndFooter = 2
+        val lastVisibleItemIndex = firstVisibleItemIndex + visibleItemCount - numberOfExtraViewsSuchAsHeaderAndFooter - 1
         val dayOf: Int => Option[LocalDate] = adapter.getItem(_).map { _.day }
-        if (firstVisibleItem == 0) {
-          adapter.loadMorePast(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
+        val topOfLoadedContentIsDisplayed = firstVisibleItemIndex == 0
+        if (topOfLoadedContentIsDisplayed && !adapter.tooMuchPast.get()) {
+          adapter.loadMorePast(dayOf(firstVisibleItemIndex), dayOf(lastVisibleItemIndex))
         }
-        if (lastVisibleItem > (adapter.getCount - howManyDaysToLoadAtTime)) {
-          adapter.loadMoreFuture(dayOf(firstVisibleItem), dayOf(lastVisibleItem))
+        val bottomOfLoadedContentIsDisplayed = lastVisibleItemIndex > (adapter.getCount - howManyDaysToLoadAtTime)
+        if (bottomOfLoadedContentIsDisplayed && !adapter.tooMuchFuture.get()) {
+          adapter.loadMoreFuture(dayOf(firstVisibleItemIndex), dayOf(lastVisibleItemIndex))
         }
       }
     })
@@ -75,10 +78,12 @@ class LoadingStopper(context: Context, dimensions: ScreenParameters) extends Lin
   addView(view)
 
   def show(message: String, loadingHandler: => View => Unit) {
-    view.setText(message)
+    setMessage(message)
     view.setOnClickListener(loadingHandler)
     view.setVisibility(View.VISIBLE)
   }
+
+  def setMessage(message: String) { view.setText(message) }
 
   def hide() { view.setVisibility(View.GONE) }
 }
@@ -93,8 +98,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val maxEventlessDaysToLoad = 3 * 360
 
   private val loading = new AtomicBoolean(false)
-  private val tooMuchPast = new AtomicBoolean(false)
-  private val tooMuchFuture = new AtomicBoolean(false) // TODO: Set to stop loading too much future
+  val tooMuchPast = new AtomicBoolean(false)
+  val tooMuchFuture = new AtomicBoolean(false)
   @volatile var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
@@ -110,15 +115,15 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     if (position == 0 && tooMuchPast.get()) {
       val loadMoreHandler: View => Unit = { _ =>
         tooMuchPast.set(false)
-        listView.headerView.hide()
-        focusOn(firstDayToLoad)
+        triggerLoading()
       }
       listView.headerView.show("Click to load events before " + dateFormat.print(firstDayToLoad), loadMoreHandler)
     } else if (tooMuchFuture.get()) {
-      listView.footerView.show("Click to load events after" + dateFormat.print(lastDayToLoad),
+      listView.footerView.show("Click to load events after " + dateFormat.print(lastDayToLoad),
         { v: View => {
           tooMuchFuture.set(false)
-          listView.footerView.hide()
+          loadWindowLock.synchronized { focusDay = lastDayToLoad }
+          triggerLoading()
         } })
     }
     val item = getItem(position)
@@ -161,6 +166,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     if (focusDay == model.firstDay) {
       firstDayToLoad = if (tooMuchPast.get()) firstDayToLoad else firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
       lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
+      listView.headerView.setMessage("Click to load events before " + dateFormat.print(firstDayToLoad))
       setSelectionToFocusDayAfterLoading = true
       val currentPastDays = Days.daysBetween(firstDayToLoad, focusDay).getDays
       if (currentPastDays > maxEventlessDaysToLoad) {
@@ -181,12 +187,19 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       debug("Already loading, not loading future then")
       return
     }
-    if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays < howManyDaysToLoadAtTime) {
+    if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays <= howManyDaysToLoadAtTime) {
       val currentWindowEnd = lastVisibleDay.map { d => if (d.isAfter(lastDayToLoad)) d else lastDayToLoad }.get
-      debug(s"Going to load up to " + currentWindowEnd)
       firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad)
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
-      triggerLoading()
+      listView.footerView.setMessage("Click to load events after " + dateFormat.print(lastDayToLoad))
+
+      val currentFutureDays = Days.daysBetween(focusDay, lastDayToLoad).getDays
+      if (currentFutureDays > maxEventlessDaysToLoad) {
+        tooMuchFuture.set(true)
+        notifyDataSetChanged()
+      } else {
+        triggerLoading()
+      }
     }
   }
 
