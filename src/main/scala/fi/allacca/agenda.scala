@@ -33,6 +33,8 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
   lazy val footerView = new LoadingStopper(activity, dimensions)
 
   def start(initialFocusDate: LocalDate) {
+    addHeaderView(headerView)
+    addFooterView(footerView)
     setAdapter(adapter)
     focusOn(initialFocusDate)
     setOnScrollListener(new OnScrollListener {
@@ -54,8 +56,6 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         }
       }
     })
-    addHeaderView(headerView)
-    addFooterView(footerView)
   }
 
   def focusOn(day: LocalDate) {
