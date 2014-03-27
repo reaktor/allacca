@@ -256,7 +256,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
             notifyDataSetChanged()
             loadWindowLock.synchronized {
               if (setSelectionToFocusDayAfterLoading) {
-                listView.setSelection(model.indexOf(focusDay))
+                val indexInModelTakingOnAccountListViewHeader = model.indexOf(focusDay) + 1
+                listView.setSelection(indexInModelTakingOnAccountListViewHeader)
                 setSelectionToFocusDayAfterLoading = false
               }
             }
