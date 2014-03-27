@@ -65,6 +65,10 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
   def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
 }
 
+/**
+ * To add header and footer view that can be hidden without taking up screen space,
+ * they must be wrapped to LinearLayouts http://pivotallabs.com/android-tidbits-6-22-2011-hiding-header-views/
+ */
 class LoadingStopper(context: Context, dimensions: ScreenParameters) extends LinearLayout(context) {
   setId(View.generateViewId())
   setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
