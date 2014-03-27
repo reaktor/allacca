@@ -193,7 +193,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
       listView.footerView.setMessage("Click to load events after " + dateFormat.print(lastDayToLoad))
 
-      val currentFutureDays = Days.daysBetween(focusDay, lastDayToLoad).getDays
+      val dayFromWhichToCalculateLoadedFutureLength = lastVisibleDay.getOrElse(focusDay)
+      val currentFutureDays = Days.daysBetween(dayFromWhichToCalculateLoadedFutureLength, lastDayToLoad).getDays
       if (currentFutureDays > maxEventlessDaysToLoad) {
         tooMuchFuture.set(true)
         notifyDataSetChanged()
