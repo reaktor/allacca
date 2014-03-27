@@ -247,7 +247,8 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       paint.setColor(Color.WHITE)
       paint.setStyle(Style.STROKE)
       paint.setStrokeWidth(5)
-      dayView.setBackground(rectShapeDrawable)
+      //dayView.setBackground(rectShapeDrawable)
+      dayView.setBackgroundDrawable(rectShapeDrawable)
     }
   }
 }
