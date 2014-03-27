@@ -142,7 +142,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
   }
 
   private def onWeeksListDayClick (day: DateTime) {
-    agendaView.focusOn(new LocalDate(day.getMillis))
+    agendaView.focusOn(day.withTimeAtStartOfDay.toLocalDate)
   }
 
   private def onWeeksListDayLongClick(day: DateTime) = {
