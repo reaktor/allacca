@@ -90,6 +90,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
     weeksList.setLayoutParams(weeksListParams)
     weeksList.setDividerHeight(0)
+    weeksAdapter.onDayClick(initialFocusDate.toDateTimeAtStartOfDay)
     weeksList
   }
 
