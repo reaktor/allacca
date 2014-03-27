@@ -130,8 +130,8 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
           triggerLoading()
         } })
     }
-    val item = getItem(position)
-    renderer.createLoadingOrRealViewFor(item)
+    val item: Option[DayWithEvents] = getItem(position)
+    renderer.createLoadingOrRealViewFor(item, focusDay)
   }
 
   def focusOn(day: LocalDate) {
@@ -280,13 +280,13 @@ class AgendaRenderer(activity: Activity) {
   private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
   private val timeFormat = DateTimeFormat.forPattern("HH:mm")
 
-  def createLoadingOrRealViewFor(content: Option[DayWithEvents]): View = {
+  def createLoadingOrRealViewFor(content: Option[DayWithEvents], focusDay: LocalDate): View = {
     val view: View = content match {
       case None =>
         val pendingView = new TextView(activity)
         pendingView.setText("Loading")
         pendingView
-      case Some(dayWithEvents) => createDayView(dayWithEvents)
+      case Some(dayWithEvents) => createDayView(dayWithEvents, focusDay)
     }
     view.setId(View.generateViewId())
     val dayViewParams = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
@@ -294,11 +294,11 @@ class AgendaRenderer(activity: Activity) {
     view
   }
 
-  private def createDayView(dayWithEvents: DayWithEvents): View = {
+  private def createDayView(dayWithEvents: DayWithEvents, focusDay: LocalDate): View = {
     val dayView = new LinearLayout(activity)
     dayView.setOrientation(LinearLayout.VERTICAL)
 
-    val dayNameView = createDayNameView(dayWithEvents)
+    val dayNameView = createDayNameView(dayWithEvents, focusDay)
     dayView.addView(dayNameView)
 
     val eventsOfDay = dayWithEvents.events
@@ -337,15 +337,19 @@ class AgendaRenderer(activity: Activity) {
     titleView
   }
 
-  def createDayNameView(dayWithEvents: DayWithEvents): TextView = {
+  def createDayNameView(dayWithEvents: DayWithEvents, focusDay: LocalDate): TextView = {
     val dayNameView = new TextView(activity)
     dayNameView.setId(View.generateViewId())
     val dayNameParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     dayNameView.setLayoutParams(dayNameParams)
     dayNameView.setTextSize(dimensions.overviewContentTextSize)
+    val day = dayWithEvents.day
+    if (day == focusDay) {
+      val box = ui.util.Draw.createBoundingBoxBackground
+      dayNameView.setBackground(box)
+    }
     dayNameView.setTextColor(dimensions.pavlova)
     dayNameView.setTypeface(null, Typeface.BOLD_ITALIC)
-    val day = dayWithEvents.day
     dayNameView.setText(dateFormat.print(day))
     dayNameView.setOnLongClickListener(new OnLongClickListener {
       def onLongClick(v: View): Boolean = {

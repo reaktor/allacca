@@ -241,12 +241,7 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     }
     dayView.setBackgroundColor(backgroundColor)
     if (isFocus) {
-      val rect = new RectShape()
-      val rectShapeDrawable = new ShapeDrawable(rect)
-      val paint = rectShapeDrawable.getPaint()
-      paint.setColor(Color.WHITE)
-      paint.setStyle(Style.STROKE)
-      paint.setStrokeWidth(5)
+      val rectShapeDrawable: ShapeDrawable = ui.util.Draw.createBoundingBoxBackground
       dayView.setBackground(rectShapeDrawable)
     }
   }
