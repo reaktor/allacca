@@ -317,7 +317,6 @@ class AgendaRenderer(activity: Activity) {
     dayView
   }
 
-
   private def createTitleView(event: CalendarEvent): TextView = {
     val titleView = new TextView(activity)
     titleView.setId(View.generateViewId())
@@ -356,26 +355,6 @@ class AgendaRenderer(activity: Activity) {
       }
     })
     dayNameView
-  }
-
-  def createPastLoadingStopper(day: LocalDate, loadingHandler: => View => Unit ): View = {
-    createLoadingStopper("Click to load events before " + dateFormat.print(day), loadingHandler)
-  }
-
-  def createFutureLoadingStopper(day: LocalDate, loadingHandler: => View => Unit ): View = {
-    createLoadingStopper("Click to load events after " + dateFormat.print(day), loadingHandler)
-  }
-
-  def createLoadingStopper(message: String, loadingHandler: => View => Unit ): View = {
-    val view = new TextView(activity)
-    view.setId(View.generateViewId())
-    val params = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-    view.setLayoutParams(params)
-    view.setTextSize(dimensions.overviewContentTextSize)
-    view.setTypeface(null, Typeface.BOLD)
-    view.setText(message)
-    view.setOnClickListener(loadingHandler)
-    view
   }
 }
 
