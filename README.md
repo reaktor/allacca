@@ -1,6 +1,8 @@
 allacca
 =======
 
+A Lean Lovely Android Calendar Controlling Allacca.
+
 Check the [UI design draft](doc/ui-design-draft.md "UI design draft").
 
 Working with Idea
