@@ -107,10 +107,11 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val loading = new AtomicBoolean(false)
   val tooMuchPast = new AtomicBoolean(false)
   val tooMuchFuture = new AtomicBoolean(false)
-  @volatile var focusDay = new LocalDate
   @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
   @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
   @volatile private var setSelectionToFocusDayAfterLoading = false
+
+  def focusDay = model.focusDay
 
   override def getCount: Int = model.size
 
@@ -129,7 +130,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       listView.footerView.show("Click to load events after " + dateFormat.print(lastDayToLoad),
         { v: View => {
           tooMuchFuture.set(false)
-          loadWindowLock.synchronized { focusDay = lastDayToLoad }
+          loadWindowLock.synchronized { model.setFocusDay(lastDayToLoad) }
           triggerLoading()
         } })
     }
@@ -145,7 +146,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 
   private def resetLoadingWindowTo(day: LocalDate) {
     loadWindowLock.synchronized {
-      focusDay = day
+      model.setFocusDay(focusDay)
       firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
       lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
     }
@@ -238,7 +239,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       }
     }, "groupBy")
 
-    val days = time({ eventsByDays.keys.toSet + focusDay }, "getDays")
+    val days = time({ eventsByDays.keys.toSet }, "getDays")
 
     val daysWithEvents: Set[DayWithEvents] = time({
       days.map {
@@ -373,6 +374,8 @@ class AgendaModel {
   private var contents: Map[Long, DayWithEvents] = Map()
   @volatile
   private var sortedIds = List[Long]()
+  @volatile
+  var focusDay: LocalDate = new LocalDate
 
   def size = synchronized { sortedIds.size }
 
@@ -392,6 +395,10 @@ class AgendaModel {
       val lastItemsKey = sortedIds.last
       contents(lastItemsKey).day
     }
+  }
+
+  def setFocusDay(focusDay: LocalDate) {
+    this.focusDay = focusDay
   }
 
   def getItemFromContents(index: Int): Option[DayWithEvents] = synchronized {
@@ -418,7 +425,10 @@ class AgendaModel {
   def addOrUpdate(newDaysAndEventsFromLoader: Set[DayWithEvents], days: Set[LocalDate]) {
     synchronized {
       val oldItemsToRetain = contents.values.filter { dwe => !days.contains(dwe.day) && !dwe.events.isEmpty }
-      val itemsInTotal: Iterable[DayWithEvents] = oldItemsToRetain ++ newDaysAndEventsFromLoader
+      val oldAndNewItems: Iterable[DayWithEvents] = oldItemsToRetain ++ newDaysAndEventsFromLoader
+      val itemsInTotal: Iterable[DayWithEvents] = if (oldAndNewItems.exists { _.day == focusDay}) {
+        oldAndNewItems
+      } else oldAndNewItems ++ List(DayWithEvents(focusDay, Nil))
       val newIdsArray = new Array[Long](itemsInTotal.size)
       var i = 0
       itemsInTotal.foreach { dwe =>
