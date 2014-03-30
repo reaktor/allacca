@@ -258,21 +258,18 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     time({ activity.runOnUiThread { statusTextView.setText("") } }, "setViewText")
 
 
-    activity.runOnUiThread(new Runnable() {
-      def run() {
-        loadWindowLock.synchronized {
-          if (setSelectionToFocusDayAfterLoading) {
-            val indexInModelTakingOnAccountListViewHeader = model.indexOf(focusDay) + 1
-            listView.setSelection(indexInModelTakingOnAccountListViewHeader)
-            setSelectionToFocusDayAfterLoading = false
-          }
+    activity.runOnUiThread {
+      loadWindowLock.synchronized {
+        if (setSelectionToFocusDayAfterLoading) {
+          val indexInModelTakingOnAccountListViewHeader = model.indexOf(focusDay) + 1
+          listView.setSelection(indexInModelTakingOnAccountListViewHeader)
+          setSelectionToFocusDayAfterLoading = false
         }
-        activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
-        loading.set(false)
-        debug("Finished loading!")
       }
-    })
-
+      activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
+      loading.set(false)
+      debug("Finished loading!")
+    }
   }
 
   override def onLoaderReset(loader: Loader[Cursor]) {}
