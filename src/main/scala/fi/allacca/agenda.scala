@@ -58,7 +58,7 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
     adapter.focusOn(day)
   }
 
-  def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
+  def focusDay: LocalDate = adapter.synchronized { adapter.getFocusDay }
 }
 
 /**
@@ -100,11 +100,11 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val loading = new AtomicBoolean(false)
   val tooMuchPast = new AtomicBoolean(false)
   val tooMuchFuture = new AtomicBoolean(false)
-  @volatile private var firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
-  @volatile private var lastDayToLoad = focusDay.plusDays(howManyDaysToLoadAtTime)
+  @volatile private var firstDayToLoad = getFocusDay.minusDays(howManyDaysToLoadAtTime)
+  @volatile private var lastDayToLoad = getFocusDay.plusDays(howManyDaysToLoadAtTime)
   @volatile private var setSelectionToFocusDayAfterLoading = false
 
-  def focusDay = model.focusDay
+  def getFocusDay = model.focusDay
 
   override def getCount: Int = model.size
 
@@ -128,7 +128,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
         } })
     }
     val item: Option[DayWithEvents] = getItem(position)
-    renderer.createLoadingOrRealViewFor(item, focusDay)
+    renderer.createLoadingOrRealViewFor(item, getFocusDay)
   }
 
   def focusOn(day: LocalDate) {
@@ -137,7 +137,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     triggerLoading()
   }
 
-  private def resetLoadingWindowTo(day: LocalDate) {
+  private def resetLoadingWindowTo(focusDay: LocalDate) {
     loadWindowLock.synchronized {
       model.setFocusDay(focusDay)
       firstDayToLoad = focusDay.minusDays(howManyDaysToLoadAtTime)
@@ -164,12 +164,12 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       debug("Already loading, not loading past then")
       return
     }
-    if (focusDay == model.firstDay) {
+    if (getFocusDay == model.firstDay) {
       firstDayToLoad = if (tooMuchPast.get()) firstDayToLoad else firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
       lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
       listView.headerView.setMessage("Click to load events before " + dateFormat.print(firstDayToLoad))
       setSelectionToFocusDayAfterLoading = true
-      val currentPastDays = Days.daysBetween(firstDayToLoad, focusDay).getDays
+      val currentPastDays = Days.daysBetween(firstDayToLoad, getFocusDay).getDays
       if (currentPastDays > maxEventlessDaysToLoad) {
         debug("currentPastDays == " + currentPastDays)
         tooMuchPast.set(true)
@@ -194,7 +194,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
       listView.footerView.setMessage("Click to load events after " + dateFormat.print(lastDayToLoad))
 
-      val dayFromWhichToCalculateLoadedFutureLength = lastVisibleDay.getOrElse(focusDay)
+      val dayFromWhichToCalculateLoadedFutureLength = lastVisibleDay.getOrElse(getFocusDay)
       val currentFutureDays = Days.daysBetween(dayFromWhichToCalculateLoadedFutureLength, lastDayToLoad).getDays
       if (currentFutureDays > maxEventlessDaysToLoad) {
         tooMuchFuture.set(true)
@@ -255,7 +255,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     activity.runOnUiThread {
       loadWindowLock.synchronized {
         if (setSelectionToFocusDayAfterLoading) {
-          val indexInModelTakingOnAccountListViewHeader = model.indexOf(focusDay) + 1
+          val indexInModelTakingOnAccountListViewHeader = model.indexOf(getFocusDay) + 1
           listView.setSelection(indexInModelTakingOnAccountListViewHeader)
           setSelectionToFocusDayAfterLoading = false
         }
