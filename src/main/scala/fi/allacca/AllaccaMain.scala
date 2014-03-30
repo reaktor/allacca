@@ -80,8 +80,6 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   def createWeeksList(): View = {
     weeksList.setId(idGenerator.nextId)
-    weeksList.setAdapter(weeksAdapter)
-    weeksList.setSelection(0)
     weeksList.start()
     val weeksListParams = new RelativeLayout.LayoutParams(dimensions.weekListWidth, LayoutParams.WRAP_CONTENT)
     weeksListParams.setMargins(0, 0, dimensions.weekListRightMargin, 0)
@@ -90,7 +88,7 @@ class AllaccaMain extends Activity with TypedViewHolder {
     weeksListParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
     weeksList.setLayoutParams(weeksListParams)
     weeksList.setDividerHeight(0)
-    weeksAdapter.onDayClick(initialFocusDate.toDateTimeAtStartOfDay)
+    goToDayOnWeeksList(new DateTime(initialFocusDate.toDate.getTime))
     weeksList
   }
 
@@ -190,14 +188,19 @@ class AllaccaMain extends Activity with TypedViewHolder {
     })
     panel
   }
+
   def gotoNow(view: View) {
     val now = new DateTime
-    val index = weeksAdapter.rollToDate(now)
-    weeksList.setSelection(index)
-    weeksList.smoothScrollToPosition(index)
-    weeksAdapter.onDayClick(now)
+    goToDayOnWeeksList(now)
     agendaView.focusOn(now.withTimeAtStartOfDay.toLocalDate)
     flashingPanel.startAnimation(fade)
+  }
+
+  def goToDayOnWeeksList(day: DateTime) {
+    val index = weeksAdapter.rollToDate(day)
+    weeksList.setSelection(index)
+    weeksList.smoothScrollToPosition(index)
+    weeksAdapter.onDayClick(day)
   }
 
   private def createDayColumnTitles(): Seq[View] = {
