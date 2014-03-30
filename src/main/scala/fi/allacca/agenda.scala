@@ -51,18 +51,11 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         }
       }
     })
-    delayedInitialFocus(initialFocusDate)
+    focusOn(initialFocusDate)
   }
 
   def focusOn(day: LocalDate) {
     adapter.focusOn(day)
-  }
-
-  private def delayedInitialFocus(focus: LocalDate) {
-    val handler = new android.os.Handler()
-    handler.postDelayed( {
-        activity.runOnUiThread { focusOn(focus) }
-      }, 1000)
   }
 
   def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
