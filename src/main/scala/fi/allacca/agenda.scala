@@ -190,7 +190,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     }
     if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays <= howManyDaysToLoadAtTime) {
       val currentWindowEnd = lastVisibleDay.map { d => if (d.isAfter(lastDayToLoad)) d else lastDayToLoad }.get
-      firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad)
+      firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad).minusDays(1)
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
       listView.footerView.setMessage("Click to load events after " + dateFormat.print(lastDayToLoad))
 
