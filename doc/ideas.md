@@ -8,4 +8,7 @@ Ideas for further development
 * show over weeks list which is the part that agenda displays
 * selection of which calendars to display
 * hint somehow which event is from which calendar
-
+* Highlight eventful days on weekview
+* Search from events. Future events is the default.
+* Finnish localization
+* Changeable color schemes (from a few hard-coded ones, e.g. dark, light)
