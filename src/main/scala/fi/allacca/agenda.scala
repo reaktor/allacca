@@ -32,7 +32,6 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
     addHeaderView(headerView)
     addFooterView(footerView)
     setAdapter(adapter)
-    focusOn(initialFocusDate)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
         Logger.debug(s"${AgendaView.this.getClass.getSimpleName} scrollState==$scrollState")
@@ -52,10 +51,18 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         }
       }
     })
+    delayedInitialFocus(initialFocusDate)
   }
 
   def focusOn(day: LocalDate) {
     adapter.focusOn(day)
+  }
+
+  private def delayedInitialFocus(focus: LocalDate) {
+    val handler = new android.os.Handler()
+    handler.postDelayed( {
+        activity.runOnUiThread { focusOn(focus) }
+      }, 1000)
   }
 
   def focusDay: LocalDate = adapter.synchronized { adapter.focusDay }
