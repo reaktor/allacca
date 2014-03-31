@@ -21,7 +21,7 @@ object Config{
   val initialWeekCount = 104
 }
 
-class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: ShownMonthsView) extends ListView(activity) {
+class WeeksView(activity: Activity, adapter: WeeksAdapter, shownMonthsView: ShownMonthsView) extends ListView(activity) {
   def start() {
     setAdapter(adapter)
     setOnScrollListener(new OnScrollListener {
@@ -49,7 +49,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter2, shownMonthsView: Sho
   }
 }
 
-class WeeksAdapter2(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
+class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
   private val renderer = new WeekViewRenderer(activity, dimensions)
   private val model = new WeeksModel
   private val loading = new AtomicBoolean(false)

@@ -16,7 +16,7 @@ import fi.allacca.Logger._
 
 class AllaccaMain extends Activity with TypedViewHolder {
   private lazy val dimensions = new ScreenParameters(getResources.getDisplayMetrics)
-  private lazy val weeksAdapter = new WeeksAdapter2(this, dimensions, onWeeksListDayClick, onWeeksListDayLongClick)
+  private lazy val weeksAdapter = new WeeksAdapter(this, dimensions, onWeeksListDayClick, onWeeksListDayLongClick)
   private lazy val weeksList = new WeeksView(this, weeksAdapter, shownMonthsView)
 
   private lazy val cornerView = new TextView(this)
