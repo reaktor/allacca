@@ -206,34 +206,14 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   }
 
   override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
-    val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon
-    ContentUris.appendId(uriBuilder, args.get("start").asInstanceOf[Long])
-    ContentUris.appendId(uriBuilder, args.get("end").asInstanceOf[Long])
-    val loader = EventsLoaderFactory.createLoader(activity)
-    loader.setUri(uriBuilder.build)
+    val loader = EventsLoaderFactory.createLoader(activity, args)
     loader
   }
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     debug("Starting the Finished call")
-
-    val events = time({ EventsLoaderFactory.readEvents(cursor) }, "readEvents")
-
-    val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
-    time({
-      events.foreach {
-        e =>
-          val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
-          val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
-          daysEventsOption match {
-            case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
-            case None => eventsByDays.put(day, List(e))
-          }
-      }
-    }, "groupBy")
-
+    val eventsByDays = EventsLoaderFactory.readEventsByDays(cursor)
     val days = time({ eventsByDays.keys.toSet }, "getDays")
-
     val daysWithEvents: Set[DayWithEvents] = time({
       days.map {
         day =>
@@ -458,12 +438,16 @@ class AgendaModel {
 object EventsLoaderFactory {
   private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end", "allDay")
 
-  def createLoader(activity: Activity): CursorLoader = {
+  def createLoader(activity: Activity, args: Bundle): CursorLoader = {
     val loader = new CursorLoader(activity)
     loader.setProjection(columnsToSelect)
     loader.setSelection("")
     loader.setSelectionArgs(null)
     loader.setSortOrder("begin asc")
+    val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon
+    ContentUris.appendId(uriBuilder, args.get("start").asInstanceOf[Long])
+    ContentUris.appendId(uriBuilder, args.get("end").asInstanceOf[Long])
+    loader.setUri(uriBuilder.build)
     loader
   }
 
@@ -475,6 +459,23 @@ object EventsLoaderFactory {
       i = i + 1
     }
     result.toSeq
+  }
+
+  def readEventsByDays(cursor: Cursor): mutable.Map[LocalDate, Seq[CalendarEvent]] = {
+    val events: Seq[CalendarEvent] = time({ readEvents(cursor) }, "readEvents")
+    val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
+    time({
+      events.foreach {
+        e =>
+          val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
+          val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
+          daysEventsOption match {
+            case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
+            case None => eventsByDays.put(day, List(e))
+          }
+      }
+    }, "groupBy")
+    eventsByDays
   }
 
   private def readEventFrom(cursor: Cursor): CalendarEvent = {
