@@ -12,8 +12,3 @@ Ideas for further development
 * Search from events. Future events is the default.
 * Finnish localization
 * Changeable color schemes (from a few hard-coded ones, e.g. dark, light)
-
-Bugs
-====
-
-* Long press on agenda day gives new event creation view which starts from 00:00. 

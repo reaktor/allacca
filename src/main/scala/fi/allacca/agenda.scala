@@ -353,7 +353,7 @@ class AgendaRenderer(activity: Activity) {
         val intent = new Intent(activity, classOf[EditEventActivity])
         val chosenDayAsMillis: Long = day
         intent.putExtra(FOCUS_DATE_EPOCH_MILLIS, chosenDayAsMillis)
-        intent.putExtra(EVENT_DATE, chosenDayAsMillis)
+        intent.putExtra(EVENT_DATE, chosenDayAsMillis + new DateTime().getMillisOfDay)
         activity.startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
         true
     }
