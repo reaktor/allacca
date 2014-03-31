@@ -347,8 +347,8 @@ class AgendaRenderer(activity: Activity) {
     dayNameView.setTextColor(dimensions.pavlova)
     dayNameView.setTypeface(null, Typeface.BOLD_ITALIC)
     dayNameView.setText(dateFormat.print(day))
-    dayNameView.setOnLongClickListener(new OnLongClickListener {
-      def onLongClick(v: View): Boolean = {
+    dayNameView.setOnLongClickListener {
+      view: View =>
         debug("+ createNewEvent from agenda day name")
         val intent = new Intent(activity, classOf[EditEventActivity])
         val chosenDayAsMillis: Long = day
@@ -356,8 +356,7 @@ class AgendaRenderer(activity: Activity) {
         intent.putExtra(EVENT_DATE, chosenDayAsMillis)
         activity.startActivityForResult(intent, REQUEST_CODE_EDIT_EVENT)
         true
-      }
-    })
+    }
     dayNameView
   }
 }
