@@ -16,8 +16,11 @@ import android.app.LoaderManager.LoaderCallbacks
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 import fi.allacca.Logger._
 import java.util.Locale
+import scala.util.{Failure, Success}
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
   val howManyDaysToLoadAtTime = 120
@@ -213,53 +216,64 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     debug("Starting the Finished call")
+    val f = Future {
+      val events = time({ EventsLoaderFactory.readEvents(cursor) }, "readEvents")
 
-    val events = time({ EventsLoaderFactory.readEvents(cursor) }, "readEvents")
-
-    val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
-    time({
-      events.foreach {
-        e =>
-          val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
-          val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
-          daysEventsOption match {
-            case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
-            case None => eventsByDays.put(day, List(e))
-          }
-      }
-    }, "groupBy")
-
-    val days = time({ eventsByDays.keys.toSet }, "getDays")
-
-    val daysWithEvents: Set[DayWithEvents] = time({
-      days.map {
-        day =>
-          val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy {
-            _.startTime
-          }
-          DayWithEvents(day, eventsOfDay)
-      }
-    }, "create daysWithEventsMap")
-    time({
-      activity.runOnUiThread {
-        model.addOrUpdate(daysWithEvents, days)
-        notifyDataSetChanged()
-      }
-    }, "Update model")
-    time({ activity.runOnUiThread { statusTextView.setText("") } }, "setViewText")
-
-
-    activity.runOnUiThread {
-      loadWindowLock.synchronized {
-        if (setSelectionToFocusDayAfterLoading) {
-          val indexInModelTakingOnAccountListViewHeader = model.indexOf(getFocusDay) + 1
-          listView.setSelection(indexInModelTakingOnAccountListViewHeader)
-          setSelectionToFocusDayAfterLoading = false
+      val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
+      time({
+        events.foreach {
+          e =>
+            if (e != null) {
+              val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
+              val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
+              daysEventsOption match {
+                case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
+                case None => eventsByDays.put(day, List(e))
+              }
+            }
         }
-      }
-      activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
-      loading.set(false)
-      debug("Finished loading!")
+      }, "groupBy")
+
+      val days = time({ eventsByDays.keys.toSet }, "getDays")
+
+      val daysWithEvents: Set[DayWithEvents] = time({
+        days.map {
+          day =>
+            val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy {
+              _.startTime
+            }
+            DayWithEvents(day, eventsOfDay)
+        }
+      }, "create daysWithEventsMap")
+      time({
+        activity.runOnUiThread(new Runnable() {
+          override def run() {
+            model.addOrUpdate(daysWithEvents, days)
+            notifyDataSetChanged()
+          }
+        })
+      }, "Update model")
+      time({ activity.runOnUiThread { statusTextView.setText("") } }, "setViewText")
+
+      activity.runOnUiThread(new Runnable() {
+        override def run() {
+          loadWindowLock.synchronized {
+            if (setSelectionToFocusDayAfterLoading) {
+              val indexInModelTakingOnAccountListViewHeader = model.indexOf(getFocusDay) + 1
+              listView.setSelection(indexInModelTakingOnAccountListViewHeader)
+              setSelectionToFocusDayAfterLoading = false
+            }
+          }
+          activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
+          loading.set(false)
+        }
+      })
+    }
+    f onComplete {
+      case Success(_) => debug("Finished loading!")
+      case Failure(e) =>
+        Logger.error("Error in processing load results", e)
+        throw e
     }
   }
 
