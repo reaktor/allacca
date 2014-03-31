@@ -11,6 +11,10 @@ object Logger {
   val TAG = "ALLACCA"
   private val preciseTimestampFormat = DateTimeFormat.forPattern("yyyy-d-M HH:mm:ss.SSS")
 
+  def error(msg: => String, e: Throwable) {
+    if (debug.get()) Log.e(TAG, msg, e)
+  }
+
   def info(msg: => String) {
     if (debug.get()) Log.i(TAG, msg)
   }
