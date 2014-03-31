@@ -130,7 +130,6 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
     initMonthLetterView(yearAndWeek, monthLetterView)
     val weekNumberView = getTextView(1, viewGroup)
     initWeekNumberView(yearAndWeek, weekNumberView)
-    //weekNumberView.setText(yearAndWeek.week.toString)
     0 to 6 map { index =>
       val dayView = getTextView(index+2, viewGroup)
       val day  = yearAndWeek.days(index)
