@@ -16,7 +16,6 @@ import android.app.LoaderManager.LoaderCallbacks
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable
-import android.view.View.OnLongClickListener
 import fi.allacca.Logger._
 import java.util.Locale
 
@@ -166,7 +165,6 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     }
     if (getFocusDay == model.firstDay) {
       firstDayToLoad = if (tooMuchPast.get()) firstDayToLoad else firstDayToLoad.minusDays(howManyDaysToLoadAtTime)
-      lastDayToLoad = lastVisibleDay.getOrElse(lastDayToLoad)
       listView.headerView.setMessage("Click to load events before " + dateFormat.print(firstDayToLoad))
       setSelectionToFocusDayAfterLoading = true
       val currentPastDays = Days.daysBetween(firstDayToLoad, getFocusDay).getDays
@@ -190,7 +188,6 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     }
     if (lastVisibleDay.isDefined && Days.daysBetween(lastVisibleDay.get, model.lastDay).getDays <= howManyDaysToLoadAtTime) {
       val currentWindowEnd = lastVisibleDay.map { d => if (d.isAfter(lastDayToLoad)) d else lastDayToLoad }.get
-      firstDayToLoad = firstVisibleDay.getOrElse(firstDayToLoad).minusDays(1)
       lastDayToLoad = currentWindowEnd.plusDays(howManyDaysToLoadAtTime)
       listView.footerView.setMessage("Click to load events after " + dateFormat.print(lastDayToLoad))
 
