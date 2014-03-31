@@ -246,17 +246,14 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
         }
       }, "create daysWithEventsMap")
       time({
-        activity.runOnUiThread(new Runnable() {
-          override def run() {
-            model.addOrUpdate(daysWithEvents, days)
-            notifyDataSetChanged()
-          }
-        })
+        activity.runOnUiThread { () =>
+          model.addOrUpdate(daysWithEvents, days)
+          notifyDataSetChanged()
+        }
       }, "Update model")
-      time({ activity.runOnUiThread { statusTextView.setText("") } }, "setViewText")
+      time({ activity.runOnUiThread { () => statusTextView.setText("") } }, "setViewText")
 
-      activity.runOnUiThread(new Runnable() {
-        override def run() {
+      activity.runOnUiThread { () => {
           loadWindowLock.synchronized {
             if (setSelectionToFocusDayAfterLoading) {
               val indexInModelTakingOnAccountListViewHeader = model.indexOf(getFocusDay) + 1
@@ -267,7 +264,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
           activity.getLoaderManager.destroyLoader(19) // This makes onCreateLoader run again and use fresh search URI
           loading.set(false)
         }
-      })
+      }
     }
     f onComplete {
       case Success(_) => debug("Finished loading!")
@@ -313,7 +310,7 @@ class AgendaRenderer(activity: Activity) {
     eventsOfDay foreach {
       event =>
         val titleView = createTitleView(event)
-        activity.runOnUiThread(dayView.addView(titleView))
+        activity.runOnUiThread { () => dayView.addView(titleView) }
         val onClick: (View => Unit) = {
           _ =>
             debug("event clicked, starting activity")
