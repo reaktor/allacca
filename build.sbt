@@ -8,7 +8,7 @@ name := "allacca"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion:= "2.11.0-M8"
+scalaVersion:= "2.11.0-RC3"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
 
@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "joda-time"         % "joda-time"           % "2.3",
   "org.joda"          % "joda-convert"        % "1.4",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.RC1" % "test",
+  "org.scalatest" %% "scalatest" % "2.1.2" % "test",
   "junit" % "junit" % "4.10" % "test"
 )
 
