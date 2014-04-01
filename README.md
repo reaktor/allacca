@@ -5,6 +5,8 @@ A Lean Lovely Android Calendar Controlling Allacca.
 
 Check the [UI design draft](doc/ui-design-draft.md "UI design draft").
 
+And [download latest Allacca release from Google Play](https://play.google.com/store/apps/details?id=fi.allacca) .
+
 Working with Idea
 -----------------
 
