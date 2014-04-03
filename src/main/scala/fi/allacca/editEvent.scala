@@ -334,13 +334,14 @@ class EditEventActivity extends Activity with TypedViewHolder {
   }
 
   private def extractEventFromFieldValues: CalendarEvent = {
+    val allDay = allDayCheckbox.isChecked
+    def toDayStartForAllDayEvent(d: DateTime) = if (allDay) d.withTimeAtStartOfDay else d
     val eventName = eventNameField.getText.toString
     val eventLocation = eventLocationField.getText.toString
     val eventDescription = eventDescriptionField.getText.toString
-    val allDay = allDayCheckbox.isChecked
     val timeZone = timeZoneForEvent(allDay)
-    val startTime = startDateTimeField.getDateTime(timeZone)
-    val endTime = endDateTimeField.getDateTime(timeZone)
+    val startTime = toDayStartForAllDayEvent(startDateTimeField.getDateTime(timeZone))
+    val endTime = toDayStartForAllDayEvent(endDateTimeField.getDateTime(timeZone))
     val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startTime, endTime = endTime,
       location = eventLocation, description = eventDescription, allDay = allDay)
     eventToSave
