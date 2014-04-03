@@ -7,11 +7,10 @@ import android.os.Bundle
 import android.content._
 import android.provider.CalendarContract
 import android.view.ViewGroup.LayoutParams
-import org.joda.time.{DateTimeZone, Days, DateTime, LocalDate}
+import org.joda.time.{Days, DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
 import android.graphics.{Typeface, Color}
 import android.view.{ViewGroup, View}
-import android.provider.CalendarContract.Instances
 import android.app.LoaderManager.LoaderCallbacks
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
@@ -226,7 +225,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
         events.foreach {
           e =>
             if (e != null) {
-              val day = new DateTime(e.startTime).withTimeAtStartOfDay.toLocalDate
+              val day = e.startTime.withTimeAtStartOfDay.toLocalDate
               val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
               daysEventsOption match {
                 case Some(eventList) => eventsByDays.put(day, eventList.+:(e))

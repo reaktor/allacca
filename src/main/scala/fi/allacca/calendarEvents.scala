@@ -2,7 +2,7 @@ package fi.allacca
 
 import android.provider.CalendarContract.{Instances, Calendars, Events}
 import android.content.{CursorLoader, ContentValues, Context}
-import org.joda.time.{LocalDate, Interval, DateTime}
+import org.joda.time.{DateTimeZone, LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone

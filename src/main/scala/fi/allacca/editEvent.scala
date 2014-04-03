@@ -124,7 +124,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def getPrepopulateStartTime: DateTime = {
     getEventWeAreEditing match {
-      case Some(event) => new DateTime(event.startTime)
+      case Some(event) => event.startTime
       case None =>
     val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
     if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
@@ -133,7 +133,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def getPrepopulateEndTime: DateTime = {
     getEventWeAreEditing match {
-      case Some(event) => new DateTime(event.endTime)
+      case Some(event) => event.endTime
       case None => getPrepopulateStartTime.plusHours(1)
     }
   }
