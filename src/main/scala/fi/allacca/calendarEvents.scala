@@ -24,7 +24,12 @@ class CalendarEvent(val id: Option[Long], val title: String,
   }
   override def toString = s"$title ($description) ${format(startTime)} - ${format(endTime)}"
 
-  private def format(dateTime: DateTime): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(dateTime)
+  def detailedToString = {
+    def detailFormat(d: DateTime) = format(d, "d.M.yyyy HH:mm:SSS Z")
+    s"$title ${detailFormat(startTime)} - ${detailFormat(endTime)}"
+  }
+
+  private def format(dateTime: DateTime, formatPattern: String = "d.M.yyyy HH:mm"): String = DateTimeFormat.forPattern(formatPattern).print(dateTime)
 }
 
 case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {

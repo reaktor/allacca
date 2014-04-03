@@ -319,9 +319,11 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def saveOrUpdate(eventToSave: CalendarEvent, selectedCalendar: UserCalendar) {
     if (isEditMode) {
+      info(s"Updating ${eventToSave.detailedToString}")
       val updateCount = calendarEventService.saveEvent(idOfEventWeAreEditing.get, eventToSave)
       info(s"Updated event $updateCount")
     } else {
+      info(s"Inserting ${eventToSave.detailedToString}")
       val savedId = calendarEventService.createEvent(selectedCalendar.id, eventToSave)
       info(s"Saved event with id $savedId")
     }
