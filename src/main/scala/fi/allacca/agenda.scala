@@ -91,6 +91,8 @@ class LoadingStopper(context: Context, dimensions: ScreenParameters, idGenerator
 }
 
 class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: TextView) extends BaseAdapter with LoaderCallbacks[Cursor] {
+  private lazy val service = new CalendarEventService(activity)
+
   private val loadWindowLock = new Object
   private val renderer = new AgendaRenderer(activity)
   private val model = new AgendaModel
@@ -209,7 +211,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
     val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon
     ContentUris.appendId(uriBuilder, args.get("start").asInstanceOf[Long])
     ContentUris.appendId(uriBuilder, args.get("end").asInstanceOf[Long])
-    val loader = EventsLoaderFactory.createLoader(activity)
+    val loader = service.createInstanceLoader(activity)
     loader.setUri(uriBuilder.build)
     loader
   }
@@ -217,7 +219,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     debug("Starting the Finished call")
     val f = Future {
-      val events = time({ EventsLoaderFactory.readEvents(cursor) }, "readEvents")
+      val events = time({ service.readEventsFromInstances(cursor) }, "readEvents")
 
       val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
       time({
@@ -458,40 +460,5 @@ class AgendaModel {
       }
       list
     }
-  }
-}
-
-object EventsLoaderFactory {
-  private val columnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end", "allDay")
-
-  def createLoader(activity: Activity): CursorLoader = {
-    val loader = new CursorLoader(activity)
-    loader.setProjection(columnsToSelect)
-    loader.setSelection("")
-    loader.setSelectionArgs(null)
-    loader.setSortOrder("begin asc")
-    loader
-  }
-
-  def readEvents(cursor: Cursor): Seq[CalendarEvent] = {
-    val result = new Array[CalendarEvent](cursor.getCount)
-    var i = 0
-    while (cursor.moveToNext()) {
-      result.update(i, readEventFrom(cursor))
-      i = i + 1
-    }
-    result.toSeq
-  }
-
-  private def readEventFrom(cursor: Cursor): CalendarEvent = {
-    val id = cursor.getLong(0)
-    val title = cursor.getString(1)
-    val startTime = cursor.getLong(2)
-    val endTime = cursor.getLong(3)
-    val allDayFromDb = cursor.getInt(4)
-    val allDay = allDayFromDb == 1
-    val timeZone = timeZoneForEvent(allDay)
-    new CalendarEvent(id = Some(id), title = title,
-      startTime = new DateTime(startTime, timeZone), endTime = new DateTime(endTime, timeZone), allDay = allDay)
   }
 }

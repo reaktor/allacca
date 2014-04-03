@@ -1,13 +1,13 @@
 package fi.allacca
 
-import android.provider.CalendarContract.{Calendars, Events}
-import android.content.ContentValues
-import android.content.Context
-import org.joda.time.{DateTimeZone, LocalDate, Interval, DateTime}
+import android.provider.CalendarContract.{Instances, Calendars, Events}
+import android.content.{CursorLoader, ContentValues, Context}
+import org.joda.time.{LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone
 import scala.annotation.tailrec
+import android.app.Activity
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -36,6 +36,8 @@ object DayWithEvents {
 }
 
 class CalendarEventService(context: Context) {
+  private val instanceColumnsToSelect = Array(Instances.EVENT_ID, "title", "begin", "end", "allDay")
+  private val eventColumnsToSelect = Array("dtstart", "dtend", "title", "eventLocation", "description", "allDay")
 
   def createEvent(calendarId: Long, event: CalendarEvent): Long = {
     val values = new ContentValues()
@@ -62,8 +64,7 @@ class CalendarEventService(context: Context) {
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
-    val projection = Array("dtstart", "dtend", "title", "eventLocation", "description", "allDay")
-    val cursor = context.getContentResolver.query(Events.CONTENT_URI, projection, "_id =? ", Array(eventId.toString), null)
+    val cursor = context.getContentResolver.query(Events.CONTENT_URI, eventColumnsToSelect, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
       val endTime = cursor.getLong(1)
@@ -92,6 +93,37 @@ class CalendarEventService(context: Context) {
     values.put("allDay", Int.box(allDay))
   }
 
+  def createInstanceLoader(activity: Activity): CursorLoader = {
+    val loader = new CursorLoader(activity)
+    loader.setProjection(instanceColumnsToSelect)
+    loader.setSelection("")
+    loader.setSelectionArgs(null)
+    loader.setSortOrder("begin asc")
+    loader
+  }
+
+  def readEventsFromInstances(cursor: Cursor): Seq[CalendarEvent] = {
+    def readSingleEvent: CalendarEvent = {
+      val id = cursor.getLong(0)
+      val title = cursor.getString(1)
+      val startTime = cursor.getLong(2)
+      val endTime = cursor.getLong(3)
+      val allDayFromDb = cursor.getInt(4)
+      val allDay = allDayFromDb == 1
+      val timeZone = timeZoneForEvent(allDay)
+      new CalendarEvent(id = Some(id), title = title,
+        startTime = new DateTime(startTime, timeZone), endTime = new DateTime(endTime, timeZone), allDay = allDay)
+    }
+
+    val result = new Array[CalendarEvent](cursor.getCount)
+    var i = 0
+    while (cursor.moveToNext()) {
+      result.update(i, readSingleEvent)
+      i = i + 1
+    }
+    result.toSeq
+  }
+
   def getCalendars: Array[UserCalendar] = {
     @tailrec
     def getCalendars0(calCursor: Cursor, calendars: Array[UserCalendar]): Array[UserCalendar] = {
@@ -106,5 +138,4 @@ class CalendarEventService(context: Context) {
     calCursor.moveToFirst()
     getCalendars0(calCursor, Array())
   }
-
 }
