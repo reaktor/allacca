@@ -80,8 +80,8 @@ class CalendarEventService(context: Context) {
       val timeZone = timeZoneForEvent(allDay)
       Some(new CalendarEvent(id = Some(eventId), 
                              title = title, 
-                             startTime = new DateTime(startTime).withZone(timeZone),
-                             endTime = new DateTime(endTime).withZone(timeZone),
+                             startTime = toDateTime(startTime, allDay),
+                             endTime = toDateTime(endTime, allDay),
                              location = location, 
                              description = description,
                              allDay = allDay))
@@ -115,9 +115,8 @@ class CalendarEventService(context: Context) {
       val endTime = cursor.getLong(3)
       val allDayFromDb = cursor.getInt(4)
       val allDay = allDayFromDb == 1
-      val timeZone = timeZoneForEvent(allDay)
       new CalendarEvent(id = Some(id), title = title,
-        startTime = new DateTime(startTime, timeZone), endTime = new DateTime(endTime, timeZone), allDay = allDay)
+        startTime = toDateTime(startTime, allDay), endTime = toDateTime(endTime, allDay), allDay = allDay)
     }
 
     val result = new Array[CalendarEvent](cursor.getCount)
@@ -127,6 +126,12 @@ class CalendarEventService(context: Context) {
       i = i + 1
     }
     result.toSeq
+  }
+
+  private def toDateTime(epochMillis: Long, allDay: Boolean): DateTime = {
+    val timeZone = timeZoneForEvent(allDay)
+    val timeZoneDifference = if (timeZone != DateTimeZone.getDefault) TimeZone.getDefault.getOffset(epochMillis) else 0
+    new DateTime(epochMillis + timeZoneDifference, timeZone)
   }
 
   def getCalendars: Array[UserCalendar] = {
