@@ -3,7 +3,7 @@ package fi.allacca
 import android.provider.CalendarContract.{Calendars, Events}
 import android.content.ContentValues
 import android.content.Context
-import org.joda.time.{LocalDate, Interval, DateTime}
+import org.joda.time.{DateTimeZone, LocalDate, Interval, DateTime}
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone
@@ -13,16 +13,18 @@ class UserCalendar(val id: Long, val name: String) {
   override def toString = name
 }
 
-class CalendarEvent(val id: Option[Long], val title: String, val startTime: Long, val endTime: Long, val description: String = "", val location: String = "", val allDay: Boolean = false) {
+class CalendarEvent(val id: Option[Long], val title: String,
+                    val startTime: DateTime, val endTime: DateTime, val description: String = "",
+                    val location: String = "", val allDay: Boolean = false) {
   def isDuring(day: DateTime): Boolean = {
-    val effectiveEnd = if (endTime < startTime) java.lang.Long.MAX_VALUE else endTime
+    val effectiveEnd = if (endTime.isBefore(startTime)) new DateTime(java.lang.Long.MAX_VALUE) else endTime
     val intervalOfEvent = new Interval(startTime, effectiveEnd)
     val intervalOfDay = new Interval(day.withTimeAtStartOfDay, day.withTimeAtStartOfDay.plusDays(1))
     intervalOfDay.overlaps(intervalOfEvent)
   }
-  override def toString = s"$title ($description) ${formatEpoch(startTime)} - ${formatEpoch(endTime)}"
+  override def toString = s"$title ($description) ${format(startTime)} - ${format(endTime)}"
 
-  private def formatEpoch(epochMillis: Long): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(epochMillis)
+  private def format(dateTime: DateTime): String = DateTimeFormat.forPattern("d.M.yyyy HH:mm").print(dateTime)
 }
 
 case class DayWithEvents(day: LocalDate, events: Seq[CalendarEvent]) {
@@ -69,10 +71,11 @@ class CalendarEventService(context: Context) {
       val location = cursor.getString(3)
       val description = cursor.getString(4)
       val allDay = cursor.getInt(5) == 1
+      val timeZone = timeZoneForEvent(allDay)
       Some(new CalendarEvent(id = Some(eventId), 
                              title = title, 
-                             startTime = startTime, 
-                             endTime = endTime, 
+                             startTime = new DateTime(startTime).withZone(timeZone),
+                             endTime = new DateTime(endTime).withZone(timeZone),
                              location = location, 
                              description = description,
                              allDay = allDay))

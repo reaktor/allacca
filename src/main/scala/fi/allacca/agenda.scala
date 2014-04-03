@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.content._
 import android.provider.CalendarContract
 import android.view.ViewGroup.LayoutParams
-import org.joda.time.{Days, DateTime, LocalDate}
+import org.joda.time.{DateTimeZone, Days, DateTime, LocalDate}
 import org.joda.time.format.DateTimeFormat
 import android.graphics.{Typeface, Color}
 import android.view.{ViewGroup, View}
@@ -239,9 +239,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
       val daysWithEvents: Set[DayWithEvents] = time({
         days.map {
           day =>
-            val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy {
-              _.startTime
-            }
+            val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime.getMillis }
             DayWithEvents(day, eventsOfDay)
         }
       }, "create daysWithEventsMap")
@@ -492,6 +490,8 @@ object EventsLoaderFactory {
     val endTime = cursor.getLong(3)
     val allDayFromDb = cursor.getInt(4)
     val allDay = allDayFromDb == 1
-    new CalendarEvent(id = Some(id), title = title, startTime = startTime, endTime = endTime, allDay = allDay)
+    val timeZone = timeZoneForEvent(allDay)
+    new CalendarEvent(id = Some(id), title = title,
+      startTime = new DateTime(startTime, timeZone), endTime = new DateTime(endTime, timeZone), allDay = allDay)
   }
 }

@@ -2,8 +2,7 @@ package fi
 
 import android.view.View
 import android.view.View.{OnLongClickListener, OnFocusChangeListener, OnClickListener}
-import org.joda.time.LocalDate
-import android.util.Log
+import org.joda.time.{DateTimeZone, DateTime, LocalDate}
 
 /*
  * When your code is not in allacca-package, but you need these definitions, do this import:
@@ -35,7 +34,11 @@ package object allacca {
 
   implicit def localDateToEpochMillis(localDate: LocalDate): Long = localDate.toDate.getTime
 
+  implicit def dateTimeToEpochMillis(dateTime: DateTime): Long = dateTime.getMillis
+
   implicit def func2Runnable(f: () => Unit) = new Runnable() { def run() { f() }}
+
+  def timeZoneForEvent(allDay: Boolean = false): DateTimeZone = if (allDay) DateTimeZone.UTC else DateTimeZone.getDefault
 
   /**
    * Timing utility from http://stackoverflow.com/a/9160068

@@ -13,7 +13,7 @@ import android.widget.RelativeLayout.{LayoutParams, BELOW, RIGHT_OF, LEFT_OF}
 import fi.allacca.ui.util.TextChangeListener.func2TextChangeListener
 import android.graphics.Color
 import android.content.{DialogInterface, Intent, Context}
-import org.joda.time.{LocalDate, Period, IllegalFieldValueException, DateTime}
+import org.joda.time._
 import android.view.{ViewGroup, View}
 import scala.Array
 import fi.allacca.ui.util.TextChangeListener
@@ -21,6 +21,7 @@ import org.joda.time.format.DateTimeFormat
 import fi.allacca.Logger._
 import java.util.Locale
 import android.view.inputmethod.EditorInfo
+import scala.Some
 
 
 class EditEventActivity extends Activity with TypedViewHolder {
@@ -193,8 +194,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def startTimeFocusChange(view: View, focus: Boolean) {
     if (startDateTimeField.isValid && !focus) { //When focus is lost, we check the end date situation (no partial fillings with one digit this way)
-      val startTime = startDateTimeField.getDateTime
-      val endTime = endDateTimeField.getDateTime
+      val startTime = startDateTimeField.getDateTime()
+      val endTime = endDateTimeField.getDateTime()
       if (endTime.isBefore(startTime)) endDateTimeField.setDateTime(startTime.plusHours(1))
     }
     okButtonController()
@@ -332,12 +333,13 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def extractEventFromFieldValues: CalendarEvent = {
     val eventName = eventNameField.getText.toString
-    val startMillis = startDateTimeField.getDateTime.toDate.getTime
-    val endMillis = endDateTimeField.getDateTime.toDate.getTime
     val eventLocation = eventLocationField.getText.toString
     val eventDescription = eventDescriptionField.getText.toString
     val allDay = allDayCheckbox.isChecked
-    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startMillis, endTime = endMillis,
+    val timeZone = timeZoneForEvent(allDay)
+    val startTime = startDateTimeField.getDateTime(timeZone)
+    val endTime = endDateTimeField.getDateTime(timeZone)
+    val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startTime, endTime = endTime,
       location = eventLocation, description = eventDescription, allDay = allDay)
     eventToSave
   }
@@ -433,11 +435,12 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
     context.initTabOrder()
   }
 
-  def getDateTime: DateTime = {
+  def getDateTime(timeZone: DateTimeZone = DateTimeZone.getDefault): DateTime = {
     def intValue(editText: EditText) = {
       editText.getText.toString.toInt
     }
-    new DateTime(intValue(yearField), intValue(monthField), intValue(dayField), intValue(hourField), intValue(minuteField), 0, 0)
+    new DateTime(intValue(yearField), intValue(monthField), intValue(dayField),
+      intValue(hourField), intValue(minuteField), 0, 0).withZone(timeZone)
   }
 
   def setDateTime(prepopulate: DateTime) {
@@ -450,7 +453,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
 
   def isValid: Boolean = {
     try {
-      getDateTime //Will throw the exceptions below if not valid
+      getDateTime() //Will throw the exceptions below if not valid
       true
     } catch {
       case e: NumberFormatException =>
@@ -465,7 +468,7 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   }
 
   private def weekDayText: String = try {
-    weekDayFormat.print(getDateTime)
+    weekDayFormat.print(getDateTime())
   } catch {
     case e: Exception => "-"
   }
