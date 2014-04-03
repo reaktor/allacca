@@ -2,7 +2,7 @@ package fi.allacca
 
 import android.app.{AlertDialog, DialogFragment, Dialog, Activity}
 import android.os.Bundle
-import android.util.{TypedValue, Log}
+import android.util.TypedValue
 import android.widget._
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -50,7 +50,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    hideKeyboardWhenEnteringEditMode
+    hideKeyboardWhenEnteringEditMode()
     val editLayout = createMainLayout
     addControlsToLayout(editLayout)
     initTextFieldListeners()
@@ -344,8 +344,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
     eventToSave
   }
 
-  private def hideKeyboardWhenEnteringEditMode {
-    if (isEditMode) getWindow().setSoftInputMode(EditorInfo.IME_ACTION_NONE)
+  private def hideKeyboardWhenEnteringEditMode() {
+    if (isEditMode) getWindow.setSoftInputMode(EditorInfo.IME_ACTION_NONE)
   }
 
 }
