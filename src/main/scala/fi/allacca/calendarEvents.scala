@@ -22,6 +22,9 @@ class CalendarEvent(val id: Option[Long], val title: String,
     val intervalOfDay = new Interval(day.withTimeAtStartOfDay, day.withTimeAtStartOfDay.plusDays(1))
     intervalOfDay.overlaps(intervalOfEvent)
   }
+
+  def spansMultipleDays: Boolean = startTime.withTimeAtStartOfDay != endTime.withTimeAtStartOfDay
+
   override def toString = s"$title ($description) ${format(startTime)} - ${format(endTime)}"
 
   def detailedToString = {

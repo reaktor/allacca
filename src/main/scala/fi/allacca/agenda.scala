@@ -279,8 +279,12 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
 class AgendaRenderer(activity: Activity) {
   private val DAYVIEW_TAG_ID = R.id.dayViewTagId
   private val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
-  private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
+
+  private val dateWithWeekdayFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
+  private val yearlessDateFormat = DateTimeFormat.forPattern("d.M.")
+  private val dateAndTimeFormat = DateTimeFormat.forPattern("E d.M. HH:mm")
   private val timeFormat = DateTimeFormat.forPattern("HH:mm")
+
   private val idGenerator = new IdGenerator()
 
   def createLoadingOrRealViewFor(content: Option[DayWithEvents], focusDay: LocalDate): View = {
@@ -325,15 +329,18 @@ class AgendaRenderer(activity: Activity) {
   }
 
   private def createTitleView(event: CalendarEvent): TextView = {
+    def createTimeRangePrefix: String = (event.spansMultipleDays, event.allDay) match {
+      case (true, true) => yearlessDateFormat.print(event.startTime) + "–" + yearlessDateFormat.print(event.endTime) + " "
+      case (true, false) => dateAndTimeFormat.print(event.startTime) + "–" + dateAndTimeFormat.print(event.endTime) + " "
+      case (false, true) => ""
+      case (false, false) => timeFormat.print(event.startTime) + "–" + timeFormat.print(event.endTime) + " "
+    }
     val titleView = new TextView(activity)
     titleView.setId(idGenerator.nextId)
     val params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
     titleView.setLayoutParams(params)
     titleView.setTextSize(dimensions.overviewContentTextSize)
-    val timeRangePrefix = if (event.allDay) "" else {
-      timeFormat.print(event.startTime) + "-" + timeFormat.print(event.endTime) + " "
-    }
-    titleView.setText(timeRangePrefix + event.title)
+    titleView.setText(createTimeRangePrefix + event.title)
     titleView.setBackgroundColor(Color.BLACK)
     titleView.setTextColor(Color.WHITE)
 
@@ -353,7 +360,7 @@ class AgendaRenderer(activity: Activity) {
     }
     dayNameView.setTextColor(dimensions.pavlova)
     dayNameView.setTypeface(null, Typeface.BOLD_ITALIC)
-    dayNameView.setText(dateFormat.print(day))
+    dayNameView.setText(dateWithWeekdayFormat.print(day))
     dayNameView.setOnLongClickListener {
       view: View =>
         debug("+ createNewEvent from agenda day name")
