@@ -126,8 +126,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
     getEventWeAreEditing match {
       case Some(event) => event.startTime
       case None =>
-    val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
-    if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
+        val eventDateLong = getIntent.getLongExtra(EVENT_DATE, NULL_VALUE)
+        if (eventDateLong == NULL_VALUE) new DateTime().plus(Period.days(1)) else new DateTime(eventDateLong)
     }
   }
 
@@ -140,8 +140,8 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def getEventWeAreEditing: Option[CalendarEvent] = {
     for {
-    eventId <- idOfEventWeAreEditing
-    event <- calendarEventService.getEvent(eventId)
+      eventId <- idOfEventWeAreEditing
+      event <- calendarEventService.getEvent(eventId)
     } yield event
   }
 
@@ -504,7 +504,7 @@ class ConfirmDeleteDialogFragment(eventService: CalendarEventService, eventId: L
           eventService.deleteEvent(eventId)
           confirmedCallback
         }
-        })
+      })
       .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
         def onClick(dialog: DialogInterface, id: Int) {
           info(s"Not deleting event $eventId")
