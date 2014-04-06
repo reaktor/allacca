@@ -112,8 +112,6 @@ class WeeksModel {
   def getStartDayIndex = Config.howManyWeeksToLoadAtTime
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
-  def startWeek = startDay.weekOfWeekyear()
-  def startYear = startDay.year()
 }
 
 class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
