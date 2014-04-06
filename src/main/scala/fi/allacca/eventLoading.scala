@@ -2,6 +2,14 @@ package fi.allacca
 
 import org.joda.time.LocalDate
 
+object EventLoaderConfig {
+  val howManyDaysToLoadAtTime = 120
+}
+
+class EventLoaderController {
+
+}
+
 class EventModel {
   @volatile
   private var contents: Map[Long, DayWithEvents] = Map()

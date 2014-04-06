@@ -22,7 +22,6 @@ import java.util.Locale
 import scala.util.{Failure, Success}
 
 class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(activity) {
-  val howManyDaysToLoadAtTime = 120
   private val adapter = new AgendaAdapter(activity, this, statusTextView)
   private lazy val dimensions = new ScreenParameters(activity.getResources.getDisplayMetrics)
   private val idGenerator = new IdGenerator
@@ -46,7 +45,7 @@ class AgendaView(activity: Activity, statusTextView: TextView) extends ListView(
         if (topOfLoadedContentIsDisplayed && !adapter.tooMuchPast.get()) {
           adapter.loadMorePast(dayOf(firstVisibleItemIndex), dayOf(lastVisibleItemIndex))
         }
-        val bottomOfLoadedContentIsDisplayed = lastVisibleItemIndex > (adapter.getCount - howManyDaysToLoadAtTime)
+        val bottomOfLoadedContentIsDisplayed = lastVisibleItemIndex > (adapter.getCount - EventLoaderConfig.howManyDaysToLoadAtTime)
         if (bottomOfLoadedContentIsDisplayed && !adapter.tooMuchFuture.get()) {
           adapter.loadMoreFuture(dayOf(firstVisibleItemIndex), dayOf(lastVisibleItemIndex))
         }
@@ -97,7 +96,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   private val model = new EventModel
   private val dateFormat = DateTimeFormat.forPattern("d.M.yyyy E").withLocale(Locale.ENGLISH)
 
-  private val howManyDaysToLoadAtTime = listView.howManyDaysToLoadAtTime
+  private val howManyDaysToLoadAtTime = EventLoaderConfig.howManyDaysToLoadAtTime
   private val maxEventlessDaysToLoad = 3 * 360
 
   private val loading = new AtomicBoolean(false)
