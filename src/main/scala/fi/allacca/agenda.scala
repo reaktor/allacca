@@ -148,15 +148,19 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   }
 
   private def triggerLoading() {
+    triggerLoading(firstDayToLoad, lastDayToLoad)
+  }
+
+  private def triggerLoading(startDate: LocalDate, endDate: LocalDate) {
     if (loading.getAndSet(true)) {
       debug("Already load in progress")
       return
     }
     statusTextView.setText("Load")
     val args = new Bundle
-    args.putLong("start", firstDayToLoad)
-    args.putLong("end", lastDayToLoad)
-    debug("Initing loading with " + firstDayToLoad + "--" + lastDayToLoad)
+    args.putLong("start", startDate)
+    args.putLong("end", endDate)
+    debug("Initing loading with " + startDate + "--" + endDate)
     activity.getLoaderManager.initLoader(19, args, this)
   }
 
