@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.widget._
 import android.view.{Gravity, ViewGroup, View}
-import org.joda.time.{Weeks, DateTime}
+import org.joda.time.{LocalDate, Weeks, DateTime}
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
@@ -15,6 +15,11 @@ import fi.allacca.Logger._
 import android.graphics.drawable.shapes.RectShape
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.Paint.Style
+import android.app.LoaderManager.LoaderCallbacks
+import android.os.Bundle
+import android.content.{ContentUris, Loader}
+import android.database.Cursor
+import android.provider.CalendarContract
 
 object Config{
   val howManyWeeksToLoadAtTime = 20
@@ -26,7 +31,10 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter, shownMonthsView: Show
     setAdapter(adapter)
     setOnScrollListener(new OnScrollListener {
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
-        Logger.debug(s"${WeeksView.this.getClass.getSimpleName} scrollState==$scrollState")
+        Logger.info(s"${WeeksView.this.getClass.getSimpleName} scrollState==$scrollState")
+        if (scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+          adapter.loadEvents(view.getFirstVisiblePosition, view.getLastVisiblePosition)
+        }
       }
 
       def onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
@@ -50,9 +58,10 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter, shownMonthsView: Show
 }
 
 class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickCallback: DateTime => Unit, onDayLongClickCallback: DateTime => Boolean)  extends BaseAdapter {
-  private val renderer = new WeekViewRenderer(activity, dimensions)
   private val model = new WeeksModel
+  private val renderer = new WeekViewRenderer(activity, model, dimensions)
   private val loading = new AtomicBoolean(false)
+  private val eventLoaderController = new EventLoaderController(activity, model, refresh)
 
   def loadMorePast() {
     info("adapter.loadMorePast")
@@ -62,6 +71,16 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
   def loadMoreFuture() {
     info("adapter.loadMoreFuture")
     model.setStartDay(model.getStartDay.plusWeeks(Config.howManyWeeksToLoadAtTime))
+    notifyDataSetChanged()
+  }
+
+  def loadEvents(firstVisibleItemPosition: Int, lastVisibleItemPosition: Int) {
+    val startWeek = model.getItem(firstVisibleItemPosition)
+    val endWeek = model.getItem(lastVisibleItemPosition)
+    eventLoaderController.loadEventsBetween(startWeek.firstDay, endWeek.lastDay)
+  }
+
+  def refresh() {
     notifyDataSetChanged()
   }
 
@@ -99,9 +118,46 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
 
 }
 
+class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallback: () => Unit) extends LoaderCallbacks[Cursor] {
+  private val LOADER_ID = 100
+  private lazy val service = new CalendarEventService(activity)
+
+  def loadEventsBetween(start: DateTime, end: DateTime) {
+    println(s"Loading events between $start and $end")
+    val args = new Bundle
+    args.putLong("start", start.getMillis)
+    args.putLong("end", end.getMillis)
+    debug("Initing loading with " + start + "--" + end)
+    activity.getLoaderManager.initLoader(LOADER_ID, args, this)
+  }
+
+  override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
+    println(s"onCreateLoader")
+    val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon
+    ContentUris.appendId(uriBuilder, args.get("start").asInstanceOf[Long])
+    ContentUris.appendId(uriBuilder, args.get("end").asInstanceOf[Long])
+    val loader = service.createInstanceLoader(activity)
+    loader.setUri(uriBuilder.build)
+    loader
+  }
+
+  override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
+    val (_, daysWithEvents) = service.readEventsByDays(cursor)
+    println(s"onLoadFinished $daysWithEvents")
+    activity.runOnUiThread { () =>
+      model.addOrUpdate(daysWithEvents)
+      refreshCallback()
+    }
+    activity.getLoaderManager.destroyLoader(LOADER_ID)
+  }
+
+  override def onLoaderReset(loader: Loader[Cursor]) {}
+}
+
 class WeeksModel {
   @volatile private var startDay: DateTime = currentDay
   @volatile private var chosenDay: DateTime = new DateTime().withTimeAtStartOfDay
+  @volatile private var events: Map[Long, DayWithEvents] = Map()
 
   def currentDay: DateTime = new DateTime().withTimeAtStartOfDay
   def getCount = Config.initialWeekCount
@@ -112,9 +168,21 @@ class WeeksModel {
   def getStartDayIndex = Config.howManyWeeksToLoadAtTime
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
+  def getEventCount(day: DateTime): Int = {
+    events.get(day.getMillis) match {
+      case Some(dayWithEvents) => dayWithEvents.events.size
+      case _ => 0
+    }
+  }
+  def hasEvents(day: DateTime) = getEventCount(day) > 0
+  def addOrUpdate(daysWithEvents: Set[DayWithEvents]) {
+    daysWithEvents foreach { dayWithEvents =>
+      events += dayWithEvents.id -> dayWithEvents
+    }
+  }
 }
 
-class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
+class WeekViewRenderer(activity: Activity, model: WeeksModel, dimensions: ScreenParameters) {
   val fmt = DateTimeFormat.forPattern("d")
   val shortMonths = new DateFormatSymbols(Locale.ENGLISH).getShortMonths
 
@@ -228,7 +296,9 @@ class WeekViewRenderer(activity: Activity, dimensions: ScreenParameters) {
       if (day.getDayOfWeek >= 6) dimensions.weekendDayColor else { dimensions.weekDayColor }
     }
     dayView.setTextColor(textColor)
-    val backgroundColor = if ((day.getMonthOfYear % 2) == 0) {
+    val backgroundColor = if (model.hasEvents(day)) {
+      dimensions.governorBay
+    } else if ((day.getMonthOfYear % 2) == 0) {
       dimensions.funBlue
     } else {
       Color.BLACK
