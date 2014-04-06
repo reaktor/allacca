@@ -105,6 +105,7 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
   def onDayClick(day: DateTime) {
     onDayClickCallback(day)
     model.setChosenDay(day)
+    eventLoaderController.loadEventsBetween(day, day.plusDays(Config.howManyWeeksToLoadAtTime * 7))
     notifyDataSetChanged()
   }
 
