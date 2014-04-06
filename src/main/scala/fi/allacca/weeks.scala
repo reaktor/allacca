@@ -177,9 +177,9 @@ class WeeksModel {
   }
   def hasEvents(day: DateTime) = getEventCount(day) > 0
   def addOrUpdate(daysWithEvents: Set[DayWithEvents]) {
-    daysWithEvents foreach { dayWithEvents =>
-      events += dayWithEvents.id -> dayWithEvents
-    }
+    events = (daysWithEvents map { dayWithEvents: DayWithEvents =>
+      (dayWithEvents.id, dayWithEvents)
+    }).toMap
   }
 }
 
