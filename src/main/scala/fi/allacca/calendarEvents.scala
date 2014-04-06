@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone
 import scala.annotation.tailrec
 import android.app.Activity
+import scala.collection.mutable
 
 class UserCalendar(val id: Long, val name: String) {
   override def toString = name
@@ -114,6 +115,35 @@ class CalendarEventService(context: Context) {
     loader.setSelectionArgs(null)
     loader.setSortOrder("begin asc")
     loader
+  }
+
+  def readEventsByDays(cursor: Cursor): (Set[LocalDate], Set[DayWithEvents]) = {
+    val events = readEventsFromInstances(cursor)
+    val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
+    time({
+      events.foreach {
+        e =>
+          if (e != null) {
+            val day = e.startTime.withTimeAtStartOfDay.toLocalDate
+            val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
+            daysEventsOption match {
+              case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
+              case None => eventsByDays.put(day, List(e))
+            }
+          }
+      }
+    }, "groupBy")
+
+    val days: Set[LocalDate] = time({ eventsByDays.keys.toSet }, "getDays")
+
+    val daysWithEvents: Set[DayWithEvents] = time({
+      days.map {
+        day =>
+          val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime.getMillis }
+          DayWithEvents(day, eventsOfDay)
+      }
+    }, "create daysWithEventsMap")
+    (days, daysWithEvents)
   }
 
   def readEventsFromInstances(cursor: Cursor): Seq[CalendarEvent] = {

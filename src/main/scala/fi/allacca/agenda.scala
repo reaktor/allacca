@@ -218,32 +218,7 @@ class AgendaAdapter(activity: Activity, listView: AgendaView, statusTextView: Te
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     debug("Starting the Finished call")
     val f = Future {
-      val events = time({ service.readEventsFromInstances(cursor) }, "readEvents")
-
-      val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
-      time({
-        events.foreach {
-          e =>
-            if (e != null) {
-              val day = e.startTime.withTimeAtStartOfDay.toLocalDate
-              val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
-              daysEventsOption match {
-                case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
-                case None => eventsByDays.put(day, List(e))
-              }
-            }
-        }
-      }, "groupBy")
-
-      val days = time({ eventsByDays.keys.toSet }, "getDays")
-
-      val daysWithEvents: Set[DayWithEvents] = time({
-        days.map {
-          day =>
-            val eventsOfDay = eventsByDays.get(day).getOrElse(Nil).sortBy { _.startTime.getMillis }
-            DayWithEvents(day, eventsOfDay)
-        }
-      }, "create daysWithEventsMap")
+      val (days, daysWithEvents) = service.readEventsByDays(cursor)
       time({
         activity.runOnUiThread { () =>
           model.addOrUpdate(daysWithEvents, days)
