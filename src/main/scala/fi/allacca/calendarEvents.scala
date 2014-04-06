@@ -23,7 +23,10 @@ class CalendarEvent(val id: Option[Long], val title: String,
     intervalOfDay.overlaps(intervalOfEvent)
   }
 
-  def spansMultipleDays: Boolean = startTime.withTimeAtStartOfDay != endTime.withTimeAtStartOfDay
+  def spansMultipleDays: Boolean = {
+    val realEndDay = if (allDay) endTime.minusDays(1) else endTime
+    startTime.withTimeAtStartOfDay != realEndDay.withTimeAtStartOfDay
+  }
 
   override def toString = s"$title ($description) ${format(startTime)} - ${format(endTime)}"
 
@@ -72,6 +75,7 @@ class CalendarEventService(context: Context) {
   }
 
   def getEvent(eventId: Long): Option[CalendarEvent] = {
+    Logger.debug(s"Loading $eventId")
     val cursor = context.getContentResolver.query(Events.CONTENT_URI, eventColumnsToSelect, "_id =? ", Array(eventId.toString), null)
     if (cursor.moveToFirst()) {
       val startTime = cursor.getLong(0)
@@ -81,13 +85,15 @@ class CalendarEventService(context: Context) {
       val description = cursor.getString(4)
       val allDay = cursor.getInt(5) == 1
       val timeZone = timeZoneForEvent(allDay)
-      Some(new CalendarEvent(id = Some(eventId), 
-                             title = title, 
-                             startTime = toDateTime(startTime, allDay),
-                             endTime = toDateTime(endTime, allDay),
-                             location = location, 
-                             description = description,
-                             allDay = allDay))
+      val event = new CalendarEvent(id = Some(eventId),
+        title = title,
+        startTime = new DateTime(startTime).withZone(timeZone),
+        endTime = new DateTime(endTime).withZone(timeZone),
+        location = location,
+        description = description,
+        allDay = allDay)
+      Logger.debug(s"Found event $event (${event.detailedToString}})")
+      Some(event)
     } else { None }
   }
 

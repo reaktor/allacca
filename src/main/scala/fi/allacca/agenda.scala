@@ -330,7 +330,7 @@ class AgendaRenderer(activity: Activity) {
 
   private def createTitleView(event: CalendarEvent): TextView = {
     def createTimeRangePrefix: String = (event.spansMultipleDays, event.allDay) match {
-      case (true, true) => yearlessDateFormat.print(event.startTime) + "–" + yearlessDateFormat.print(event.endTime) + " "
+      case (true, true) => yearlessDateFormat.print(event.startTime) + "–" + yearlessDateFormat.print(event.endTime.minusDays(1)) + " "
       case (true, false) => dateAndTimeFormat.print(event.startTime) + "–" + dateAndTimeFormat.print(event.endTime) + " "
       case (false, true) => ""
       case (false, false) => timeFormat.print(event.startTime) + "–" + timeFormat.print(event.endTime) + " "

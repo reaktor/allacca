@@ -148,7 +148,7 @@ class EditEventActivity extends Activity with TypedViewHolder {
   private def initDateFields(editLayout: RelativeLayout) {
     startDateTimeField.init(editLayout)
     initAllDayCheckboxAndLabel(editLayout)
-    endDateTimeField.init(editLayout)
+    endDateTimeField.init(editLayout, if (allDayCheckbox.isChecked) 1 else 0)
   }
 
 
@@ -335,13 +335,13 @@ class EditEventActivity extends Activity with TypedViewHolder {
 
   private def extractEventFromFieldValues: CalendarEvent = {
     val allDay = allDayCheckbox.isChecked
-    def toDayStartForAllDayEvent(d: DateTime) = if (allDay) d.withTimeAtStartOfDay else d
+    def toDayStartForAllDayEvent(d: DateTime, daysToAdd: Int = 0) = if (allDay) d.plusDays(daysToAdd).withTimeAtStartOfDay else d
     val eventName = eventNameField.getText.toString
     val eventLocation = eventLocationField.getText.toString
     val eventDescription = eventDescriptionField.getText.toString
     val timeZone = timeZoneForEvent(allDay)
     val startTime = toDayStartForAllDayEvent(startDateTimeField.getDateTime(timeZone))
-    val endTime = toDayStartForAllDayEvent(endDateTimeField.getDateTime(timeZone))
+    val endTime = toDayStartForAllDayEvent(endDateTimeField.getDateTime(timeZone), 1)
     val eventToSave = new CalendarEvent(id = None, title = eventName, startTime = startTime, endTime = endTime,
       location = eventLocation, description = eventDescription, allDay = allDay)
     eventToSave
@@ -405,8 +405,8 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   private val hourAndMinuteElements = List(hourField, colon, minuteField)
   private val weekDayFormat = DateTimeFormat.forPattern("E").withLocale(Locale.ENGLISH)
 
-  def init(editLayout: RelativeLayout) {
-    setDateTime(prePopulateTime)
+  def init(editLayout: RelativeLayout, subtractDays: Int = 0) {
+    setDateTime(prePopulateTime, subtractDays)
     fields.foreach { field =>
       editLayout.addView(field)
       field.setSelectAllOnFocus(true)
@@ -443,11 +443,11 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
       editText.getText.toString.toInt
     }
     new DateTime(intValue(yearField), intValue(monthField), intValue(dayField),
-      intValue(hourField), intValue(minuteField), 0, 0).withZone(timeZone)
+      intValue(hourField), intValue(minuteField), 0, 0, timeZone)
   }
 
-  def setDateTime(prepopulate: DateTime) {
-    dayField.setText(digitToStr(prepopulate.getDayOfMonth))
+  def setDateTime(prepopulate: DateTime, subtractDays: Int = 0) {
+    dayField.setText(digitToStr(prepopulate.getDayOfMonth - subtractDays))
     monthField.setText(digitToStr(prepopulate.getMonthOfYear))
     yearField.setText(prepopulate.getYear.toString)
     hourField.setText(digitToStr(prepopulate.getHourOfDay))
