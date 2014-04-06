@@ -101,19 +101,16 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
 
 class WeeksModel {
   @volatile private var startDay: DateTime = currentDay
-  @volatile private var focusDay: DateTime = new DateTime().withTimeAtStartOfDay
   @volatile private var chosenDay: DateTime = new DateTime().withTimeAtStartOfDay
 
   def currentDay: DateTime = new DateTime().withTimeAtStartOfDay
   def getCount = Config.initialWeekCount
   def getStartDay = startDay
   def setStartDay(startDay: DateTime) { this.startDay = startDay }
-  def getFocusDay = focusDay
   def getChosenDay = { chosenDay }
   def setChosenDay(chosen: DateTime) { chosenDay = chosen }
   def getStartDayIndex = Config.howManyWeeksToLoadAtTime
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
-  def setFocusDay(newFocus: DateTime) { focusDay = newFocus }
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def startWeek = startDay.weekOfWeekyear()
   def startYear = startDay.year()
