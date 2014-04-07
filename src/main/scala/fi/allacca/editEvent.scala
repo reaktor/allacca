@@ -447,11 +447,12 @@ class DateTimeField(val prePopulateTime: DateTime, placeBelowFieldId: Int, val c
   }
 
   def setDateTime(prepopulate: DateTime, subtractDays: Int = 0) {
-    dayField.setText(digitToStr(prepopulate.getDayOfMonth - subtractDays))
-    monthField.setText(digitToStr(prepopulate.getMonthOfYear))
-    yearField.setText(prepopulate.getYear.toString)
-    hourField.setText(digitToStr(prepopulate.getHourOfDay))
-    minuteField.setText(digitToStr(prepopulate.getMinuteOfHour))
+    val effectiveDate = prepopulate.minusDays(subtractDays)
+    dayField.setText(digitToStr(effectiveDate.getDayOfMonth))
+    monthField.setText(digitToStr(effectiveDate.getMonthOfYear))
+    yearField.setText(effectiveDate.getYear.toString)
+    hourField.setText(digitToStr(effectiveDate.getHourOfDay))
+    minuteField.setText(digitToStr(effectiveDate.getMinuteOfHour))
   }
 
   def isValid: Boolean = {
