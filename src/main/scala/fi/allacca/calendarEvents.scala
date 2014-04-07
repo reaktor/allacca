@@ -2,7 +2,7 @@ package fi.allacca
 
 import android.provider.CalendarContract.{Instances, Calendars, Events}
 import android.content.{CursorLoader, ContentValues, Context}
-import org.joda.time.{DateTimeZone, LocalDate, Interval, DateTime}
+import org.joda.time._
 import android.database.Cursor
 import org.joda.time.format.DateTimeFormat
 import java.util.TimeZone
@@ -23,6 +23,22 @@ class CalendarEvent(val id: Option[Long], val title: String,
     val intervalOfDay = new Interval(day.withTimeAtStartOfDay, day.withTimeAtStartOfDay.plusDays(1))
     intervalOfDay.overlaps(intervalOfEvent)
   }
+
+  def days: Seq[LocalDate] = {
+    if (spansMultipleDays) dayRange else List(toDayStart(startTime))
+  }
+
+  private def dayRange: Seq[LocalDate] = {
+    val startDay = toDayStart(startTime)
+    val endDay = toDayStart(endTime)
+    val rangeLength = Days.daysBetween(startDay, endDay).getDays
+    val daysToSubtract = if (allDay) 1 else 0
+    val days = 0.to(rangeLength - daysToSubtract).map { startDay.plusDays }
+    Logger.debug(s"$this days == $days")
+    days
+  }
+
+  private def toDayStart(d: DateTime): LocalDate = d.withTimeAtStartOfDay.withZone(DateTimeZone.getDefault).toLocalDate
 
   def spansMultipleDays: Boolean = {
     val realEndDay = if (allDay) endTime.minusDays(1) else endTime
@@ -118,17 +134,19 @@ class CalendarEventService(context: Context) {
   }
 
   def readEventsByDays(cursor: Cursor): (Set[LocalDate], Set[DayWithEvents]) = {
-    val events = readEventsFromInstances(cursor)
+    val events = time({ readEventsFromInstances(cursor) }, "readEvents")
     val eventsByDays: mutable.Map[LocalDate, Seq[CalendarEvent]] = new mutable.HashMap[LocalDate, Seq[CalendarEvent]]()
     time({
       events.foreach {
         e =>
           if (e != null) {
-            val day = e.startTime.withTimeAtStartOfDay.toLocalDate
-            val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
-            daysEventsOption match {
-              case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
-              case None => eventsByDays.put(day, List(e))
+            val daysOfEvent: Seq[LocalDate] = e.days
+            daysOfEvent.foreach { day =>
+              val daysEventsOption: Option[Seq[CalendarEvent]] = eventsByDays.get(day)
+              daysEventsOption match {
+                case Some(eventList) => eventsByDays.put(day, eventList.+:(e))
+                case None => eventsByDays.put(day, List(e))
+              }
             }
           }
       }
