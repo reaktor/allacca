@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.widget._
 import android.view.{Gravity, ViewGroup, View}
-import org.joda.time.{LocalDate, Weeks, DateTime}
+import org.joda.time.{Days, LocalDate, Weeks, DateTime}
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
@@ -21,7 +21,11 @@ import android.content.{ContentUris, Loader}
 import android.database.Cursor
 import android.provider.CalendarContract
 
-object Config{
+object Config {
+  def eventLoadWindow(day: DateTime): (DateTime, DateTime) = {
+    (day.minusDays(loadEventsForDaysInOneDirection), day.plusDays(loadEventsForDaysInOneDirection))
+  }
+  val loadEventsForDaysInOneDirection = 120
   val howManyWeeksToLoadAtTime = 20
   val initialWeekCount = 104
 }
@@ -75,9 +79,12 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
   }
 
   def loadEvents(firstVisibleItemPosition: Int, lastVisibleItemPosition: Int) {
-    val startWeek = model.getItem(firstVisibleItemPosition)
-    val endWeek = model.getItem(lastVisibleItemPosition)
-    eventLoaderController.loadEventsBetween(startWeek.firstDay, endWeek.lastDay)
+    val firstShownDay = model.getItem(firstVisibleItemPosition).firstDay
+    val lastShownDay = model.getItem(lastVisibleItemPosition).lastDay
+    val between = Days.daysBetween(firstShownDay, lastShownDay)
+    val dayBetween = firstShownDay.plusDays(between.getDays / 2)
+    val (start, end) = Config.eventLoadWindow(dayBetween)
+    eventLoaderController.loadEventsBetween(start, end)
   }
 
   def refresh() {
@@ -105,7 +112,8 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
   def onDayClick(day: DateTime) {
     onDayClickCallback(day)
     model.setChosenDay(day)
-    eventLoaderController.loadEventsBetween(day, day.plusDays(Config.howManyWeeksToLoadAtTime * 7))
+    val (start, end) = Config.eventLoadWindow(day)
+    eventLoaderController.loadEventsBetween(start, end)
     notifyDataSetChanged()
   }
 
