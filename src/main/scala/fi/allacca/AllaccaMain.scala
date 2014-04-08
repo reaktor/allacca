@@ -198,9 +198,8 @@ class AllaccaMain extends Activity with TypedViewHolder {
 
   def goToDayOnWeeksList(day: DateTime) {
     val index = weeksAdapter.rollToDate(day)
-    weeksList.setSelection(index)
-    weeksList.smoothScrollToPosition(index)
     weeksAdapter.onDayClick(day)
+    weeksList.setSelection(index)
   }
 
   private def createDayColumnTitles(): Seq[View] = {
