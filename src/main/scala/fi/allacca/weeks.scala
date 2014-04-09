@@ -3,7 +3,7 @@ package fi.allacca
 import android.app.Activity
 import android.widget._
 import android.view.{Gravity, ViewGroup, View}
-import org.joda.time.{Days, LocalDate, Weeks, DateTime}
+import org.joda.time.{Days, Weeks, DateTime}
 import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
@@ -12,14 +12,16 @@ import android.graphics.{Typeface, Color}
 import java.util.{Calendar, Locale}
 import java.text.DateFormatSymbols
 import fi.allacca.Logger._
-import android.graphics.drawable.shapes.RectShape
 import android.graphics.drawable.ShapeDrawable
-import android.graphics.Paint.Style
 import android.app.LoaderManager.LoaderCallbacks
 import android.os.Bundle
 import android.content.{ContentUris, Loader}
 import android.database.Cursor
 import android.provider.CalendarContract
+import scala.concurrent.Future
+import scala.Predef._
+import scala.Some
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Config {
   def eventLoadWindow(day: DateTime): (DateTime, DateTime) = {
@@ -132,16 +134,15 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
   private lazy val service = new CalendarEventService(activity)
 
   def loadEventsBetween(start: DateTime, end: DateTime) {
-    println(s"Loading events between $start and $end")
+    Logger.info(s"Loading events between $start and $end")
     val args = new Bundle
     args.putLong("start", start.getMillis)
     args.putLong("end", end.getMillis)
     debug("Initing loading with " + start + "--" + end)
-    activity.getLoaderManager.initLoader(LOADER_ID, args, this)
+    activity.getLoaderManager.restartLoader(LOADER_ID, args, this)
   }
 
   override def onCreateLoader(id: Int, args: Bundle): Loader[Cursor] = {
-    println(s"onCreateLoader")
     val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon
     ContentUris.appendId(uriBuilder, args.get("start").asInstanceOf[Long])
     ContentUris.appendId(uriBuilder, args.get("end").asInstanceOf[Long])
@@ -151,17 +152,34 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
   }
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
-    val (_, daysWithEvents) = service.readEventsByDays(cursor)
-    println(s"onLoadFinished $daysWithEvents")
-    val newEvents = (daysWithEvents map { dayWithEvents: DayWithEvents =>
-        (dayWithEvents.id, dayWithEvents)
-      }).toMap
-
-    activity.runOnUiThread { () =>
-      model.updateEvents(newEvents)
-      refreshCallback()
+    val f: Future[Map[Long, DayWithEvents]] = Future {
+      processLoadedEvents(cursor)
     }
-    activity.getLoaderManager.destroyLoader(LOADER_ID)
+    f onSuccess {
+      case newEvents => {
+        updateUiWithNewEvents(newEvents)
+      }
+    }
+    f onFailure {
+      case t => Logger.info("ERROR: Could not process file: " + t.getMessage)
+    }
+  }
+
+  private def processLoadedEvents(cursor: Cursor): Map[Long, DayWithEvents] = {
+    val (_, daysWithEvents) = service.readEventsByDays(cursor)
+    cursor.close()
+    (daysWithEvents map {
+      dayWithEvents: DayWithEvents =>
+        (dayWithEvents.id, dayWithEvents)
+    }).toMap
+  }
+
+  private def updateUiWithNewEvents(newEvents: Map[Long, DayWithEvents]) {
+    activity.runOnUiThread {
+      () =>
+        model.updateEvents(newEvents)
+        refreshCallback()
+    }
   }
 
   override def onLoaderReset(loader: Loader[Cursor]) {}
