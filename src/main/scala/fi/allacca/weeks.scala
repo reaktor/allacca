@@ -25,7 +25,7 @@ object Config {
   def eventLoadWindow(day: DateTime): (DateTime, DateTime) = {
     (day.minusDays(loadEventsForDaysInOneDirection), day.plusDays(loadEventsForDaysInOneDirection))
   }
-  val loadEventsForDaysInOneDirection = 120
+  val loadEventsForDaysInOneDirection = 240
   val howManyWeeksToLoadAtTime = 20
   val initialWeekCount = 104
 }
@@ -153,8 +153,12 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
     val (_, daysWithEvents) = service.readEventsByDays(cursor)
     println(s"onLoadFinished $daysWithEvents")
+    val newEvents = (daysWithEvents map { dayWithEvents: DayWithEvents =>
+        (dayWithEvents.id, dayWithEvents)
+      }).toMap
+
     activity.runOnUiThread { () =>
-      model.addOrUpdate(daysWithEvents)
+      model.updateEvents(newEvents)
       refreshCallback()
     }
     activity.getLoaderManager.destroyLoader(LOADER_ID)
@@ -184,10 +188,8 @@ class WeeksModel {
     }
   }
   def hasEvents(day: DateTime) = getEventCount(day) > 0
-  def addOrUpdate(daysWithEvents: Set[DayWithEvents]) {
-    events = (daysWithEvents map { dayWithEvents: DayWithEvents =>
-      (dayWithEvents.id, dayWithEvents)
-    }).toMap
+  def updateEvents(newEvents: Map[Long, DayWithEvents]) {
+    events = newEvents
   }
 }
 
