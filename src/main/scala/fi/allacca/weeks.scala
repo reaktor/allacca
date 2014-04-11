@@ -103,11 +103,11 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
 
   def getStartDayIndex = model.getStartDayIndex
 
-  def getIndex(yearAndWeek: YearAndWeek) = model.getIndex(yearAndWeek)
+  def getIndex(yearAndWeek: YearAndWeek) = time ( { model.getIndex(yearAndWeek) }, "weeks.getIndex")
 
-  def getCount: Int = model.getCount
+  def getCount: Int = time ( { model.getCount } , "weeks.getCount")
 
-  def getItem(position: Int): YearAndWeek = model.getItem(position)
+  def getItem(position: Int): YearAndWeek = time ( { model.getItem(position) } , "weeks.getItem")
 
   def getItemId(position: Int): Long = position
 
@@ -122,9 +122,9 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
   def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val yearAndWeek: YearAndWeek = getItem(position)
     if (convertView == null)
-      renderer.createWeekView(model.getChosenDay, yearAndWeek, onDayClick, onDayLongClickCallback)
+      time ( { renderer.createWeekView(model.getChosenDay, yearAndWeek, onDayClick, onDayLongClickCallback) }, "weeks.createWeekView" )
     else
-      renderer.updateView(model.getChosenDay, yearAndWeek, convertView, onDayClick, onDayLongClickCallback)
+      time ( { renderer.updateView(model.getChosenDay, yearAndWeek, convertView, onDayClick, onDayLongClickCallback) }, "weeks.updateView" )
   }
 
 }
