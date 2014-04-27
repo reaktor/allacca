@@ -28,6 +28,7 @@ object Config {
     (day.minusDays(loadEventsForDaysInOneDirection), day.plusDays(loadEventsForDaysInOneDirection))
   }
   val loadEventsForDaysInOneDirection = 240
+  val eventLoadingThresholdDays = 30
   val howManyWeeksToLoadAtTime = 20
   val initialWeekCount = 104
 }
@@ -39,7 +40,7 @@ class WeeksView(activity: Activity, adapter: WeeksAdapter, shownMonthsView: Show
       def onScrollStateChanged(view: AbsListView, scrollState: Int) {
         Logger.info(s"${WeeksView.this.getClass.getSimpleName} scrollState==$scrollState")
         if (scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
-          adapter.loadEvents(view.getFirstVisiblePosition, view.getLastVisiblePosition)
+          adapter.maybeLoadEvents(view.getFirstVisiblePosition, view.getLastVisiblePosition)
         }
       }
 
@@ -80,13 +81,31 @@ class WeeksAdapter(activity: Activity, dimensions: ScreenParameters, onDayClickC
     notifyDataSetChanged()
   }
 
-  def loadEvents(firstVisibleItemPosition: Int, lastVisibleItemPosition: Int) {
+  def maybeLoadEvents(firstVisibleItemPosition: Int, lastVisibleItemPosition: Int) {
     val firstShownDay = model.getItem(firstVisibleItemPosition).firstDay
     val lastShownDay = model.getItem(lastVisibleItemPosition).lastDay
-    val between = Days.daysBetween(firstShownDay, lastShownDay)
-    val dayBetween = firstShownDay.plusDays(between.getDays / 2)
-    val (start, end) = Config.eventLoadWindow(dayBetween)
-    eventLoaderController.loadEventsBetween(start, end)
+    if (shouldLoadEvents(firstShownDay, lastShownDay)) {
+      val between = Days.daysBetween(firstShownDay, lastShownDay)
+      val dayBetween = firstShownDay.plusDays(between.getDays / 2)
+      val (start, end) = Config.eventLoadWindow(dayBetween)
+      eventLoaderController.loadEventsBetween(start, end)
+    } else {
+      info("No need to load events yet")
+    }
+  }
+
+  private def shouldLoadEvents(firstShownDay: DateTime, lastShownDay: DateTime): Boolean = {
+    val (loadedStartMillis, loadedEndMillis) = model.getRangeOfLoadedEvents
+    val loadedStart = new DateTime(loadedStartMillis)
+    val loadedEnd = new DateTime(loadedEndMillis)
+
+    def startDayThresholdExceeded = {
+      firstShownDay.isBefore(loadedStart) || math.abs(Days.daysBetween(firstShownDay, loadedStart).getDays) < Config.eventLoadingThresholdDays
+    }
+    def endDayThresholdExceeded = {
+      lastShownDay.isAfter(loadedEnd) || math.abs(Days.daysBetween(lastShownDay, loadedEnd).getDays) < Config.eventLoadingThresholdDays
+    }
+    startDayThresholdExceeded || endDayThresholdExceeded
   }
 
   def refresh() {
@@ -152,11 +171,11 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
   }
 
   override def onLoadFinished(loader: Loader[Cursor], cursor: Cursor) {
-    val f: Future[Map[Long, DayWithEvents]] = Future {
+    val f: Future[LoadedEvents] = Future {
       processLoadedEvents(cursor)
     }
     f onSuccess {
-      case newEvents => {
+      case newEvents: LoadedEvents => {
         updateUiWithNewEvents(newEvents)
       }
     }
@@ -165,16 +184,20 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
     }
   }
 
-  private def processLoadedEvents(cursor: Cursor): Map[Long, DayWithEvents] = {
+  private def processLoadedEvents(cursor: Cursor): LoadedEvents = {
     val (_, daysWithEvents) = service.readEventsByDays(cursor)
     cursor.close()
-    (daysWithEvents map {
+    val daysWithEventsMap = (daysWithEvents map {
       dayWithEvents: DayWithEvents =>
         (dayWithEvents.id, dayWithEvents)
     }).toMap
+    val daysAsMillis = daysWithEventsMap.keys
+    val start = daysAsMillis.min
+    val end = daysAsMillis.max
+    LoadedEvents(start, end, daysWithEventsMap)
   }
 
-  private def updateUiWithNewEvents(newEvents: Map[Long, DayWithEvents]) {
+  private def updateUiWithNewEvents(newEvents: LoadedEvents) {
     activity.runOnUiThread {
       () =>
         model.updateEvents(newEvents)
@@ -185,10 +208,12 @@ class EventLoaderController(activity: Activity, model: WeeksModel, refreshCallba
   override def onLoaderReset(loader: Loader[Cursor]) {}
 }
 
+case class LoadedEvents(start: Long, end: Long, daysWithEvents: Map[Long, DayWithEvents])
+
 class WeeksModel {
   @volatile private var startDay: DateTime = currentDay
   @volatile private var chosenDay: DateTime = new DateTime().withTimeAtStartOfDay
-  @volatile private var events: Map[Long, DayWithEvents] = Map()
+  @volatile private var events: LoadedEvents = LoadedEvents(Long.MinValue, Long.MinValue, Map())
 
   def currentDay: DateTime = new DateTime().withTimeAtStartOfDay
   def getCount = Config.initialWeekCount
@@ -200,13 +225,14 @@ class WeeksModel {
   def getIndex(yearAndWeek: YearAndWeek) = Weeks.weeksBetween(startDay, yearAndWeek.firstDay).getWeeks
   def getItem(position: Int): YearAndWeek = YearAndWeek.from(startDay.plusWeeks(position))
   def getEventCount(day: DateTime): Int = {
-    events.get(day.getMillis) match {
+    events.daysWithEvents.get(day.getMillis) match {
       case Some(dayWithEvents) => dayWithEvents.events.size
       case _ => 0
     }
   }
+  def getRangeOfLoadedEvents: (Long, Long) = (events.start, events.end)
   def hasEvents(day: DateTime) = getEventCount(day) > 0
-  def updateEvents(newEvents: Map[Long, DayWithEvents]) {
+  def updateEvents(newEvents: LoadedEvents) {
     events = newEvents
   }
 }
