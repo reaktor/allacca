@@ -8,7 +8,7 @@ import android.widget.AbsListView.OnScrollListener
 import java.util.concurrent.atomic.AtomicBoolean
 import fi.allacca.dates.YearAndWeek
 import org.joda.time.format.DateTimeFormat
-import android.graphics.{Typeface, Color}
+import android.graphics.{Paint, Typeface, Color}
 import java.util.{Calendar, Locale}
 import java.text.DateFormatSymbols
 import fi.allacca.Logger._
@@ -351,9 +351,11 @@ class WeekViewRenderer(activity: Activity, model: WeeksModel, dimensions: Screen
       if (day.getDayOfWeek >= 6) dimensions.weekendDayColor else { dimensions.weekDayColor }
     }
     dayView.setTextColor(textColor)
-    val backgroundColor = if (model.hasEvents(day)) {
-      dimensions.governorBay
-    } else if ((day.getMonthOfYear % 2) == 0) {
+    var flags = dayView.getPaintFlags
+    if (model.hasEvents(day)) flags |= Paint.UNDERLINE_TEXT_FLAG else flags &= ~Paint.UNDERLINE_TEXT_FLAG
+    dayView.setPaintFlags(flags)
+    val backgroundColor =
+    if ((day.getMonthOfYear % 2) == 0) {
       dimensions.funBlue
     } else {
       Color.BLACK
