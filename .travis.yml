@@ -2,12 +2,11 @@ language: scala
 scala:
   - 2.11.0
 script:
-  - "./sbt ';clean;compile;package;test'"
+  - "sbt ';clean;compile;package;test'"
 jdk:
   - oraclejdk8
 notifications:
   email:
    recipients:
     - timo.rantalaiho@gmail.com
-
 
