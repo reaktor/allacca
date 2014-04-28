@@ -15,9 +15,9 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:impli
 libraryDependencies ++= Seq(
   "joda-time"         % "joda-time"           % "2.3",
   "org.joda"          % "joda-convert"        % "1.4",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.4" % "test",
-  "junit" % "junit" % "4.10" % "test"
+  "org.scalacheck" %% "scalacheck" % "1.11.3" % "compile",
+  "org.scalatest" %% "scalatest" % "2.1.4" % "compile",
+  "junit" % "junit" % "4.10" % "compile"
 )
 
 // for non-ant-based projects, you'll need this for the specific build target:
