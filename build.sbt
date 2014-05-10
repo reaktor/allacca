@@ -10,6 +10,10 @@ version := "0.1-SNAPSHOT"
 
 scalaVersion:= "2.11.0"
 
+debugIncludesTests := false
+
+debugIncludesTests in Android := false
+
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
 
 libraryDependencies ++= Seq(
@@ -17,7 +21,7 @@ libraryDependencies ++= Seq(
   "org.joda"          % "joda-convert"        % "1.4",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.4" % "test",
-  "junit" % "junit" % "4.10" % "test"
+  "junit" % "junit" % "4.10" % "compile"
 )
 
 // for non-ant-based projects, you'll need this for the specific build target:
