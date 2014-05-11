@@ -10,8 +10,6 @@ version := "0.1-SNAPSHOT"
 
 scalaVersion:= "2.11.0"
 
-debugIncludesTests := false
-
 debugIncludesTests in Android := false
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions")
@@ -40,8 +38,6 @@ proguardCache in Android ++= Seq(
   ProguardCache("org.joda") % "joda-time" % "joda-time",
   ProguardCache("org.joda.convert") % "org.joda" % "joda-convert"
 )
-
-debugIncludesTests in Android := true
 
 apkbuildExcludes in Android ++= Seq(
   "META-INF/LICENSE.txt",
